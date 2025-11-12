@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout, Menu, Drawer, Button, Avatar, Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -11,6 +12,9 @@ import {
   LogoutOutlined,
   SettingOutlined,
   DashboardOutlined,
+  TeamOutlined,
+  BankOutlined,
+  ControlOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
@@ -48,7 +52,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     navigate('/login');
   };
 
-  const menuItems = [
+  const isAdmin = user?.role?.name === 'admin';
+
+  const menuItems: MenuProps['items'] = [
     {
       key: '/dashboard',
       icon: <DashboardOutlined />,
@@ -82,6 +88,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       onClick: () => navigate('/other-activities'),
       disabled: true,
     },
+    ...(isAdmin
+      ? [
+          { type: 'divider' as const },
+          {
+            key: 'administration',
+            icon: <ControlOutlined />,
+            label: 'Administration',
+            children: [
+              {
+                key: '/admin/users',
+                icon: <TeamOutlined />,
+                label: 'Users',
+                onClick: () => navigate('/admin/users'),
+              },
+              {
+                key: '/admin/departments',
+                icon: <BankOutlined />,
+                label: 'Departments',
+                onClick: () => navigate('/admin/departments'),
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 
   const userMenuItems = [
@@ -185,6 +215,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
 
           <div className="header-right">
+            {isAdmin && (
+              <Button
+                type="primary"
+                icon={<ControlOutlined />}
+                onClick={() => navigate('/admin/users')}
+                className="admin-btn"
+              >
+                Administration
+              </Button>
+            )}
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <div className="user-profile">
                 <Avatar
