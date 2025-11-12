@@ -1,10 +1,4 @@
-import {
-  IsInt,
-  IsArray,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsInt, IsArray, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateTeachingActivityDto {
   @IsInt()
