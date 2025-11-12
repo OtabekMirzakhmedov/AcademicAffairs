@@ -1,5 +1,7 @@
 // Primary Theme Colors
 $primary-color: #1890ff;
+$primary-dark: #0050b3;
+$primary-light: #69c0ff;
 $secondary-color: #52c41a;
 
 // Status Colors
@@ -8,19 +10,36 @@ $warning-color: #faad14;
 $error-color: #f5222d;
 $info-color: #1890ff;
 
+// Gradient Colors
+$gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$gradient-success: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+$gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+$gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+$gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$gradient-blue: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+
 // Background Colors
-$background-primary: #f5f5f5;
+$background-primary: #f0f2f5;
 $background-secondary: #ffffff;
 $background-dark: #001529;
+$background-light: #fafafa;
 
 // Text Colors
 $text-primary: #000000;
 $text-secondary: #8c8c8c;
 $text-disabled: #bfbfbf;
+$text-white: #ffffff;
 
 // Border & Divider
 $border-color: #d9d9d9;
-$divider-color: #f0f0f0;
+$border-light: #f0f0f0;
+$divider-color: #e8e8e8;
+
+// Shadow
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.15);
+$shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
 
 // Spacing
 $spacing-xs: 4px;
@@ -28,21 +47,61 @@ $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
+$spacing-2xl: 48px;
+
+// Border Radius
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// Transitions
+$transition-fast: 0.15s ease-in-out;
+$transition-base: 0.3s ease-in-out;
+$transition-slow: 0.5s ease-in-out;
 
 // Export as CSS custom properties
 :root {
+  // Colors
   --primary-color: #{$primary-color};
+  --primary-dark: #{$primary-dark};
+  --primary-light: #{$primary-light};
   --secondary-color: #{$secondary-color};
   --success-color: #{$success-color};
   --warning-color: #{$warning-color};
   --error-color: #{$error-color};
   --info-color: #{$info-color};
+
+  // Backgrounds
   --background-primary: #{$background-primary};
   --background-secondary: #{$background-secondary};
   --background-dark: #{$background-dark};
+  --background-light: #{$background-light};
+
+  // Text
   --text-primary: #{$text-primary};
   --text-secondary: #{$text-secondary};
   --text-disabled: #{$text-disabled};
+  --text-white: #{$text-white};
+
+  // Borders
   --border-color: #{$border-color};
+  --border-light: #{$border-light};
   --divider-color: #{$divider-color};
+
+  // Spacing
+  --spacing-xs: #{$spacing-xs};
+  --spacing-sm: #{$spacing-sm};
+  --spacing-md: #{$spacing-md};
+  --spacing-lg: #{$spacing-lg};
+  --spacing-xl: #{$spacing-xl};
+  --spacing-2xl: #{$spacing-2xl};
+
+  // Border Radius
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --radius-xl: #{$radius-xl};
+  --radius-full: #{$radius-full};
 }

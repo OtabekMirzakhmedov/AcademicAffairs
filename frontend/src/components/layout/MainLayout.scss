@@ -1,0 +1,164 @@
+@use '../../styles/variables' as *;
+
+.main-layout {
+  min-height: 100vh;
+
+  .main-sider {
+    background: $background-dark;
+    box-shadow: $shadow-lg;
+    z-index: 100;
+    position: relative;
+
+    .logo-container {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all $transition-base;
+
+      .logo-text {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        padding: 0 $spacing-md;
+
+        .logo-image {
+          height: 32px;
+          width: auto;
+        }
+
+        .university-name {
+          color: $text-white;
+          font-size: 18px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+      }
+
+      .logo-icon {
+        font-size: 24px;
+        color: $primary-light;
+      }
+    }
+
+    .sidebar-menu {
+      border-right: none;
+      margin-top: $spacing-md;
+
+      .ant-menu-item {
+        margin: $spacing-xs $spacing-sm;
+        border-radius: $radius-md;
+        height: 48px;
+        line-height: 48px;
+        transition: all $transition-fast;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        &.ant-menu-item-selected {
+          background: $primary-color;
+
+          &::after {
+            display: none;
+          }
+        }
+
+        &.ant-menu-item-disabled {
+          opacity: 0.4;
+        }
+      }
+
+      .ant-menu-item-icon {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .main-header {
+    background: $background-secondary;
+    padding: 0 $spacing-lg;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: $shadow-sm;
+    z-index: 99;
+    position: sticky;
+    top: 0;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+
+      .collapse-btn {
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-md;
+        transition: all $transition-fast;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.05);
+        }
+      }
+
+      .header-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: $text-primary;
+
+        @media (max-width: 768px) {
+          display: none;
+        }
+      }
+    }
+
+    .header-right {
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        cursor: pointer;
+        padding: $spacing-xs $spacing-md;
+        border-radius: $radius-lg;
+        transition: all $transition-fast;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.05);
+        }
+
+        .user-avatar {
+          background: $gradient-primary;
+        }
+
+        .user-name {
+          font-weight: 500;
+          color: $text-primary;
+
+          @media (max-width: 576px) {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
+  .main-content {
+    background: $background-primary;
+    min-height: calc(100vh - 64px);
+    padding: $spacing-lg;
+
+    @media (max-width: 768px) {
+      padding: $spacing-md;
+    }
+  }
+}
+
+.mobile-drawer {
+  .ant-drawer-body {
+    padding: 0;
+  }
+}
