@@ -1,0 +1,88 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
+@Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.usersService.create(createUserDto);
+    return {
+      success: true,
+      data: user,
+      message: 'User created successfully',
+    };
+  }
+
+  @Get()
+  async findAll() {
+    const users = await this.usersService.findAll();
+    return {
+      success: true,
+      data: users,
+    };
+  }
+
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.usersService.findOne(id);
+    return {
+      success: true,
+      data: user,
+    };
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const user = await this.usersService.update(id, updateUserDto);
+    return {
+      success: true,
+      data: user,
+      message: 'User updated successfully',
+    };
+  }
+
+  @Patch(':id/toggle-status')
+  @HttpCode(HttpStatus.OK)
+  async toggleStatus(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.usersService.toggleStatus(id);
+    return {
+      success: true,
+      data: user,
+      message: 'User status updated successfully',
+    };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.usersService.remove(id);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+}
