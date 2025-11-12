@@ -1,0 +1,84 @@
+@use '../styles/variables' as *;
+
+.teaching-activities-page {
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-xl;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: $spacing-md;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 $spacing-xs 0;
+      color: $text-primary;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: $text-secondary;
+      margin: 0;
+    }
+
+    .add-btn {
+      height: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: $shadow-md;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-lg;
+      }
+    }
+  }
+
+  .activities-card {
+    border-radius: $radius-lg;
+    box-shadow: $shadow-md;
+
+    .filters-section {
+      display: flex;
+      gap: $spacing-md;
+      margin-bottom: $spacing-lg;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+      }
+
+      .search-input {
+        flex: 1;
+        height: 40px;
+      }
+
+      .status-filter {
+        width: 200px;
+
+        @media (max-width: 768px) {
+          width: 100%;
+        }
+      }
+    }
+
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: $background-light;
+        font-weight: 600;
+        color: $text-primary;
+      }
+
+      .ant-table-tbody > tr {
+        transition: all $transition-fast;
+
+        &:hover {
+          background: rgba(24, 144, 255, 0.05);
+        }
+      }
+    }
+  }
+}

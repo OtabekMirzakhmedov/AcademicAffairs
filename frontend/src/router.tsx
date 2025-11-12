@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
+import TeacherDashboard from './pages/TeacherDashboard';
+import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -20,7 +21,39 @@ export const router = createBrowserRouter([
     path: '/dashboard',
     element: (
       <ProtectedRoute>
-        <DashboardPage />
+        <TeacherDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/teaching-activities',
+    element: (
+      <ProtectedRoute>
+        <TeachingActivitiesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/scientific-activities',
+    element: (
+      <ProtectedRoute>
+        <div>Scientific Activities - Coming Soon</div>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/research-activities',
+    element: (
+      <ProtectedRoute>
+        <div>Research Activities - Coming Soon</div>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/other-activities',
+    element: (
+      <ProtectedRoute>
+        <div>Other Activities - Coming Soon</div>
       </ProtectedRoute>
     ),
   },
