@@ -37,7 +37,7 @@ interface Activity {
 }
 
 const TeachingActivitiesPage = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
   const [searchText, setSearchText] = useState('');

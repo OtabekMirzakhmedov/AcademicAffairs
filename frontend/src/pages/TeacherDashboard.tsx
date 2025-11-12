@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, Row, Col, Progress, Button, Statistic, Tag, Empty } from 'antd';
 import {
   BookOutlined,
@@ -15,7 +15,7 @@ import './TeacherDashboard.scss';
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     mandatoryHours: user?.teacherInfo?.mandatoryHoursPerPeriod || 500,
     submittedHours: 0,
     validatedHours: 0,

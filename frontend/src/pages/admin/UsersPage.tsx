@@ -10,12 +10,10 @@ import {
   Select,
   Modal,
   message,
-  Switch,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
-  DeleteOutlined,
   SearchOutlined,
   UserOutlined,
   CheckCircleOutlined,
@@ -23,23 +21,12 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
+import UserFormModal from '../../components/features/admin/UserFormModal';
+import usersService from '../../services/users.service';
+import departmentsService from '../../services/departments.service';
+import api from '../../config/api';
+import type { User, Role, Department } from '../../types';
 import './UsersPage.scss';
-
-interface User {
-  id: number;
-  login: string;
-  role: {
-    id: number;
-    name: string;
-  };
-  isActive: boolean;
-  userInfo?: {
-    firstName: string;
-    lastName: string;
-    email1?: string;
-  };
-  createdAt: string;
-}
 
 const UsersPage = () => {
   const [loading, setLoading] = useState(false);
@@ -48,10 +35,16 @@ const UsersPage = () => {
   const [searchText, setSearchText] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
   useEffect(() => {
-    // TODO: Fetch users from API
-    setUsers([]);
-    setFilteredUsers([]);
+    fetchUsers();
+    fetchRoles();
+    fetchDepartments();
   }, []);
 
   useEffect(() => {
@@ -76,6 +69,37 @@ const UsersPage = () => {
 
     setFilteredUsers(filtered);
   }, [searchText, roleFilter, users]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await usersService.getAll();
+      setUsers(data);
+      setFilteredUsers(data);
+    } catch (error) {
+      message.error('Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await api.get('/users/roles');
+      setRoles(response.data.data);
+    } catch (error) {
+      message.error('Failed to fetch roles');
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const data = await departmentsService.getAll();
+      setDepartments(data);
+    } catch (error) {
+      message.error('Failed to fetch departments');
+    }
+  };
 
   const getRoleColor = (roleName: string) => {
     switch (roleName) {
@@ -180,7 +204,7 @@ const UsersPage = () => {
               type="text"
               size="small"
               icon={<EditOutlined />}
-              onClick={() => handleEdit(record.id)}
+              onClick={() => handleEdit(record)}
             />
           </Tooltip>
           <Tooltip title={record.isActive ? 'Deactivate' : 'Activate'}>
@@ -197,10 +221,9 @@ const UsersPage = () => {
     },
   ];
 
-  const handleEdit = (id: number) => {
-    console.log('Edit user:', id);
-    // TODO: Implement edit modal
-    message.info('Edit user functionality coming soon');
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
+    setModalOpen(true);
   };
 
   const handleToggleStatus = (id: number, currentStatus: boolean) => {
@@ -209,21 +232,32 @@ const UsersPage = () => {
       content: `Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this user?`,
       onOk: async () => {
         try {
-          // TODO: API call to toggle status
+          await usersService.toggleStatus(id);
           message.success(
             `User ${currentStatus ? 'deactivated' : 'activated'} successfully`
           );
-        } catch (error) {
-          message.error('Failed to update user status');
+          fetchUsers();
+        } catch (error: any) {
+          message.error(
+            error?.response?.data?.error?.message || 'Failed to update user status'
+          );
         }
       },
     });
   };
 
   const handleAddNew = () => {
-    console.log('Add new user');
-    // TODO: Implement add modal
-    message.info('Add user functionality coming soon');
+    setEditingUser(null);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setEditingUser(null);
+  };
+
+  const handleModalSuccess = () => {
+    fetchUsers();
   };
 
   return (
@@ -284,6 +318,15 @@ const UsersPage = () => {
             scroll={{ x: 1000 }}
           />
         </Card>
+
+        <UserFormModal
+          open={modalOpen}
+          onClose={handleModalClose}
+          onSuccess={handleModalSuccess}
+          user={editingUser}
+          roles={roles}
+          departments={departments}
+        />
       </div>
     </MainLayout>
   );
