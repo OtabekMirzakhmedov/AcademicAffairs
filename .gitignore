@@ -3,6 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
+
 # Testing
 coverage/
 
@@ -37,6 +38,7 @@ lerna-debug.log*
 # Prisma
 prisma/migrations/*
 !prisma/migrations/.gitkeep
+migration_lock.toml
 
 # Misc
 .cache/
