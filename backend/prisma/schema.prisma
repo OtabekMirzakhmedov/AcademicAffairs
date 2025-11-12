@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // admin, departmenthead, teacher
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                 Int      @id @default(autoincrement())
+  login              String   @unique
+  password           String // Hashed password
+  roleId             Int      @map("role_id")
+  isActive           Boolean  @default(true) @map("is_active")
+  mustChangePassword Boolean  @default(true) @map("must_change_password")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  role                     Role               @relation(fields: [roleId], references: [id])
+  userInfo                 UserInfo?
+  teacherInfo              TeacherInfo?
+  headedDepartments        Department[]       @relation("DepartmentHead")
+  courseAssignments        CourseTeacher[]
+  teachingActivities       TeachingActivity[]
+  validatedActivities      TeachingActivity[] @relation("ValidatedBy")
+
+  @@map("users")
+}
+
+model UserInfo {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email1    String?  @map("email_1")
+  email2    String?  @map("email_2")
+  phone1    String?  @map("phone_1")
+  phone2    String?  @map("phone_2")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_info")
+}
+
+model AcademicPeriod {
+  id           Int      @id @default(autoincrement())
+  academicYear String   @map("academic_year") // e.g., 2024-2025
+  semester     Int // 1 or 2
+  teachingWeek Int      @map("teaching_week") // Current week number in semester
+  isActive     Boolean  @default(false) @map("is_active") // Only one period can be active
+  startDate    DateTime @map("start_date")
+  endDate      DateTime @map("end_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  courseAssignments  CourseTeacher[]
+  teachingActivities TeachingActivity[]
+
+  @@map("academic_periods")
+}
+
+model Department {
+  id         Int      @id @default(autoincrement())
+  name       String
+  headId     Int?     @map("head_id") // Department head user ID
+  phone      String?
+  roomNumber String?  @map("room_number")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  head         User?         @relation("DepartmentHead", fields: [headId], references: [id])
+  teachers     TeacherInfo[]
+  courses      Course[]
+
+  @@map("departments")
+}
+
+model TeacherInfo {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int      @unique @map("user_id")
+  employmentType          String?  @map("employment_type") // full-time, part-time, contract - set by dept head, nullable
+  departmentId            Int      @map("department_id") // Set by admin when assigning teacher to department
+  mandatoryHoursPerPeriod Decimal? @map("mandatory_hours_per_period") @db.Decimal(10, 2) // Set by dept head, nullable
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id])
+
+  @@map("teacher_info")
+}
+
+model Course {
+  id           Int      @id @default(autoincrement())
+  departmentId Int      @map("department_id")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  department         Department         @relation(fields: [departmentId], references: [id])
+  assignedTeachers   CourseTeacher[]
+  teachingActivities TeachingActivity[]
+
+  @@map("courses")
+}
+
+model CourseTeacher {
+  id               Int      @id @default(autoincrement())
+  courseId         Int      @map("course_id")
+  teacherId        Int      @map("teacher_id")
+  academicPeriodId Int      @map("academic_period_id")
+  groups           Json? // Optional: Array of group names, can be set by dept head or null
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  course           Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher          User               @relation(fields: [teacherId], references: [id])
+  academicPeriod   AcademicPeriod     @relation(fields: [academicPeriodId], references: [id])
+  teachingActivities TeachingActivity[]
+
+  @@map("course_teachers")
+}
+
+model TeachingActivity {
+  id               Int       @id @default(autoincrement())
+  courseTeacherId  Int       @map("course_teacher_id") // Links to the course assignment
+  teacherId        Int       @map("teacher_id")
+  courseId         Int       @map("course_id")
+  academicPeriodId Int       @map("academic_period_id")
+  groups           Json // Array of group names entered by teacher
+  lectureHours     Decimal   @default(0) @map("lecture_hours") @db.Decimal(10, 2)
+  practiceHours    Decimal   @default(0) @map("practice_hours") @db.Decimal(10, 2)
+  labHours         Decimal   @default(0) @map("lab_hours") @db.Decimal(10, 2)
+  seminarHours     Decimal   @default(0) @map("seminar_hours") @db.Decimal(10, 2)
+  advisingHours    Decimal   @default(0) @map("advising_hours") @db.Decimal(10, 2)
+  totalHours       Decimal   @default(0) @map("total_hours") @db.Decimal(10, 2) // Calculated sum but stored
+  status           String    @default("draft") // draft, submitted, validated, rejected
+  submittedAt      DateTime? @map("submitted_at")
+  validatedAt      DateTime? @map("validated_at")
+  validatedBy      Int?      @map("validated_by") // Dept head who validated
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  courseTeacher  CourseTeacher  @relation(fields: [courseTeacherId], references: [id], onDelete: Cascade)
+  teacher        User           @relation(fields: [teacherId], references: [id])
+  course         Course         @relation(fields: [courseId], references: [id])
+  academicPeriod AcademicPeriod @relation(fields: [academicPeriodId], references: [id])
+  validator      User?          @relation("ValidatedBy", fields: [validatedBy], references: [id])
+
+  @@map("teaching_activities")
+}

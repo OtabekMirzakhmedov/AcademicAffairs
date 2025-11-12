@@ -1,0 +1,48 @@
+// Primary Theme Colors
+$primary-color: #1890ff;
+$secondary-color: #52c41a;
+
+// Status Colors
+$success-color: #52c41a;
+$warning-color: #faad14;
+$error-color: #f5222d;
+$info-color: #1890ff;
+
+// Background Colors
+$background-primary: #f5f5f5;
+$background-secondary: #ffffff;
+$background-dark: #001529;
+
+// Text Colors
+$text-primary: #000000;
+$text-secondary: #8c8c8c;
+$text-disabled: #bfbfbf;
+
+// Border & Divider
+$border-color: #d9d9d9;
+$divider-color: #f0f0f0;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Export as CSS custom properties
+:root {
+  --primary-color: #{$primary-color};
+  --secondary-color: #{$secondary-color};
+  --success-color: #{$success-color};
+  --warning-color: #{$warning-color};
+  --error-color: #{$error-color};
+  --info-color: #{$info-color};
+  --background-primary: #{$background-primary};
+  --background-secondary: #{$background-secondary};
+  --background-dark: #{$background-dark};
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-disabled: #{$text-disabled};
+  --border-color: #{$border-color};
+  --divider-color: #{$divider-color};
+}
