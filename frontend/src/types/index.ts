@@ -64,6 +64,10 @@ export interface Department {
   head?: User;
   phone?: string;
   roomNumber?: string;
+  _count?: {
+    teachers: number;
+    courses: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

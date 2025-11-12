@@ -22,27 +22,11 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
+import DepartmentFormModal from '../../components/features/admin/DepartmentFormModal';
+import departmentsService from '../../services/departments.service';
+import usersService from '../../services/users.service';
+import type { Department, User } from '../../types';
 import './DepartmentsPage.scss';
-
-interface Department {
-  id: number;
-  name: string;
-  head?: {
-    id: number;
-    login: string;
-    userInfo?: {
-      firstName: string;
-      lastName: string;
-    };
-  };
-  phone?: string;
-  roomNumber?: string;
-  _count?: {
-    teachers: number;
-    courses: number;
-  };
-  createdAt: string;
-}
 
 const DepartmentsPage = () => {
   const [loading, setLoading] = useState(false);
@@ -52,10 +36,14 @@ const DepartmentsPage = () => {
   );
   const [searchText, setSearchText] = useState('');
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+  const [departmentHeads, setDepartmentHeads] = useState<User[]>([]);
+
   useEffect(() => {
-    // TODO: Fetch departments from API
-    setDepartments([]);
-    setFilteredDepartments([]);
+    fetchDepartments();
+    fetchDepartmentHeads();
   }, []);
 
   useEffect(() => {
@@ -69,6 +57,29 @@ const DepartmentsPage = () => {
 
     setFilteredDepartments(filtered);
   }, [searchText, departments]);
+
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      const data = await departmentsService.getAll();
+      setDepartments(data);
+      setFilteredDepartments(data);
+    } catch (error) {
+      message.error('Failed to fetch departments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDepartmentHeads = async () => {
+    try {
+      const data = await usersService.getAll();
+      const heads = data.filter((user) => user.role.name === 'departmenthead');
+      setDepartmentHeads(heads);
+    } catch (error) {
+      message.error('Failed to fetch department heads');
+    }
+  };
 
   const columns: ColumnsType<Department> = [
     {
@@ -171,9 +182,11 @@ const DepartmentsPage = () => {
   ];
 
   const handleEdit = (id: number) => {
-    console.log('Edit department:', id);
-    // TODO: Implement edit modal
-    message.info('Edit department functionality coming soon');
+    const department = departments.find((dept) => dept.id === id);
+    if (department) {
+      setEditingDepartment(department);
+      setModalOpen(true);
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -185,19 +198,30 @@ const DepartmentsPage = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          // TODO: API call to delete department
+          await departmentsService.delete(id);
           message.success('Department deleted successfully');
-        } catch (error) {
-          message.error('Failed to delete department');
+          fetchDepartments();
+        } catch (error: any) {
+          message.error(
+            error?.response?.data?.error?.message || 'Failed to delete department'
+          );
         }
       },
     });
   };
 
   const handleAddNew = () => {
-    console.log('Add new department');
-    // TODO: Implement add modal
-    message.info('Add department functionality coming soon');
+    setEditingDepartment(null);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setEditingDepartment(null);
+  };
+
+  const handleModalSuccess = () => {
+    fetchDepartments();
   };
 
   return (
@@ -246,6 +270,14 @@ const DepartmentsPage = () => {
             scroll={{ x: 1000 }}
           />
         </Card>
+
+        <DepartmentFormModal
+          open={modalOpen}
+          onClose={handleModalClose}
+          onSuccess={handleModalSuccess}
+          department={editingDepartment}
+          departmentHeads={departmentHeads}
+        />
       </div>
     </MainLayout>
   );

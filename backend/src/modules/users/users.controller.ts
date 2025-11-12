@@ -17,12 +17,25 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  @Get('roles')
+  async getRoles() {
+    const roles = await this.prisma.role.findMany();
+    return {
+      success: true,
+      data: roles,
+    };
+  }
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
