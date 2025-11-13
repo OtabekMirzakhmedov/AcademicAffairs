@@ -377,14 +377,32 @@ export class UsersService {
       }
     }
 
-    // Soft delete by deactivating
-    await this.prisma.user.update({
-      where: { id },
-      data: {
-        isActive: false,
-      },
+    // Hard delete - remove all related records first
+    // Delete teaching activities
+    await this.prisma.teachingActivity.deleteMany({
+      where: { teacherId: id },
     });
 
-    return { message: 'User deactivated successfully' };
+    // Delete course teacher assignments
+    await this.prisma.courseTeacher.deleteMany({
+      where: { teacherId: id },
+    });
+
+    // Delete teacher info if exists
+    await this.prisma.teacherInfo.deleteMany({
+      where: { userId: id },
+    });
+
+    // Delete user info if exists
+    await this.prisma.userInfo.deleteMany({
+      where: { userId: id },
+    });
+
+    // Finally, delete the user
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return { message: 'User deleted successfully' };
   }
 }
