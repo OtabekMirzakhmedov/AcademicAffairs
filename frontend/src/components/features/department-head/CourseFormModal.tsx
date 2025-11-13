@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, message, Select, Tag, Collapse } from 'antd';
-import { BookOutlined, UserOutlined, CalendarOutlined, TeamOutlined } from '@ant-design/icons';
+import { BookOutlined, UserOutlined, CalendarOutlined, TeamOutlined, ApartmentOutlined } from '@ant-design/icons';
 import coursesService, {
   type CreateCourseRequest,
   type UpdateCourseRequest,
 } from '../../../services/courses.service';
-import type { Course, User, AcademicPeriod } from '../../../types';
+import type { Course, User, AcademicPeriod, Department } from '../../../types';
 
 interface CourseFormModalProps {
   open: boolean;
@@ -16,6 +16,7 @@ interface CourseFormModalProps {
   teachers: User[];
   teachersLoading: boolean;
   academicPeriods: AcademicPeriod[];
+  departments: Department[];
 }
 
 const CourseFormModal = ({
@@ -27,14 +28,21 @@ const CourseFormModal = ({
   teachers,
   teachersLoading,
   academicPeriods,
+  departments,
 }: CourseFormModalProps) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<number | undefined>(undefined);
+
+  // Filter teachers by selected department
+  const filteredTeachers = selectedDepartment
+    ? teachers.filter((t) => t.teacherInfo?.departmentId === selectedDepartment)
+    : teachers;
 
   useEffect(() => {
     if (open) {
       if (course) {
-        // Edit mode - only course name
+        // Edit mode - populate course name
         form.setFieldsValue({
           name: course.name,
         });
@@ -42,6 +50,8 @@ const CourseFormModal = ({
         // Create mode - reset all fields
         form.resetFields();
       }
+      // Reset department filter
+      setSelectedDepartment(undefined);
     }
   }, [open, course, form]);
 
@@ -113,35 +123,54 @@ const CourseFormModal = ({
           />
         </Form.Item>
 
-        {!course && (
-          <Collapse
-            items={[
-              {
-                key: 'assignment',
-                label: 'Assign Teacher (Optional)',
-                children: (
-                  <>
-                    <Form.Item
-                      name="teacherId"
-                      label="Teacher"
-                      tooltip="Optionally assign a teacher when creating the course"
+        <Collapse
+          items={[
+            {
+              key: 'assignment',
+              label: 'Assign Teacher (Optional)',
+              children: (
+                <>
+                  <Form.Item
+                    label="Filter by Department"
+                    tooltip="Filter teachers by department"
+                  >
+                    <Select
+                      placeholder="All Departments"
+                      size="large"
+                      allowClear
+                      value={selectedDepartment}
+                      onChange={setSelectedDepartment}
+                      suffixIcon={<ApartmentOutlined />}
                     >
-                      <Select
-                        placeholder="Select teacher (optional)"
-                        size="large"
-                        allowClear
-                        showSearch
-                        loading={teachersLoading}
-                        filterOption={(input, option) =>
-                          option?.label.toLowerCase().includes(input.toLowerCase()) ?? false
-                        }
-                        options={teachers.map((teacher) => ({
-                          label: `${teacher.userInfo?.firstName} ${teacher.userInfo?.lastName} (${teacher.login})`,
-                          value: teacher.id,
-                        }))}
-                        suffixIcon={<UserOutlined />}
-                      />
-                    </Form.Item>
+                      {departments.map((dept) => (
+                        <Select.Option key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+
+                  <Form.Item
+                    name="teacherId"
+                    label="Teacher"
+                    tooltip="Optionally assign a teacher when creating the course"
+                  >
+                    <Select
+                      placeholder="Select teacher (optional)"
+                      size="large"
+                      allowClear
+                      showSearch
+                      loading={teachersLoading}
+                      filterOption={(input, option) =>
+                        option?.label.toLowerCase().includes(input.toLowerCase()) ?? false
+                      }
+                      options={filteredTeachers.map((teacher) => ({
+                        label: `${teacher.userInfo?.firstName} ${teacher.userInfo?.lastName} (${teacher.login}) - ${teacher.teacherInfo?.department?.name || 'No Dept'}`,
+                        value: teacher.id,
+                      }))}
+                      suffixIcon={<UserOutlined />}
+                    />
+                  </Form.Item>
 
                     <Form.Item
                       name="academicPeriodId"
@@ -203,7 +232,6 @@ const CourseFormModal = ({
               },
             ]}
           />
-        )}
       </Form>
     </Modal>
   );
