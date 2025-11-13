@@ -2,69 +2,88 @@ import { useState, useEffect } from 'react';
 import {
   Card,
   Table,
-  Button,
+  Statistic,
+  Row,
+  Col,
   Tag,
-  Space,
-  Tooltip,
-  Empty,
-  Input,
-  Select,
+  Spin,
+  Alert,
 } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  SearchOutlined,
+  BookOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../components/layout/MainLayout';
+import academicPeriodsService from '../services/academic-periods.service';
+import courseTeachersService from '../services/course-teachers.service';
+import teachingActivitiesService from '../services/teaching-activities.service';
+import type { AcademicPeriod, CourseTeacher } from '../types';
 import './TeachingActivitiesPage.scss';
 
-interface Activity {
-  id: number;
+interface AssignedCourse {
+  key: number;
   courseName: string;
   groups: string[];
-  lectureHours: number;
-  practiceHours: number;
-  labHours: number;
-  seminarHours: number;
-  advisingHours: number;
+  department: string;
   totalHours: number;
   status: 'draft' | 'submitted' | 'validated' | 'rejected';
-  submittedAt?: string;
-  validatedAt?: string;
 }
 
 const TeachingActivitiesPage = () => {
-  const [loading] = useState(false);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
-  const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activePeriod, setActivePeriod] = useState<AcademicPeriod | null>(null);
+  const [stats, setStats] = useState({
+    mandatoryHours: 0,
+    submittedHours: 0,
+    validatedHours: 0,
+    otherHours: 0,
+  });
+  const [assignments, setAssignments] = useState<AssignedCourse[]>([]);
 
   useEffect(() => {
-    // TODO: Fetch activities from API
-    // For now, using empty array
-    setActivities([]);
-    setFilteredActivities([]);
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    let filtered = activities;
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    if (searchText) {
-      filtered = filtered.filter((activity) =>
-        activity.courseName.toLowerCase().includes(searchText.toLowerCase())
-      );
+      // Fetch active academic period
+      const period = await academicPeriodsService.getActive();
+      setActivePeriod(period);
+
+      // Fetch teaching statistics
+      const statistics = await teachingActivitiesService.getStatistics(period.id);
+      setStats({
+        mandatoryHours: statistics.mandatoryHours,
+        submittedHours: statistics.submittedHours,
+        validatedHours: statistics.validatedHours,
+        otherHours: statistics.submittedHours - statistics.mandatoryHours,
+      });
+
+      // Fetch course assignments
+      const courseAssignments = await courseTeachersService.getMyAssignments();
+      const formattedAssignments: AssignedCourse[] = courseAssignments.map((assignment: CourseTeacher) => ({
+        key: assignment.id,
+        courseName: assignment.course?.name || 'Unknown Course',
+        groups: assignment.groups || [],
+        department: assignment.course?.department?.name || 'N/A',
+        totalHours: assignment.teachingActivities?.[0]?.totalHours || 0,
+        status: (assignment.teachingActivities?.[0]?.status as AssignedCourse['status']) || 'draft',
+      }));
+      setAssignments(formattedAssignments);
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setError(err.message || 'Failed to load teaching activities data');
+    } finally {
+      setLoading(false);
     }
-
-    if (statusFilter) {
-      filtered = filtered.filter((activity) => activity.status === statusFilter);
-    }
-
-    setFilteredActivities(filtered);
-  }, [searchText, statusFilter, activities]);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,9 +100,9 @@ const TeachingActivitiesPage = () => {
     }
   };
 
-  const columns: ColumnsType<Activity> = [
+  const columns: ColumnsType<AssignedCourse> = [
     {
-      title: 'Course',
+      title: 'Course Name',
       dataIndex: 'courseName',
       key: 'courseName',
       sorter: (a, b) => a.courseName.localeCompare(b.courseName),
@@ -94,43 +113,28 @@ const TeachingActivitiesPage = () => {
       key: 'groups',
       render: (groups: string[]) => (
         <>
-          {groups.map((group) => (
-            <Tag key={group} color="blue">
-              {group}
-            </Tag>
-          ))}
+          {groups && groups.length > 0 ? (
+            groups.map((group) => (
+              <Tag key={group} color="blue">
+                {group}
+              </Tag>
+            ))
+          ) : (
+            <Tag>No groups</Tag>
+          )}
         </>
       ),
     },
     {
-      title: 'Lecture',
-      dataIndex: 'lectureHours',
-      key: 'lectureHours',
-      width: 90,
-      align: 'center',
-      render: (hours) => `${hours}h`,
+      title: 'Department',
+      dataIndex: 'department',
+      key: 'department',
     },
     {
-      title: 'Practice',
-      dataIndex: 'practiceHours',
-      key: 'practiceHours',
-      width: 90,
-      align: 'center',
-      render: (hours) => `${hours}h`,
-    },
-    {
-      title: 'Lab',
-      dataIndex: 'labHours',
-      key: 'labHours',
-      width: 90,
-      align: 'center',
-      render: (hours) => `${hours}h`,
-    },
-    {
-      title: 'Total',
+      title: 'Total Hours',
       dataIndex: 'totalHours',
       key: 'totalHours',
-      width: 100,
+      width: 120,
       align: 'center',
       sorter: (a, b) => a.totalHours - b.totalHours,
       render: (hours) => <strong>{hours}h</strong>,
@@ -145,148 +149,133 @@ const TeachingActivitiesPage = () => {
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </Tag>
       ),
-      filters: [
-        { text: 'Draft', value: 'draft' },
-        { text: 'Submitted', value: 'submitted' },
-        { text: 'Validated', value: 'validated' },
-        { text: 'Rejected', value: 'rejected' },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 150,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="View Details">
-            <Button
-              type="text"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => handleView(record.id)}
-            />
-          </Tooltip>
-          {record.status === 'draft' && (
-            <>
-              <Tooltip title="Edit">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<EditOutlined />}
-                  onClick={() => handleEdit(record.id)}
-                />
-              </Tooltip>
-              <Tooltip title="Delete">
-                <Button
-                  type="text"
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={() => handleDelete(record.id)}
-                />
-              </Tooltip>
-            </>
-          )}
-        </Space>
-      ),
     },
   ];
 
-  const handleView = (id: number) => {
-    console.log('View activity:', id);
-    // TODO: Implement view modal
-  };
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="teaching-activities-page" style={{ textAlign: 'center', padding: '100px 0' }}>
+          <Spin size="large" tip="Loading teaching activities..." />
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const handleEdit = (id: number) => {
-    console.log('Edit activity:', id);
-    // TODO: Implement edit modal
-  };
-
-  const handleDelete = (id: number) => {
-    console.log('Delete activity:', id);
-    // TODO: Implement delete confirmation
-  };
-
-  const handleAddNew = () => {
-    console.log('Add new activity');
-    // TODO: Implement add modal
-  };
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="teaching-activities-page">
+          <Alert
+            message="Error Loading Data"
+            description={error}
+            type="error"
+            showIcon
+          />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
       <div className="teaching-activities-page">
         <div className="page-header">
-          <div>
-            <h1 className="page-title">Teaching Activities</h1>
-            <p className="page-subtitle">
-              Manage and track your teaching workload
-            </p>
-          </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={handleAddNew}
-            className="add-btn"
-          >
-            Add Activity
-          </Button>
+          <h1 className="page-title">Teaching Activities</h1>
+          <p className="page-subtitle">Track your teaching workload and assignments</p>
         </div>
 
-        <Card className="activities-card">
-          <div className="filters-section">
-            <Input
-              placeholder="Search by course name..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="search-input"
-              allowClear
-            />
-            <Select
-              placeholder="Filter by status"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              className="status-filter"
-              allowClear
-              options={[
-                { label: 'Draft', value: 'draft' },
-                { label: 'Submitted', value: 'submitted' },
-                { label: 'Validated', value: 'validated' },
-                { label: 'Rejected', value: 'rejected' },
-              ]}
-            />
-          </div>
+        {/* Academic Period Info */}
+        {activePeriod && (
+          <Card className="period-card" style={{ marginBottom: 24 }}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <div className="period-info">
+                  <span className="period-label">Academic Year:</span>
+                  <span className="period-value">{activePeriod.academicYear}</span>
+                </div>
+              </Col>
+              <Col span={8}>
+                <div className="period-info">
+                  <span className="period-label">Semester:</span>
+                  <span className="period-value">
+                    {activePeriod.semester === 1 ? 'Fall' : 'Spring'} (Semester {activePeriod.semester})
+                  </span>
+                </div>
+              </Col>
+              <Col span={8}>
+                <div className="period-info">
+                  <span className="period-label">Teaching Week:</span>
+                  <span className="period-value">Week {activePeriod.teachingWeek}</span>
+                </div>
+              </Col>
+            </Row>
+          </Card>
+        )}
 
+        {/* Hours Statistics */}
+        <Row gutter={16} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Mandatory Hours"
+                value={stats.mandatoryHours}
+                suffix="hrs"
+                prefix={<BookOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Validated Hours"
+                value={stats.validatedHours}
+                suffix="hrs"
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Other Hours"
+                value={stats.otherHours}
+                suffix="hrs"
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ color: '#faad14' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic
+                title="Total Submitted"
+                value={stats.submittedHours}
+                suffix="hrs"
+                prefix={<FileTextOutlined />}
+                valueStyle={{ color: '#722ed1' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Assigned Courses Table */}
+        <Card
+          title="Assigned Courses"
+          className="courses-card"
+        >
           <Table
             columns={columns}
-            dataSource={filteredActivities}
-            loading={loading}
-            rowKey="id"
+            dataSource={assignments}
+            rowKey="key"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} activities`,
+              showTotal: (total) => `Total ${total} courses`,
             }}
-            scroll={{ x: 1000 }}
-            locale={{
-              emptyText: (
-                <Empty
-                  description="No teaching activities yet"
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                >
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAddNew}
-                  >
-                    Add Your First Activity
-                  </Button>
-                </Empty>
-              ),
-            }}
+            scroll={{ x: 800 }}
           />
         </Card>
       </div>

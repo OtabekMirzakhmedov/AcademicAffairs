@@ -94,6 +94,7 @@ export interface CourseTeacher {
   academicPeriodId: number;
   academicPeriod?: AcademicPeriod;
   groups?: string[];
+  teachingActivities?: TeachingActivity[];
   createdAt: string;
   updatedAt: string;
 }
