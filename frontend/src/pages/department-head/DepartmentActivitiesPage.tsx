@@ -25,6 +25,7 @@ import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
 import CourseFormModal from '../../components/features/department-head/CourseFormModal';
 import TeacherFormModal from '../../components/features/department-head/TeacherFormModal';
+import TeacherEditModal from '../../components/features/department-head/TeacherEditModal';
 import TeacherAssignmentModal from '../../components/features/department-head/TeacherAssignmentModal';
 import coursesService from '../../services/courses.service';
 import courseTeachersService from '../../services/course-teachers.service';
@@ -54,6 +55,8 @@ const DepartmentActivitiesPage = () => {
   const [filteredTeachers, setFilteredTeachers] = useState<User[]>([]);
   const [teacherSearchText, setTeacherSearchText] = useState('');
   const [teacherModalOpen, setTeacherModalOpen] = useState(false);
+  const [teacherEditModalOpen, setTeacherEditModalOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
   const [teachersLoading, setTeachersLoading] = useState(false);
 
   // Assignments state
@@ -225,6 +228,15 @@ const DepartmentActivitiesPage = () => {
     fetchTeachers();
   };
 
+  const handleEditTeacher = (teacher: User) => {
+    setEditingTeacher(teacher);
+    setTeacherEditModalOpen(true);
+  };
+
+  const handleTeacherEditModalSuccess = () => {
+    fetchTeachers();
+  };
+
   const handleAddAssignment = () => {
     setEditingAssignment(null);
     setAssignmentModalOpen(true);
@@ -305,7 +317,6 @@ const DepartmentActivitiesPage = () => {
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDeleteCourse(record.id)}
-              disabled={(record._count?.assignedTeachers || 0) > 0}
             />
           </Tooltip>
         </Space>
@@ -359,6 +370,22 @@ const DepartmentActivitiesPage = () => {
         <Tag color={record.isActive ? 'green' : 'red'}>
           {record.isActive ? 'Active' : 'Inactive'}
         </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      fixed: 'right',
+      render: (_, record) => (
+        <Tooltip title="Edit Teacher Info">
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEditTeacher(record)}
+          />
+        </Tooltip>
       ),
     },
   ];
@@ -626,6 +653,13 @@ const DepartmentActivitiesPage = () => {
           visible={teacherModalOpen}
           onClose={() => setTeacherModalOpen(false)}
           onSuccess={handleTeacherModalSuccess}
+        />
+
+        <TeacherEditModal
+          visible={teacherEditModalOpen}
+          onClose={() => setTeacherEditModalOpen(false)}
+          onSuccess={handleTeacherEditModalSuccess}
+          teacher={editingTeacher}
         />
 
         <TeacherAssignmentModal

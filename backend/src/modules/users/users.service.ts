@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateTeacherInfoDto } from './dto/update-teacher-info.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -249,6 +250,66 @@ export class UsersService {
     }
 
     const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async updateTeacherInfo(
+    teacherId: number,
+    updateTeacherInfoDto: UpdateTeacherInfoDto,
+    departmentHeadId: number,
+  ) {
+    // Verify department head and get their department
+    const department = await this.prisma.department.findFirst({
+      where: { headId: departmentHeadId },
+    });
+
+    if (!department) {
+      throw new ForbiddenException('You are not a department head');
+    }
+
+    // Verify teacher exists and belongs to the department
+    const teacher = await this.prisma.user.findUnique({
+      where: { id: teacherId },
+      include: {
+        role: true,
+        teacherInfo: true,
+      },
+    });
+
+    if (!teacher || teacher.role.name !== 'teacher') {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    if (teacher.teacherInfo?.departmentId !== department.id) {
+      throw new ForbiddenException(
+        'You can only update teachers in your department',
+      );
+    }
+
+    // Update teacher info
+    const updatedTeacherInfo = await this.prisma.teacherInfo.update({
+      where: { userId: teacherId },
+      data: {
+        employmentType: updateTeacherInfoDto.employmentType,
+        mandatoryHoursPerPeriod: updateTeacherInfoDto.mandatoryHoursPerPeriod,
+      },
+    });
+
+    // Return full user with updated teacher info
+    const updatedUser = await this.prisma.user.findUnique({
+      where: { id: teacherId },
+      include: {
+        role: true,
+        userInfo: true,
+        teacherInfo: {
+          include: {
+            department: true,
+          },
+        },
+      },
+    });
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 
