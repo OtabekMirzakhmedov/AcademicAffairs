@@ -36,7 +36,7 @@ export class CoursesService {
         );
       }
 
-      // Verify teacher exists and belongs to the department
+      // Verify teacher exists
       const teacher = await this.prisma.user.findUnique({
         where: { id: createCourseDto.teacherId },
         include: {
@@ -47,12 +47,6 @@ export class CoursesService {
 
       if (!teacher || teacher.role.name !== 'teacher') {
         throw new NotFoundException('Teacher not found');
-      }
-
-      if (teacher.teacherInfo?.departmentId !== createCourseDto.departmentId) {
-        throw new BadRequestException(
-          'Teacher must belong to the same department as the course',
-        );
       }
 
       // Verify academic period exists
@@ -295,16 +289,7 @@ export class CoursesService {
       );
     }
 
-    // Prevent deletion if there are teacher assignments or activities
-    if (
-      course._count.assignedTeachers > 0 ||
-      course._count.teachingActivities > 0
-    ) {
-      throw new ForbiddenException(
-        'Cannot delete course with existing teacher assignments or activities',
-      );
-    }
-
+    // Delete course (cascade will handle related records)
     return await this.prisma.course.delete({
       where: { id },
     });

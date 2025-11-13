@@ -29,7 +29,7 @@ export class CourseTeachersService {
       );
     }
 
-    // Verify teacher exists and belongs to the department
+    // Verify teacher exists
     const teacher = await this.prisma.user.findUnique({
       where: { id: createDto.teacherId },
       include: {
@@ -40,12 +40,6 @@ export class CourseTeachersService {
 
     if (!teacher || teacher.role.name !== 'teacher') {
       throw new NotFoundException('Teacher not found');
-    }
-
-    if (teacher.teacherInfo?.departmentId !== course.departmentId) {
-      throw new BadRequestException(
-        'Teacher must belong to the same department as the course',
-      );
     }
 
     // Verify academic period exists

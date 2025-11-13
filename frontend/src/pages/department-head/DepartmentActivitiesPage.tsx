@@ -42,6 +42,7 @@ const DepartmentActivitiesPage = () => {
 
   // Department state
   const [department, setDepartment] = useState<Department | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   // Courses state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -136,6 +137,7 @@ const DepartmentActivitiesPage = () => {
   const fetchDepartment = async () => {
     try {
       const allDepartments = await departmentsService.getAll();
+      setDepartments(allDepartments);
       const myDepartment = allDepartments.find((dept) => dept.headId === user?.id);
       if (myDepartment) {
         setDepartment(myDepartment);
@@ -164,10 +166,13 @@ const DepartmentActivitiesPage = () => {
     try {
       setTeachersLoading(true);
       const allUsers = await usersService.getAll();
+      // For the teachers table, show only department teachers
       const departmentTeachers = allUsers.filter(
         (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === department?.id
       );
-      setTeachers(departmentTeachers);
+      // For course assignment, get ALL teachers
+      const allTeachers = allUsers.filter((u) => u.role.name === 'teacher');
+      setTeachers(allTeachers);
       setFilteredTeachers(departmentTeachers);
     } catch (error) {
       message.error('Failed to fetch teachers');
@@ -647,6 +652,7 @@ const DepartmentActivitiesPage = () => {
           teachers={teachers}
           teachersLoading={teachersLoading}
           academicPeriods={academicPeriods}
+          departments={departments}
         />
 
         <TeacherFormModal
