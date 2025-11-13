@@ -20,6 +20,9 @@ import {
   SearchOutlined,
   TeamOutlined,
   LinkOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
@@ -31,7 +34,8 @@ import coursesService from '../../services/courses.service';
 import courseTeachersService from '../../services/course-teachers.service';
 import usersService from '../../services/users.service';
 import departmentsService from '../../services/departments.service';
-import type { Course, User, CourseTeacher, AcademicPeriod, Department } from '../../types';
+import teachingActivitiesService from '../../services/teaching-activities.service';
+import type { Course, User, CourseTeacher, AcademicPeriod, Department, TeachingActivity } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import './DepartmentActivitiesPage.scss';
 
@@ -67,6 +71,11 @@ const DepartmentActivitiesPage = () => {
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<CourseTeacher | null>(null);
 
+  // Submissions state
+  const [submissions, setSubmissions] = useState<TeachingActivity[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<TeachingActivity[]>([]);
+  const [submissionSearchText, setSubmissionSearchText] = useState('');
+
   // Academic periods (for now, we'll need to fetch this later)
   const [academicPeriods] = useState<AcademicPeriod[]>([
     {
@@ -91,6 +100,7 @@ const DepartmentActivitiesPage = () => {
       fetchCourses();
       fetchTeachers();
       fetchAssignments();
+      fetchSubmissions();
     }
   }, [department]);
 
@@ -133,6 +143,23 @@ const DepartmentActivitiesPage = () => {
     }
     setFilteredAssignments(filtered);
   }, [assignmentSearchText, assignments]);
+
+  useEffect(() => {
+    let filtered = submissions;
+    if (submissionSearchText) {
+      filtered = filtered.filter(
+        (submission) =>
+          submission.course?.name.toLowerCase().includes(submissionSearchText.toLowerCase()) ||
+          submission.teacher?.userInfo?.firstName
+            .toLowerCase()
+            .includes(submissionSearchText.toLowerCase()) ||
+          submission.teacher?.userInfo?.lastName
+            .toLowerCase()
+            .includes(submissionSearchText.toLowerCase())
+      );
+    }
+    setFilteredSubmissions(filtered);
+  }, [submissionSearchText, submissions]);
 
   const fetchDepartment = async () => {
     try {
@@ -188,6 +215,16 @@ const DepartmentActivitiesPage = () => {
       setFilteredAssignments(data);
     } catch (error) {
       message.error('Failed to fetch assignments');
+    }
+  };
+
+  const fetchSubmissions = async () => {
+    try {
+      const data = await teachingActivitiesService.getAllSubmitted();
+      setSubmissions(data);
+      setFilteredSubmissions(data);
+    } catch (error) {
+      message.error('Failed to fetch submissions');
     }
   };
 
@@ -276,6 +313,46 @@ const DepartmentActivitiesPage = () => {
   const handleAssignmentModalSuccess = () => {
     fetchAssignments();
     fetchCourses(); // Refresh courses to update assignment counts
+  };
+
+  const handleValidateSubmission = (submission: TeachingActivity) => {
+    Modal.confirm({
+      title: 'Validate Teaching Hours',
+      content: `Are you sure you want to validate the teaching hours submitted by ${submission.teacher?.userInfo?.firstName} ${submission.teacher?.userInfo?.lastName} for "${submission.course?.name}"?`,
+      okText: 'Validate',
+      okType: 'primary',
+      onOk: async () => {
+        try {
+          await teachingActivitiesService.validate(submission.id);
+          message.success('Teaching hours validated successfully');
+          fetchSubmissions();
+        } catch (error: any) {
+          message.error(
+            error?.response?.data?.error?.message || 'Failed to validate submission'
+          );
+        }
+      },
+    });
+  };
+
+  const handleRejectSubmission = (submission: TeachingActivity) => {
+    Modal.confirm({
+      title: 'Reject Teaching Hours',
+      content: `Are you sure you want to reject the teaching hours submitted by ${submission.teacher?.userInfo?.firstName} ${submission.teacher?.userInfo?.lastName} for "${submission.course?.name}"? The teacher will be able to update and resubmit.`,
+      okText: 'Reject',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await teachingActivitiesService.reject(submission.id);
+          message.success('Teaching hours rejected');
+          fetchSubmissions();
+        } catch (error: any) {
+          message.error(
+            error?.response?.data?.error?.message || 'Failed to reject submission'
+          );
+        }
+      },
+    });
   };
 
   const coursesColumns: ColumnsType<Course> = [
@@ -482,6 +559,149 @@ const DepartmentActivitiesPage = () => {
     },
   ];
 
+  const submissionsColumns: ColumnsType<TeachingActivity> = [
+    {
+      title: 'Teacher',
+      key: 'teacher',
+      render: (_, record) => (
+        <span>
+          <UserOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+          {`${record.teacher?.userInfo?.firstName} ${record.teacher?.userInfo?.lastName}`}
+        </span>
+      ),
+      sorter: (a, b) =>
+        `${a.teacher?.userInfo?.firstName} ${a.teacher?.userInfo?.lastName}`.localeCompare(
+          `${b.teacher?.userInfo?.firstName} ${b.teacher?.userInfo?.lastName}`
+        ),
+    },
+    {
+      title: 'Course',
+      key: 'course',
+      render: (_, record) => (
+        <span>
+          <BookOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          {record.course?.name}
+        </span>
+      ),
+      sorter: (a, b) => (a.course?.name || '').localeCompare(b.course?.name || ''),
+    },
+    {
+      title: 'Groups',
+      key: 'groups',
+      render: (_, record) => {
+        if (!record.groups || record.groups.length === 0) {
+          return <Tag>No Groups</Tag>;
+        }
+        return (
+          <Space size="small">
+            {record.groups.map((group: string, index: number) => (
+              <Tag key={index} color="blue">
+                <TeamOutlined /> {group}
+              </Tag>
+            ))}
+          </Space>
+        );
+      },
+    },
+    {
+      title: 'Lecture',
+      dataIndex: 'lectureHours',
+      key: 'lectureHours',
+      width: 90,
+      align: 'center',
+      render: (hours) => `${hours || 0}h`,
+    },
+    {
+      title: 'Practice',
+      dataIndex: 'practiceHours',
+      key: 'practiceHours',
+      width: 90,
+      align: 'center',
+      render: (hours) => `${hours || 0}h`,
+    },
+    {
+      title: 'Lab',
+      dataIndex: 'labHours',
+      key: 'labHours',
+      width: 90,
+      align: 'center',
+      render: (hours) => `${hours || 0}h`,
+    },
+    {
+      title: 'Total',
+      dataIndex: 'totalHours',
+      key: 'totalHours',
+      width: 90,
+      align: 'center',
+      sorter: (a, b) => (a.totalHours || 0) - (b.totalHours || 0),
+      render: (hours) => <strong>{hours || 0}h</strong>,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 110,
+      render: (status) => {
+        const colors: Record<string, string> = {
+          submitted: 'processing',
+          validated: 'success',
+          rejected: 'error',
+        };
+        return (
+          <Tag color={colors[status] || 'default'}>
+            {status?.charAt(0).toUpperCase() + status?.slice(1)}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 180,
+      fixed: 'right',
+      render: (_, record) => (
+        <Space size="small">
+          {record.status === 'submitted' && (
+            <>
+              <Tooltip title="Validate submission">
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => handleValidateSubmission(record)}
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                >
+                  Validate
+                </Button>
+              </Tooltip>
+              <Tooltip title="Reject submission">
+                <Button
+                  danger
+                  type="primary"
+                  size="small"
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => handleRejectSubmission(record)}
+                >
+                  Reject
+                </Button>
+              </Tooltip>
+            </>
+          )}
+          {record.status === 'validated' && (
+            <Tag color="success" icon={<CheckCircleOutlined />}>
+              Validated
+            </Tag>
+          )}
+          {record.status === 'rejected' && (
+            <Tag color="error" icon={<CloseCircleOutlined />}>
+              Rejected
+            </Tag>
+          )}
+        </Space>
+      ),
+    },
+  ];
+
   const tabItems = [
     {
       key: 'courses',
@@ -604,6 +824,41 @@ const DepartmentActivitiesPage = () => {
               pageSize: 10,
               showSizeChanger: true,
               showTotal: (total) => `Total ${total} assignments`,
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'submissions',
+      label: (
+        <span>
+          <FileTextOutlined />
+          Hour Submissions ({submissions.length})
+        </span>
+      ),
+      children: (
+        <div className="tab-content">
+          <div className="filters-section">
+            <Input
+              placeholder="Search submissions..."
+              prefix={<SearchOutlined />}
+              value={submissionSearchText}
+              onChange={(e) => setSubmissionSearchText(e.target.value)}
+              className="search-input"
+              allowClear
+            />
+          </div>
+          <Table
+            columns={submissionsColumns}
+            dataSource={filteredSubmissions}
+            loading={loading}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} submissions`,
             }}
             scroll={{ x: 1200 }}
           />

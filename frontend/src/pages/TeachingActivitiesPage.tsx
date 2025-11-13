@@ -290,7 +290,7 @@ const TeachingActivitiesPage = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          {record.status === 'draft' && (
+          {(record.status === 'draft' || record.status === 'submitted') && (
             <Tooltip title={record.activityId ? 'Update Hours' : 'Add Hours'}>
               <Button
                 type={record.activityId ? 'default' : 'primary'}

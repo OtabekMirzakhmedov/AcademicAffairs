@@ -28,7 +28,7 @@ export class TeachingActivitiesService {
         courseTeacherId: dto.courseTeacherId,
         courseId: dto.courseId,
         academicPeriodId: dto.academicPeriodId,
-        groups: dto.groups,
+        groups: dto.groups || [],
         lectureHours: new Decimal(dto.lectureHours || 0),
         practiceHours: new Decimal(dto.practiceHours || 0),
         labHours: new Decimal(dto.labHours || 0),
@@ -132,8 +132,8 @@ export class TeachingActivitiesService {
   ) {
     const activity = await this.findOne(id, teacherId);
 
-    if (activity.status !== 'draft') {
-      throw new BadRequestException('Only draft activities can be edited');
+    if (activity.status === 'validated' || activity.status === 'rejected') {
+      throw new BadRequestException('Validated or rejected activities cannot be edited');
     }
 
     // Recalculate total hours if any hour fields are updated

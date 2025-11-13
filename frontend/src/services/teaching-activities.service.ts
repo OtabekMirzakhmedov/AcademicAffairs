@@ -60,6 +60,27 @@ class TeachingActivitiesService {
     );
     return response.data.data;
   }
+
+  async getAllSubmitted(): Promise<TeachingActivity[]> {
+    const response = await api.get<ApiResponse<TeachingActivity[]>>(
+      '/teaching-activities?status=submitted'
+    );
+    return response.data.data;
+  }
+
+  async validate(id: number): Promise<TeachingActivity> {
+    const response = await api.post<ApiResponse<TeachingActivity>>(
+      `/teaching-activities/${id}/validate`
+    );
+    return response.data.data;
+  }
+
+  async reject(id: number): Promise<TeachingActivity> {
+    const response = await api.post<ApiResponse<TeachingActivity>>(
+      `/teaching-activities/${id}/reject`
+    );
+    return response.data.data;
+  }
 }
 
 export default new TeachingActivitiesService();
