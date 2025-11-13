@@ -9,6 +9,8 @@ export interface TeachingStatistics {
 
 export interface CreateTeachingActivityRequest {
   courseTeacherId: number;
+  courseId: number;
+  academicPeriodId: number;
   groups: string[];
   lectureHours: number;
   practiceHours: number;
@@ -18,6 +20,9 @@ export interface CreateTeachingActivityRequest {
 }
 
 export interface UpdateTeachingActivityRequest {
+  courseTeacherId?: number;
+  courseId?: number;
+  academicPeriodId?: number;
   groups?: string[];
   lectureHours?: number;
   practiceHours?: number;
