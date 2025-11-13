@@ -15,6 +15,7 @@ import {
   Select,
   message,
   Tooltip,
+  Space,
 } from 'antd';
 import {
   BookOutlined,
@@ -23,6 +24,7 @@ import {
   FileTextOutlined,
   PlusOutlined,
   EditOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../components/layout/MainLayout';
@@ -186,6 +188,27 @@ const TeachingActivitiesPage = () => {
     }
   };
 
+  const handleSubmit = async (course: AssignedCourse) => {
+    if (!course.activityId) return;
+
+    Modal.confirm({
+      title: 'Submit Teaching Hours',
+      content: `Are you sure you want to submit teaching hours for "${course.courseName}"? You won't be able to edit them after submission.`,
+      okText: 'Submit',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await teachingActivitiesService.submit(course.activityId!);
+          message.success('Teaching hours submitted successfully for approval');
+          await fetchData();
+        } catch (error: any) {
+          console.error('Error submitting teaching hours:', error);
+          message.error(error.message || 'Failed to submit teaching hours');
+        }
+      },
+    });
+  };
+
   const columns: ColumnsType<AssignedCourse> = [
     {
       title: 'Course Name',
@@ -263,19 +286,36 @@ const TeachingActivitiesPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: 180,
       fixed: 'right',
       render: (_, record) => (
-        <Tooltip title={record.activityId ? 'Update Hours' : 'Add Hours'}>
-          <Button
-            type={record.activityId ? 'default' : 'primary'}
-            size="small"
-            icon={record.activityId ? <EditOutlined /> : <PlusOutlined />}
-            onClick={() => handleAddHours(record)}
-          >
-            {record.activityId ? 'Update' : 'Add'}
-          </Button>
-        </Tooltip>
+        <Space size="small">
+          {record.status === 'draft' && (
+            <Tooltip title={record.activityId ? 'Update Hours' : 'Add Hours'}>
+              <Button
+                type={record.activityId ? 'default' : 'primary'}
+                size="small"
+                icon={record.activityId ? <EditOutlined /> : <PlusOutlined />}
+                onClick={() => handleAddHours(record)}
+              >
+                {record.activityId ? 'Update' : 'Add'}
+              </Button>
+            </Tooltip>
+          )}
+          {record.status === 'draft' && record.activityId && (
+            <Tooltip title="Submit for approval">
+              <Button
+                type="primary"
+                size="small"
+                icon={<SendOutlined />}
+                onClick={() => handleSubmit(record)}
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+              >
+                Submit
+              </Button>
+            </Tooltip>
+          )}
+        </Space>
       ),
     },
   ];

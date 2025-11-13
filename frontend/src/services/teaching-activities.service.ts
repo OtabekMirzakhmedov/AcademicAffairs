@@ -53,6 +53,13 @@ class TeachingActivitiesService {
     );
     return response.data.data;
   }
+
+  async submit(id: number): Promise<TeachingActivity> {
+    const response = await api.post<ApiResponse<TeachingActivity>>(
+      `/teaching-activities/${id}/submit`
+    );
+    return response.data.data;
+  }
 }
 
 export default new TeachingActivitiesService();
