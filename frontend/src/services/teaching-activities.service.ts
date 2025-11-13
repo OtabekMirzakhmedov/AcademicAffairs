@@ -63,7 +63,7 @@ class TeachingActivitiesService {
 
   async getAllSubmitted(): Promise<TeachingActivity[]> {
     const response = await api.get<ApiResponse<TeachingActivity[]>>(
-      '/teaching-activities?status=submitted'
+      '/teaching-activities/submitted/all'
     );
     return response.data.data;
   }
