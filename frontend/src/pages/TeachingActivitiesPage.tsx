@@ -35,6 +35,7 @@ import './TeachingActivitiesPage.scss';
 interface AssignedCourse {
   key: number;
   courseTeacherId: number;
+  courseId: number;
   courseName: string;
   groups: string[];
   department: string;
@@ -91,6 +92,7 @@ const TeachingActivitiesPage = () => {
         return {
           key: assignment.id,
           courseTeacherId: assignment.id,
+          courseId: assignment.courseId,
           courseName: assignment.course?.name || 'Unknown Course',
           groups: assignment.groups || [],
           department: assignment.course?.department?.name || 'N/A',
@@ -150,7 +152,9 @@ const TeachingActivitiesPage = () => {
 
       const activityData = {
         courseTeacherId: editingCourse!.courseTeacherId,
-        groups: values.groups || editingCourse!.groups,
+        courseId: editingCourse!.courseId,
+        academicPeriodId: activePeriod!.id,
+        groups: values.groups || editingCourse!.groups || [],
         lectureHours: values.lectureHours || 0,
         practiceHours: values.practiceHours || 0,
         labHours: values.labHours || 0,
@@ -424,7 +428,6 @@ const TeachingActivitiesPage = () => {
             <Form.Item
               name="groups"
               label="Groups"
-              rules={[{ required: true, message: 'Please select at least one group' }]}
             >
               <Select
                 mode="tags"
