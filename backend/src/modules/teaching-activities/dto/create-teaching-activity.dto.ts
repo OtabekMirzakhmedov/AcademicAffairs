@@ -11,7 +11,8 @@ export class CreateTeachingActivityDto {
   academicPeriodId: number;
 
   @IsArray()
-  groups: string[];
+  @IsOptional()
+  groups?: string[];
 
   @IsNumber()
   @Min(0)
