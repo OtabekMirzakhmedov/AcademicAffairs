@@ -129,9 +129,13 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @Roles('admin', 'departmenthead')
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    const result = await this.usersService.remove(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
+    const result = await this.usersService.remove(id, user.id);
     return {
       success: true,
       data: result,

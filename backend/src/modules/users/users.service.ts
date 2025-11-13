@@ -335,8 +335,47 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, currentUserId: number) {
+    // Get the user to be deleted
+    const userToDelete = await this.findOne(id);
+
+    // Get current user to check permissions
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      include: {
+        role: true,
+      },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('Current user not found');
+    }
+
+    // If department head, verify they can only delete teachers from their department
+    if (currentUser.role.name === 'departmenthead') {
+      // Get department head's department
+      const department = await this.prisma.department.findFirst({
+        where: { headId: currentUserId },
+      });
+
+      if (!department) {
+        throw new ForbiddenException('You are not a department head');
+      }
+
+      // Check if user being deleted is a teacher
+      if (userToDelete.role.name !== 'teacher') {
+        throw new ForbiddenException(
+          'Department heads can only delete teachers',
+        );
+      }
+
+      // Check if teacher belongs to their department
+      if (userToDelete.teacherInfo?.departmentId !== department.id) {
+        throw new ForbiddenException(
+          'You can only delete teachers from your department',
+        );
+      }
+    }
 
     // Soft delete by deactivating
     await this.prisma.user.update({
