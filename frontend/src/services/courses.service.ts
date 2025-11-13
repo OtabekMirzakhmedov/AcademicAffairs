@@ -4,6 +4,9 @@ import type { ApiResponse, Course } from '../types';
 export interface CreateCourseRequest {
   name: string;
   departmentId: number;
+  teacherId?: number;
+  academicPeriodId?: number;
+  groups?: string[];
 }
 
 export interface UpdateCourseRequest {
