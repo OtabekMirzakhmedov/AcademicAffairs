@@ -200,8 +200,8 @@ export class TeachingActivitiesService {
   async submit(id: number, teacherId: number) {
     const activity = await this.findOne(id, teacherId);
 
-    if (activity.status !== 'draft') {
-      throw new BadRequestException('Only draft activities can be submitted');
+    if (activity.status === 'validated') {
+      throw new BadRequestException('Validated activities cannot be resubmitted');
     }
 
     return this.prisma.teachingActivity.update({
@@ -263,5 +263,83 @@ export class TeachingActivitiesService {
         ? Number(validatedActivities._sum.totalHours)
         : 0,
     };
+  }
+
+  async getAllSubmitted() {
+    return this.prisma.teachingActivity.findMany({
+      where: {
+        status: 'submitted',
+      },
+      include: {
+        course: true,
+        teacher: {
+          include: {
+            userInfo: true,
+          },
+        },
+        academicPeriod: true,
+      },
+      orderBy: {
+        submittedAt: 'desc',
+      },
+    });
+  }
+
+  async validate(id: number) {
+    const activity = await this.prisma.teachingActivity.findUnique({
+      where: { id },
+    });
+
+    if (!activity) {
+      throw new BadRequestException('Teaching activity not found');
+    }
+
+    if (activity.status !== 'submitted') {
+      throw new BadRequestException('Only submitted activities can be validated');
+    }
+
+    return this.prisma.teachingActivity.update({
+      where: { id },
+      data: {
+        status: 'validated',
+      },
+      include: {
+        course: true,
+        teacher: {
+          include: {
+            userInfo: true,
+          },
+        },
+      },
+    });
+  }
+
+  async reject(id: number) {
+    const activity = await this.prisma.teachingActivity.findUnique({
+      where: { id },
+    });
+
+    if (!activity) {
+      throw new BadRequestException('Teaching activity not found');
+    }
+
+    if (activity.status !== 'submitted') {
+      throw new BadRequestException('Only submitted activities can be rejected');
+    }
+
+    return this.prisma.teachingActivity.update({
+      where: { id },
+      data: {
+        status: 'rejected',
+      },
+      include: {
+        course: true,
+        teacher: {
+          include: {
+            userInfo: true,
+          },
+        },
+      },
+    });
   }
 }

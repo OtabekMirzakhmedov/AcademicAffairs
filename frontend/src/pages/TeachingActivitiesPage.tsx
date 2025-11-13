@@ -153,13 +153,13 @@ const TeachingActivitiesPage = () => {
       setSubmitting(true);
 
       const activityData = {
-        courseTeacherId: editingCourse!.courseTeacherId,
-        courseId: editingCourse!.courseId,
-        academicPeriodId: activePeriod!.id,
+        courseTeacherId: Number(editingCourse!.courseTeacherId),
+        courseId: Number(editingCourse!.courseId),
+        academicPeriodId: Number(activePeriod!.id),
         groups: values.groups || editingCourse!.groups || [],
-        lectureHours: values.lectureHours || 0,
-        practiceHours: values.practiceHours || 0,
-        labHours: values.labHours || 0,
+        lectureHours: Number(values.lectureHours) || 0,
+        practiceHours: Number(values.practiceHours) || 0,
+        labHours: Number(values.labHours) || 0,
         seminarHours: 0,
         advisingHours: 0,
       };
@@ -193,7 +193,7 @@ const TeachingActivitiesPage = () => {
 
     Modal.confirm({
       title: 'Submit Teaching Hours',
-      content: `Are you sure you want to submit teaching hours for "${course.courseName}"? You won't be able to edit them after submission.`,
+      content: `Are you sure you want to submit teaching hours for "${course.courseName}" for department head approval? You can still edit them before they are validated.`,
       okText: 'Submit',
       cancelText: 'Cancel',
       onOk: async () => {
@@ -290,7 +290,7 @@ const TeachingActivitiesPage = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          {(record.status === 'draft' || record.status === 'submitted') && (
+          {(record.status === 'draft' || record.status === 'submitted' || record.status === 'rejected') && (
             <Tooltip title={record.activityId ? 'Update Hours' : 'Add Hours'}>
               <Button
                 type={record.activityId ? 'default' : 'primary'}
@@ -302,8 +302,8 @@ const TeachingActivitiesPage = () => {
               </Button>
             </Tooltip>
           )}
-          {record.status === 'draft' && record.activityId && (
-            <Tooltip title="Submit for approval">
+          {(record.status === 'draft' || record.status === 'rejected') && record.activityId && (
+            <Tooltip title={record.status === 'rejected' ? 'Resubmit for approval' : 'Submit for approval'}>
               <Button
                 type="primary"
                 size="small"
@@ -311,7 +311,7 @@ const TeachingActivitiesPage = () => {
                 onClick={() => handleSubmit(record)}
                 style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
               >
-                Submit
+                {record.status === 'rejected' ? 'Resubmit' : 'Submit'}
               </Button>
             </Tooltip>
           )}

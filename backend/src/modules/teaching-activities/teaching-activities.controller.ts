@@ -127,4 +127,35 @@ export class TeachingActivitiesController {
       message: 'Teaching activity submitted successfully',
     };
   }
+
+  @Get('submitted/all')
+  async getAllSubmitted() {
+    const activities = await this.teachingActivitiesService.getAllSubmitted();
+    return {
+      success: true,
+      data: activities,
+    };
+  }
+
+  @Post(':id/validate')
+  @HttpCode(HttpStatus.OK)
+  async validate(@Param('id', ParseIntPipe) id: number) {
+    const activity = await this.teachingActivitiesService.validate(id);
+    return {
+      success: true,
+      data: activity,
+      message: 'Teaching activity validated successfully',
+    };
+  }
+
+  @Post(':id/reject')
+  @HttpCode(HttpStatus.OK)
+  async reject(@Param('id', ParseIntPipe) id: number) {
+    const activity = await this.teachingActivitiesService.reject(id);
+    return {
+      success: true,
+      data: activity,
+      message: 'Teaching activity rejected successfully',
+    };
+  }
 }
