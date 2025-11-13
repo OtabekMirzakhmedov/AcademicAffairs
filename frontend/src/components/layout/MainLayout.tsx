@@ -53,6 +53,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   const isAdmin = user?.role?.name === 'admin';
+  const isDeptHead = user?.role?.name === 'departmenthead';
 
   const menuItems: MenuProps['items'] = [
     {
@@ -88,6 +89,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       onClick: () => navigate('/other-activities'),
       disabled: true,
     },
+    ...(isDeptHead
+      ? [
+          { type: 'divider' as const },
+          {
+            key: '/department/activities',
+            icon: <BankOutlined />,
+            label: 'Department Management',
+            onClick: () => navigate('/department/activities'),
+          },
+        ]
+      : []),
     ...(isAdmin
       ? [
           { type: 'divider' as const },

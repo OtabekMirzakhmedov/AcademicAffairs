@@ -1,0 +1,76 @@
+.department-activities-page {
+  .page-header {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-subtitle {
+      color: #8c8c8c;
+      margin: 8px 0 0 0;
+      font-size: 14px;
+    }
+  }
+
+  .activities-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .tab-content {
+      .filters-section {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+        align-items: center;
+
+        .search-input {
+          flex: 1;
+          max-width: 400px;
+        }
+      }
+
+      .course-name {
+        font-weight: 500;
+        color: #1890ff;
+
+        .anticon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .department-activities-page {
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .activities-card {
+      .tab-content {
+        .filters-section {
+          flex-direction: column;
+          align-items: stretch;
+
+          .search-input {
+            max-width: 100%;
+          }
+        }
+      }
+    }
+  }
+}
