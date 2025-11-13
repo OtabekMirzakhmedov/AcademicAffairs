@@ -13,6 +13,13 @@ export interface UpdateCourseTeacherRequest {
 }
 
 class CourseTeachersService {
+  async getMyAssignments(): Promise<CourseTeacher[]> {
+    const response = await api.get<ApiResponse<CourseTeacher[]>>(
+      '/course-teachers/my-assignments'
+    );
+    return response.data.data;
+  }
+
   async getAll(courseId?: number): Promise<CourseTeacher[]> {
     const params = courseId ? { courseId } : undefined;
     const response = await api.get<ApiResponse<CourseTeacher[]>>(

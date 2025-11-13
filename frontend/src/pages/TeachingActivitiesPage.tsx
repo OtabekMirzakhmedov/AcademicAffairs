@@ -8,12 +8,21 @@ import {
   Tag,
   Spin,
   Alert,
+  Button,
+  Modal,
+  Form,
+  InputNumber,
+  Select,
+  message,
+  Tooltip,
 } from 'antd';
 import {
   BookOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
+  PlusOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../components/layout/MainLayout';
@@ -25,14 +34,20 @@ import './TeachingActivitiesPage.scss';
 
 interface AssignedCourse {
   key: number;
+  courseTeacherId: number;
   courseName: string;
   groups: string[];
   department: string;
+  lectureHours: number;
+  practiceHours: number;
+  labHours: number;
   totalHours: number;
   status: 'draft' | 'submitted' | 'validated' | 'rejected';
+  activityId?: number;
 }
 
 const TeachingActivitiesPage = () => {
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePeriod, setActivePeriod] = useState<AcademicPeriod | null>(null);
@@ -43,6 +58,9 @@ const TeachingActivitiesPage = () => {
     otherHours: 0,
   });
   const [assignments, setAssignments] = useState<AssignedCourse[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<AssignedCourse | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -68,14 +86,22 @@ const TeachingActivitiesPage = () => {
 
       // Fetch course assignments
       const courseAssignments = await courseTeachersService.getMyAssignments();
-      const formattedAssignments: AssignedCourse[] = courseAssignments.map((assignment: CourseTeacher) => ({
-        key: assignment.id,
-        courseName: assignment.course?.name || 'Unknown Course',
-        groups: assignment.groups || [],
-        department: assignment.course?.department?.name || 'N/A',
-        totalHours: assignment.teachingActivities?.[0]?.totalHours || 0,
-        status: (assignment.teachingActivities?.[0]?.status as AssignedCourse['status']) || 'draft',
-      }));
+      const formattedAssignments: AssignedCourse[] = courseAssignments.map((assignment: CourseTeacher) => {
+        const activity = assignment.teachingActivities?.[0];
+        return {
+          key: assignment.id,
+          courseTeacherId: assignment.id,
+          courseName: assignment.course?.name || 'Unknown Course',
+          groups: assignment.groups || [],
+          department: assignment.course?.department?.name || 'N/A',
+          lectureHours: activity?.lectureHours || 0,
+          practiceHours: activity?.practiceHours || 0,
+          labHours: activity?.labHours || 0,
+          totalHours: activity?.totalHours || 0,
+          status: (activity?.status as AssignedCourse['status']) || 'draft',
+          activityId: activity?.id,
+        };
+      });
       setAssignments(formattedAssignments);
     } catch (err: any) {
       console.error('Error fetching data:', err);
@@ -97,6 +123,62 @@ const TeachingActivitiesPage = () => {
         return 'error';
       default:
         return 'default';
+    }
+  };
+
+  const handleAddHours = (course: AssignedCourse) => {
+    setEditingCourse(course);
+    form.setFieldsValue({
+      lectureHours: course.lectureHours,
+      practiceHours: course.practiceHours,
+      labHours: course.labHours,
+      groups: course.groups,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleModalCancel = () => {
+    setIsModalOpen(false);
+    setEditingCourse(null);
+    form.resetFields();
+  };
+
+  const handleModalSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setSubmitting(true);
+
+      const activityData = {
+        courseTeacherId: editingCourse!.courseTeacherId,
+        groups: values.groups || editingCourse!.groups,
+        lectureHours: values.lectureHours || 0,
+        practiceHours: values.practiceHours || 0,
+        labHours: values.labHours || 0,
+        seminarHours: 0,
+        advisingHours: 0,
+      };
+
+      if (editingCourse!.activityId) {
+        // Update existing activity
+        await teachingActivitiesService.update(editingCourse!.activityId, activityData);
+        message.success('Teaching hours updated successfully');
+      } else {
+        // Create new activity
+        await teachingActivitiesService.create(activityData);
+        message.success('Teaching hours added successfully');
+      }
+
+      setIsModalOpen(false);
+      setEditingCourse(null);
+      form.resetFields();
+
+      // Refresh data
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error saving teaching hours:', error);
+      message.error(error.message || 'Failed to save teaching hours');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -131,10 +213,34 @@ const TeachingActivitiesPage = () => {
       key: 'department',
     },
     {
-      title: 'Total Hours',
+      title: 'Lecture',
+      dataIndex: 'lectureHours',
+      key: 'lectureHours',
+      width: 90,
+      align: 'center',
+      render: (hours) => `${hours}h`,
+    },
+    {
+      title: 'Practice',
+      dataIndex: 'practiceHours',
+      key: 'practiceHours',
+      width: 90,
+      align: 'center',
+      render: (hours) => `${hours}h`,
+    },
+    {
+      title: 'Lab',
+      dataIndex: 'labHours',
+      key: 'labHours',
+      width: 90,
+      align: 'center',
+      render: (hours) => `${hours}h`,
+    },
+    {
+      title: 'Total',
       dataIndex: 'totalHours',
       key: 'totalHours',
-      width: 120,
+      width: 90,
       align: 'center',
       sorter: (a, b) => a.totalHours - b.totalHours,
       render: (hours) => <strong>{hours}h</strong>,
@@ -148,6 +254,24 @@ const TeachingActivitiesPage = () => {
         <Tag color={getStatusColor(status)}>
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      fixed: 'right',
+      render: (_, record) => (
+        <Tooltip title={record.activityId ? 'Update Hours' : 'Add Hours'}>
+          <Button
+            type={record.activityId ? 'default' : 'primary'}
+            size="small"
+            icon={record.activityId ? <EditOutlined /> : <PlusOutlined />}
+            onClick={() => handleAddHours(record)}
+          >
+            {record.activityId ? 'Update' : 'Add'}
+          </Button>
+        </Tooltip>
       ),
     },
   ];
@@ -275,9 +399,83 @@ const TeachingActivitiesPage = () => {
               showSizeChanger: true,
               showTotal: (total) => `Total ${total} courses`,
             }}
-            scroll={{ x: 800 }}
+            scroll={{ x: 1200 }}
           />
         </Card>
+
+        {/* Add/Update Hours Modal */}
+        <Modal
+          title={editingCourse?.activityId ? 'Update Teaching Hours' : 'Add Teaching Hours'}
+          open={isModalOpen}
+          onOk={handleModalSubmit}
+          onCancel={handleModalCancel}
+          confirmLoading={submitting}
+          width={600}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            style={{ marginTop: 24 }}
+          >
+            <div style={{ marginBottom: 16, padding: 12, background: '#f5f5f5', borderRadius: 4 }}>
+              <strong>Course:</strong> {editingCourse?.courseName}
+            </div>
+
+            <Form.Item
+              name="groups"
+              label="Groups"
+              rules={[{ required: true, message: 'Please select at least one group' }]}
+            >
+              <Select
+                mode="tags"
+                placeholder="Enter group names (e.g., 101, 102)"
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  name="lectureHours"
+                  label="Lecture Hours"
+                  rules={[{ required: true, message: 'Required' }]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: '100%' }}
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  name="practiceHours"
+                  label="Practice Hours"
+                  rules={[{ required: true, message: 'Required' }]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: '100%' }}
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  name="labHours"
+                  label="Lab Hours"
+                  rules={[{ required: true, message: 'Required' }]}
+                >
+                  <InputNumber
+                    min={0}
+                    style={{ width: '100%' }}
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </Modal>
       </div>
     </MainLayout>
   );
