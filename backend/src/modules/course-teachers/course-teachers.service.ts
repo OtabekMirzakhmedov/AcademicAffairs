@@ -323,4 +323,36 @@ export class CourseTeachersService {
       where: { id },
     });
   }
+
+  async getTeacherAssignments(teacherId: number) {
+    const activePeriod = await this.prisma.academicPeriod.findFirst({
+      where: { isActive: true },
+    });
+
+    if (!activePeriod) {
+      return [];
+    }
+
+    return await this.prisma.courseTeacher.findMany({
+      where: {
+        teacherId,
+        academicPeriodId: activePeriod.id,
+      },
+      include: {
+        course: {
+          include: {
+            department: true,
+          },
+        },
+        academicPeriod: true,
+        teachingActivities: {
+          select: {
+            id: true,
+            totalHours: true,
+            status: true,
+          },
+        },
+      },
+    });
+  }
 }

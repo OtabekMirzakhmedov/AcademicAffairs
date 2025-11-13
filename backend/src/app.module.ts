@@ -9,6 +9,7 @@ import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { CourseTeachersModule } from './modules/course-teachers/course-teachers.module';
+import {AcademicPeriodsModule} from "./modules/academic-periods/academic-periods.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CourseTeachersModule } from './modules/course-teachers/course-teachers.
     DepartmentsModule,
     CoursesModule,
     CourseTeachersModule,
+    AcademicPeriodsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

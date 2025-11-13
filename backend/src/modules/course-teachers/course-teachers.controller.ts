@@ -42,6 +42,16 @@ export class CourseTeachersController {
     };
   }
 
+  @Get('my-assignments')
+  @Roles('teacher')
+  async getMyAssignments(@CurrentUser() user: any) {
+    const assignments = await this.courseTeachersService.getTeacherAssignments(user.id);
+    return {
+      success: true,
+      data: assignments,
+    };
+  }
+
   @Get()
   @Roles('admin', 'departmenthead', 'teacher')
   async findAll(
