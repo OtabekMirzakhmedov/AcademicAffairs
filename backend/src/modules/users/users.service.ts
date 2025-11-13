@@ -3,9 +3,11 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 
@@ -62,6 +64,76 @@ export class UsersService {
         },
       });
     }
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async createTeacher(createTeacherDto: CreateTeacherDto, departmentHeadId: number) {
+    // Verify department head and get their department
+    const department = await this.prisma.department.findFirst({
+      where: { headId: departmentHeadId },
+    });
+
+    if (!department) {
+      throw new ForbiddenException('You are not a department head');
+    }
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { login: createTeacherDto.login },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this login already exists');
+    }
+
+    // Get teacher role
+    const teacherRole = await this.prisma.role.findUnique({
+      where: { name: 'teacher' },
+    });
+
+    if (!teacherRole) {
+      throw new BadRequestException('Teacher role not found');
+    }
+
+    // Hash default password
+    const hashedPassword = await bcrypt.hash('password123', 10);
+
+    // Create user with user info and teacher info
+    const user = await this.prisma.user.create({
+      data: {
+        login: createTeacherDto.login,
+        password: hashedPassword,
+        roleId: teacherRole.id,
+        mustChangePassword: true,
+        userInfo: {
+          create: {
+            firstName: createTeacherDto.firstName,
+            lastName: createTeacherDto.lastName,
+            email1: createTeacherDto.email1,
+            email2: createTeacherDto.email2,
+            phone1: createTeacherDto.phone1,
+            phone2: createTeacherDto.phone2,
+          },
+        },
+        teacherInfo: {
+          create: {
+            departmentId: department.id,
+          },
+        },
+      },
+      include: {
+        role: true,
+        userInfo: true,
+        teacherInfo: {
+          include: {
+            department: true,
+          },
+        },
+      },
+    });
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

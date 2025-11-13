@@ -24,6 +24,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
 import CourseFormModal from '../../components/features/department-head/CourseFormModal';
+import TeacherFormModal from '../../components/features/department-head/TeacherFormModal';
 import TeacherAssignmentModal from '../../components/features/department-head/TeacherAssignmentModal';
 import coursesService from '../../services/courses.service';
 import courseTeachersService from '../../services/course-teachers.service';
@@ -52,6 +53,7 @@ const DepartmentActivitiesPage = () => {
   const [teachers, setTeachers] = useState<User[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<User[]>([]);
   const [teacherSearchText, setTeacherSearchText] = useState('');
+  const [teacherModalOpen, setTeacherModalOpen] = useState(false);
 
   // Assignments state
   const [assignments, setAssignments] = useState<CourseTeacher[]>([]);
@@ -209,6 +211,14 @@ const DepartmentActivitiesPage = () => {
 
   const handleCourseModalSuccess = () => {
     fetchCourses();
+  };
+
+  const handleAddTeacher = () => {
+    setTeacherModalOpen(true);
+  };
+
+  const handleTeacherModalSuccess = () => {
+    fetchTeachers();
   };
 
   const handleAddAssignment = () => {
@@ -498,6 +508,14 @@ const DepartmentActivitiesPage = () => {
               className="search-input"
               allowClear
             />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddTeacher}
+              size="large"
+            >
+              Add Teacher
+            </Button>
           </div>
           <Table
             columns={teachersColumns}
@@ -597,6 +615,12 @@ const DepartmentActivitiesPage = () => {
           departmentId={department.id}
           teachers={teachers}
           academicPeriods={academicPeriods}
+        />
+
+        <TeacherFormModal
+          visible={teacherModalOpen}
+          onClose={() => setTeacherModalOpen(false)}
+          onSuccess={handleTeacherModalSuccess}
         />
 
         <TeacherAssignmentModal

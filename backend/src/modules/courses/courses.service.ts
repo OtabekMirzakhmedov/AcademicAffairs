@@ -88,7 +88,7 @@ export class CoursesService {
           courseId: course.id,
           teacherId: createCourseDto.teacherId,
           academicPeriodId: createCourseDto.academicPeriodId,
-          groups: createCourseDto.groups || null,
+          groups: createCourseDto.groups && createCourseDto.groups.length > 0 ? createCourseDto.groups : undefined,
         },
       });
 

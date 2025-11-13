@@ -77,7 +77,7 @@ export class CourseTeachersService {
         courseId: createDto.courseId,
         teacherId: createDto.teacherId,
         academicPeriodId: createDto.academicPeriodId,
-        groups: createDto.groups || null,
+        groups: createDto.groups && createDto.groups.length > 0 ? createDto.groups : undefined,
       },
       include: {
         course: {

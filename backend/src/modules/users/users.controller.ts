@@ -13,10 +13,12 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Controller('users')
@@ -44,6 +46,20 @@ export class UsersController {
       success: true,
       data: user,
       message: 'User created successfully',
+    };
+  }
+
+  @Post('teachers')
+  @Roles('departmenthead')
+  async createTeacher(
+    @Body() createTeacherDto: CreateTeacherDto,
+    @CurrentUser() user: any,
+  ) {
+    const teacher = await this.usersService.createTeacher(createTeacherDto, user.id);
+    return {
+      success: true,
+      data: teacher,
+      message: 'Teacher created successfully with default password "password123"',
     };
   }
 
