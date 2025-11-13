@@ -14,6 +14,7 @@ interface CourseFormModalProps {
   course: Course | null;
   departmentId: number;
   teachers: User[];
+  teachersLoading: boolean;
   academicPeriods: AcademicPeriod[];
 }
 
@@ -24,6 +25,7 @@ const CourseFormModal = ({
   course,
   departmentId,
   teachers,
+  teachersLoading,
   academicPeriods,
 }: CourseFormModalProps) => {
   const [form] = Form.useForm();
@@ -129,6 +131,7 @@ const CourseFormModal = ({
                         size="large"
                         allowClear
                         showSearch
+                        loading={teachersLoading}
                         filterOption={(input, option) =>
                           option?.label.toLowerCase().includes(input.toLowerCase()) ?? false
                         }

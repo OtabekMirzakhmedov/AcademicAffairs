@@ -1,5 +1,5 @@
 import { Modal, Form, Input, message } from 'antd';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import usersService, { type CreateTeacherRequest } from '../../../services/users.service';
 
 interface TeacherFormModalProps {
@@ -10,6 +10,7 @@ interface TeacherFormModalProps {
 
 const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps) => {
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -19,12 +20,19 @@ const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps
 
   const handleSubmit = async (values: CreateTeacherRequest) => {
     try {
+      setLoading(true);
       await usersService.createTeacher(values);
       message.success('Teacher created successfully! Default password: password123');
       onSuccess();
       onClose();
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to create teacher');
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        'Failed to create teacher';
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,6 +42,7 @@ const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps
       open={visible}
       onCancel={onClose}
       onOk={() => form.submit()}
+      confirmLoading={loading}
       width={600}
     >
       <Form
