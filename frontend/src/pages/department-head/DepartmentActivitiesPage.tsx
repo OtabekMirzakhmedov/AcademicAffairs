@@ -28,7 +28,8 @@ import TeacherAssignmentModal from '../../components/features/department-head/Te
 import coursesService from '../../services/courses.service';
 import courseTeachersService from '../../services/course-teachers.service';
 import usersService from '../../services/users.service';
-import type { Course, User, CourseTeacher, AcademicPeriod } from '../../types';
+import departmentsService from '../../services/departments.service';
+import type { Course, User, CourseTeacher, AcademicPeriod, Department } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import './DepartmentActivitiesPage.scss';
 
@@ -36,6 +37,9 @@ const DepartmentActivitiesPage = () => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('courses');
   const [loading, setLoading] = useState(false);
+
+  // Department state
+  const [department, setDepartment] = useState<Department | null>(null);
 
   // Courses state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -71,15 +75,17 @@ const DepartmentActivitiesPage = () => {
     },
   ]);
 
-  const departmentId = user?.teacherInfo?.departmentId;
+  useEffect(() => {
+    fetchDepartment();
+  }, [user?.id]);
 
   useEffect(() => {
-    if (departmentId) {
+    if (department) {
       fetchCourses();
       fetchTeachers();
       fetchAssignments();
     }
-  }, [departmentId]);
+  }, [department]);
 
   useEffect(() => {
     let filtered = courses;
@@ -121,6 +127,20 @@ const DepartmentActivitiesPage = () => {
     setFilteredAssignments(filtered);
   }, [assignmentSearchText, assignments]);
 
+  const fetchDepartment = async () => {
+    try {
+      const allDepartments = await departmentsService.getAll();
+      const myDepartment = allDepartments.find((dept) => dept.headId === user?.id);
+      if (myDepartment) {
+        setDepartment(myDepartment);
+      } else {
+        message.warning('You are not assigned as head of any department');
+      }
+    } catch (error) {
+      message.error('Failed to fetch department information');
+    }
+  };
+
   const fetchCourses = async () => {
     try {
       setLoading(true);
@@ -138,7 +158,7 @@ const DepartmentActivitiesPage = () => {
     try {
       const allUsers = await usersService.getAll();
       const departmentTeachers = allUsers.filter(
-        (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === departmentId
+        (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === department?.id
       );
       setTeachers(departmentTeachers);
       setFilteredTeachers(departmentTeachers);
@@ -538,11 +558,11 @@ const DepartmentActivitiesPage = () => {
     },
   ];
 
-  if (!departmentId) {
+  if (!department) {
     return (
       <MainLayout>
         <Card>
-          <p>You are not assigned to a department. Please contact an administrator.</p>
+          <p>You are not assigned as head of any department. Please contact an administrator.</p>
         </Card>
       </MainLayout>
     );
@@ -574,7 +594,7 @@ const DepartmentActivitiesPage = () => {
           onClose={() => setCourseModalOpen(false)}
           onSuccess={handleCourseModalSuccess}
           course={editingCourse}
-          departmentId={departmentId}
+          departmentId={department.id}
         />
 
         <TeacherAssignmentModal
