@@ -54,6 +54,7 @@ const DepartmentActivitiesPage = () => {
   const [filteredTeachers, setFilteredTeachers] = useState<User[]>([]);
   const [teacherSearchText, setTeacherSearchText] = useState('');
   const [teacherModalOpen, setTeacherModalOpen] = useState(false);
+  const [teachersLoading, setTeachersLoading] = useState(false);
 
   // Assignments state
   const [assignments, setAssignments] = useState<CourseTeacher[]>([]);
@@ -158,6 +159,7 @@ const DepartmentActivitiesPage = () => {
 
   const fetchTeachers = async () => {
     try {
+      setTeachersLoading(true);
       const allUsers = await usersService.getAll();
       const departmentTeachers = allUsers.filter(
         (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === department?.id
@@ -166,6 +168,8 @@ const DepartmentActivitiesPage = () => {
       setFilteredTeachers(departmentTeachers);
     } catch (error) {
       message.error('Failed to fetch teachers');
+    } finally {
+      setTeachersLoading(false);
     }
   };
 
@@ -614,6 +618,7 @@ const DepartmentActivitiesPage = () => {
           course={editingCourse}
           departmentId={department.id}
           teachers={teachers}
+          teachersLoading={teachersLoading}
           academicPeriods={academicPeriods}
         />
 
