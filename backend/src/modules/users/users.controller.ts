@@ -15,6 +15,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateTeacherInfoDto } from './dto/update-teacher-info.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -61,6 +62,25 @@ export class UsersController {
       success: true,
       data: teacher,
       message: 'Teacher created successfully with default password "password123"',
+    };
+  }
+
+  @Patch('teachers/:id')
+  @Roles('departmenthead')
+  async updateTeacherInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTeacherInfoDto: UpdateTeacherInfoDto,
+    @CurrentUser() user: any,
+  ) {
+    const teacher = await this.usersService.updateTeacherInfo(
+      id,
+      updateTeacherInfoDto,
+      user.id,
+    );
+    return {
+      success: true,
+      data: teacher,
+      message: 'Teacher info updated successfully',
     };
   }
 

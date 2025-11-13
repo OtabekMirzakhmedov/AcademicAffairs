@@ -36,6 +36,11 @@ export interface CreateTeacherRequest {
   phone2?: string;
 }
 
+export interface UpdateTeacherInfoRequest {
+  employmentType?: string;
+  mandatoryHoursPerPeriod?: number;
+}
+
 class UsersService {
   async getAll(): Promise<User[]> {
     const response = await api.get<ApiResponse<User[]>>('/users');
@@ -54,6 +59,11 @@ class UsersService {
 
   async createTeacher(data: CreateTeacherRequest): Promise<User> {
     const response = await api.post<ApiResponse<User>>('/users/teachers', data);
+    return response.data.data;
+  }
+
+  async updateTeacherInfo(id: number, data: UpdateTeacherInfoRequest): Promise<User> {
+    const response = await api.patch<ApiResponse<User>>(`/users/teachers/${id}`, data);
     return response.data.data;
   }
 
