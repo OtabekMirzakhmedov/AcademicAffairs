@@ -37,6 +37,7 @@ export class DepartmentsController {
   }
 
   @Get()
+  @Roles('admin', 'departmenthead')
   async findAll() {
     const departments = await this.departmentsService.findAll();
     return {
@@ -46,6 +47,7 @@ export class DepartmentsController {
   }
 
   @Get(':id')
+  @Roles('admin', 'departmenthead')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const department = await this.departmentsService.findOne(id);
     return {
