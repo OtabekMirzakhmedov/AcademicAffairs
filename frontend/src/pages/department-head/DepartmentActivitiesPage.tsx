@@ -279,6 +279,26 @@ const DepartmentActivitiesPage = () => {
     fetchTeachers();
   };
 
+  const handleDeleteTeacher = (id: number) => {
+    Modal.confirm({
+      title: 'Delete Teacher',
+      content: 'Are you sure you want to delete this teacher? This will deactivate their account.',
+      okText: 'Delete',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await usersService.delete(id);
+          message.success('Teacher deleted successfully');
+          fetchTeachers();
+        } catch (error: any) {
+          message.error(
+            error?.response?.data?.error?.message || 'Failed to delete teacher'
+          );
+        }
+      },
+    });
+  };
+
   const handleAddAssignment = () => {
     setEditingAssignment(null);
     setAssignmentModalOpen(true);
@@ -457,17 +477,28 @@ const DepartmentActivitiesPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: 150,
       fixed: 'right',
       render: (_, record) => (
-        <Tooltip title="Edit Teacher Info">
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEditTeacher(record)}
-          />
-        </Tooltip>
+        <Space size="small">
+          <Tooltip title="Edit Teacher Info">
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEditTeacher(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Delete Teacher">
+            <Button
+              type="text"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteTeacher(record.id)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
