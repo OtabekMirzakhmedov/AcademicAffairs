@@ -22,6 +22,13 @@ class CourseTeachersService {
     return response.data.data;
   }
 
+  async getMyAssignments(): Promise<CourseTeacher[]> {
+    const response = await api.get<ApiResponse<CourseTeacher[]>>(
+        '/course-teachers/my-assignments'
+    );
+    return response.data.data;
+  }
+
   async getOne(id: number): Promise<CourseTeacher> {
     const response = await api.get<ApiResponse<CourseTeacher>>(
       `/course-teachers/${id}`
