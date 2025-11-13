@@ -31,6 +31,7 @@ export class UsersController {
   ) {}
 
   @Get('roles')
+  @Roles('admin', 'departmenthead')
   async getRoles() {
     const roles = await this.prisma.role.findMany();
     return {
@@ -64,6 +65,7 @@ export class UsersController {
   }
 
   @Get()
+  @Roles('admin', 'departmenthead')
   async findAll() {
     const users = await this.usersService.findAll();
     return {
@@ -73,6 +75,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @Roles('admin', 'departmenthead')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const user = await this.usersService.findOne(id);
     return {
