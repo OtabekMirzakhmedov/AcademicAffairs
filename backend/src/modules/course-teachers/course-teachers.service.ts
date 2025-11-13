@@ -348,6 +348,12 @@ export class CourseTeachersService {
         teachingActivities: {
           select: {
             id: true,
+            groups: true,
+            lectureHours: true,
+            practiceHours: true,
+            labHours: true,
+            seminarHours: true,
+            advisingHours: true,
             totalHours: true,
             status: true,
           },
