@@ -6,10 +6,12 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<string[]>(
-      'roles',
+    // Use getAllAndOverride to check method-level first, then class-level
+    // Method-level @Roles decorator will override class-level
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
       context.getHandler(),
-    );
+      context.getClass(),
+    ]);
 
     if (!requiredRoles) {
       return true;
@@ -18,6 +20,7 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    return requiredRoles.some((role) => user?.roleName === role);
+    // Check user.role.name (not user.roleName) as per JWT strategy
+    return requiredRoles.some((role) => user?.role?.name === role);
   }
 }

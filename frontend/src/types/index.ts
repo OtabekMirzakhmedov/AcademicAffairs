@@ -78,6 +78,9 @@ export interface Course {
   departmentId: number;
   department?: Department;
   name: string;
+  _count?: {
+    assignedTeachers: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

@@ -3,10 +3,13 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateTeacherInfoDto } from './dto/update-teacher-info.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -62,6 +65,76 @@ export class UsersService {
         },
       });
     }
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async createTeacher(createTeacherDto: CreateTeacherDto, departmentHeadId: number) {
+    // Verify department head and get their department
+    const department = await this.prisma.department.findFirst({
+      where: { headId: departmentHeadId },
+    });
+
+    if (!department) {
+      throw new ForbiddenException('You are not a department head');
+    }
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { login: createTeacherDto.login },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this login already exists');
+    }
+
+    // Get teacher role
+    const teacherRole = await this.prisma.role.findUnique({
+      where: { name: 'teacher' },
+    });
+
+    if (!teacherRole) {
+      throw new BadRequestException('Teacher role not found');
+    }
+
+    // Hash default password
+    const hashedPassword = await bcrypt.hash('password123', 10);
+
+    // Create user with user info and teacher info
+    const user = await this.prisma.user.create({
+      data: {
+        login: createTeacherDto.login,
+        password: hashedPassword,
+        roleId: teacherRole.id,
+        mustChangePassword: true,
+        userInfo: {
+          create: {
+            firstName: createTeacherDto.firstName,
+            lastName: createTeacherDto.lastName,
+            email1: createTeacherDto.email1,
+            email2: createTeacherDto.email2,
+            phone1: createTeacherDto.phone1,
+            phone2: createTeacherDto.phone2,
+          },
+        },
+        teacherInfo: {
+          create: {
+            departmentId: department.id,
+          },
+        },
+      },
+      include: {
+        role: true,
+        userInfo: true,
+        teacherInfo: {
+          include: {
+            department: true,
+          },
+        },
+      },
+    });
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
@@ -177,6 +250,70 @@ export class UsersService {
     }
 
     const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async updateTeacherInfo(
+    teacherId: number,
+    updateTeacherInfoDto: UpdateTeacherInfoDto,
+    departmentHeadId: number,
+  ) {
+    // Verify department head and get their department
+    const department = await this.prisma.department.findFirst({
+      where: { headId: departmentHeadId },
+    });
+
+    if (!department) {
+      throw new ForbiddenException('You are not a department head');
+    }
+
+    // Verify teacher exists and belongs to the department
+    const teacher = await this.prisma.user.findUnique({
+      where: { id: teacherId },
+      include: {
+        role: true,
+        teacherInfo: true,
+      },
+    });
+
+    if (!teacher || teacher.role.name !== 'teacher') {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    if (teacher.teacherInfo?.departmentId !== department.id) {
+      throw new ForbiddenException(
+        'You can only update teachers in your department',
+      );
+    }
+
+    // Update teacher info
+    const updatedTeacherInfo = await this.prisma.teacherInfo.update({
+      where: { userId: teacherId },
+      data: {
+        employmentType: updateTeacherInfoDto.employmentType,
+        mandatoryHoursPerPeriod: updateTeacherInfoDto.mandatoryHoursPerPeriod,
+      },
+    });
+
+    // Return full user with updated teacher info
+    const updatedUser = await this.prisma.user.findUnique({
+      where: { id: teacherId },
+      include: {
+        role: true,
+        userInfo: true,
+        teacherInfo: {
+          include: {
+            department: true,
+          },
+        },
+      },
+    });
+
+    if (!updatedUser) {
+      throw new NotFoundException('Teacher not found after update');
+    }
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 

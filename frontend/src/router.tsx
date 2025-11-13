@@ -4,6 +4,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
 import UsersPage from './pages/admin/UsersPage';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
+import DepartmentActivitiesPage from './pages/department-head/DepartmentActivitiesPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -72,6 +73,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <DepartmentsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/department/activities',
+    element: (
+      <ProtectedRoute>
+        <DepartmentActivitiesPage />
       </ProtectedRoute>
     ),
   },

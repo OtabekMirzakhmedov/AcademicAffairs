@@ -24,6 +24,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       include: {
         role: true,
         userInfo: true,
+        teacherInfo: {
+          include: {
+            department: true,
+          },
+        },
       },
     });
 
@@ -31,13 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    // This will be available as req.user in controllers
-    return {
-      id: user.id,
-      login: user.login,
-      roleId: user.roleId,
-      roleName: user.role.name,
-      mustChangePassword: user.mustChangePassword,
-    };
+    // Return full user object so controllers can access user.role.name
+    return user;
   }
 }
