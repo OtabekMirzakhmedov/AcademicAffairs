@@ -595,6 +595,8 @@ const DepartmentActivitiesPage = () => {
           onSuccess={handleCourseModalSuccess}
           course={editingCourse}
           departmentId={department.id}
+          teachers={teachers}
+          academicPeriods={academicPeriods}
         />
 
         <TeacherAssignmentModal

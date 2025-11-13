@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -27,8 +28,49 @@ export class CoursesService {
       );
     }
 
-    return await this.prisma.course.create({
-      data: createCourseDto,
+    // If teacher is being assigned, validate requirements
+    if (createCourseDto.teacherId) {
+      if (!createCourseDto.academicPeriodId) {
+        throw new BadRequestException(
+          'Academic period is required when assigning a teacher',
+        );
+      }
+
+      // Verify teacher exists and belongs to the department
+      const teacher = await this.prisma.user.findUnique({
+        where: { id: createCourseDto.teacherId },
+        include: {
+          role: true,
+          teacherInfo: true,
+        },
+      });
+
+      if (!teacher || teacher.role.name !== 'teacher') {
+        throw new NotFoundException('Teacher not found');
+      }
+
+      if (teacher.teacherInfo?.departmentId !== createCourseDto.departmentId) {
+        throw new BadRequestException(
+          'Teacher must belong to the same department as the course',
+        );
+      }
+
+      // Verify academic period exists
+      const academicPeriod = await this.prisma.academicPeriod.findUnique({
+        where: { id: createCourseDto.academicPeriodId },
+      });
+
+      if (!academicPeriod) {
+        throw new NotFoundException('Academic period not found');
+      }
+    }
+
+    // Create course
+    const course = await this.prisma.course.create({
+      data: {
+        name: createCourseDto.name,
+        departmentId: createCourseDto.departmentId,
+      },
       include: {
         department: true,
         _count: {
@@ -38,6 +80,33 @@ export class CoursesService {
         },
       },
     });
+
+    // If teacher assignment was provided, create the assignment
+    if (createCourseDto.teacherId && createCourseDto.academicPeriodId) {
+      await this.prisma.courseTeacher.create({
+        data: {
+          courseId: course.id,
+          teacherId: createCourseDto.teacherId,
+          academicPeriodId: createCourseDto.academicPeriodId,
+          groups: createCourseDto.groups || null,
+        },
+      });
+
+      // Refetch course to get updated assignment count
+      return await this.prisma.course.findUnique({
+        where: { id: course.id },
+        include: {
+          department: true,
+          _count: {
+            select: {
+              assignedTeachers: true,
+            },
+          },
+        },
+      });
+    }
+
+    return course;
   }
 
   async findAll(userId: number, userRole: string) {
