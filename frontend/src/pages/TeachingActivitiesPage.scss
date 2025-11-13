@@ -24,56 +24,49 @@
       color: $text-secondary;
       margin: 0;
     }
+  }
 
-    .add-btn {
-      height: 48px;
-      font-size: 16px;
-      font-weight: 600;
-      box-shadow: $shadow-md;
+  .period-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: $shadow-lg;
+    .period-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .period-label {
+        font-size: 14px;
+        color: #8c8c8c;
+        font-weight: 500;
+      }
+
+      .period-value {
+        font-size: 18px;
+        color: #262626;
+        font-weight: 600;
       }
     }
   }
 
-  .activities-card {
-    border-radius: $radius-lg;
-    box-shadow: $shadow-md;
+  .courses-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-    .filters-section {
-      display: flex;
-      gap: $spacing-md;
-      margin-bottom: $spacing-lg;
-
-      @media (max-width: 768px) {
-        flex-direction: column;
-      }
-
-      .search-input {
-        flex: 1;
-        height: 40px;
-      }
-
-      .status-filter {
-        width: 200px;
-
-        @media (max-width: 768px) {
-          width: 100%;
-        }
-      }
+    .ant-card-head-title {
+      font-size: 18px;
+      font-weight: 600;
     }
 
     .ant-table {
       .ant-table-thead > tr > th {
-        background: $background-light;
+        background: #fafafa;
         font-weight: 600;
-        color: $text-primary;
+        color: #262626;
       }
 
       .ant-table-tbody > tr {
-        transition: all $transition-fast;
+        transition: all 0.2s;
 
         &:hover {
           background: rgba(24, 144, 255, 0.05);

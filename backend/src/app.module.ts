@@ -7,6 +7,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TeachingActivitiesModule } from './modules/teaching-activities/teaching-activities.module';
 import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
+import { AcademicPeriodsModule } from './modules/academic-periods/academic-periods.module';
+import { CourseTeachersModule } from './modules/course-teachers/course-teachers.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { DepartmentsModule } from './modules/departments/departments.module';
     TeachingActivitiesModule,
     UsersModule,
     DepartmentsModule,
+    AcademicPeriodsModule,
+    CourseTeachersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
