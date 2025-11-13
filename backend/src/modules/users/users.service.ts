@@ -309,6 +309,10 @@ export class UsersService {
       },
     });
 
+    if (!updatedUser) {
+      throw new NotFoundException('Teacher not found after update');
+    }
+
     const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
