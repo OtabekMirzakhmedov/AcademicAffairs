@@ -119,14 +119,11 @@ class ScientificTasksService {
     const formData = new FormData();
     formData.append('file', file);
 
+    // Note: Don't set Content-Type header manually for FormData
+    // Axios will automatically set it with the correct boundary parameter
     const response = await api.post<ApiResponse<{ filePath: string; fileName: string }>>(
       '/scientific-tasks/reports/upload',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data.data;
   }
