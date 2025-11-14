@@ -67,6 +67,11 @@ export class CoursesService {
       },
       include: {
         department: true,
+        programCourses: {
+          include: {
+            program: true,
+          },
+        },
         _count: {
           select: {
             assignedTeachers: true,
@@ -91,6 +96,11 @@ export class CoursesService {
         where: { id: course.id },
         include: {
           department: true,
+          programCourses: {
+            include: {
+              program: true,
+            },
+          },
           _count: {
             select: {
               assignedTeachers: true,
@@ -109,6 +119,11 @@ export class CoursesService {
       return await this.prisma.course.findMany({
         include: {
           department: true,
+          programCourses: {
+            include: {
+              program: true,
+            },
+          },
           _count: {
             select: {
               assignedTeachers: true,
@@ -133,6 +148,11 @@ export class CoursesService {
         where: { departmentId: department.id },
         include: {
           department: true,
+          programCourses: {
+            include: {
+              program: true,
+            },
+          },
           _count: {
             select: {
               assignedTeachers: true,
@@ -174,6 +194,11 @@ export class CoursesService {
                 userInfo: true,
               },
             },
+          },
+        },
+        programCourses: {
+          include: {
+            program: true,
           },
         },
         _count: {
@@ -250,6 +275,11 @@ export class CoursesService {
       data: updateCourseDto,
       include: {
         department: true,
+        programCourses: {
+          include: {
+            program: true,
+          },
+        },
         _count: {
           select: {
             assignedTeachers: true,

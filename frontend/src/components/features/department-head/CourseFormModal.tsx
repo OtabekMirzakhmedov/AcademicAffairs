@@ -52,8 +52,10 @@ const CourseFormModal = ({
 
       // Then populate with current values if editing
       if (course) {
+        const currentProgramIds = course.programCourses?.map((pc) => pc.programId) || [];
         form.setFieldsValue({
           name: course.name,
+          programIds: currentProgramIds,
         });
       }
     }
@@ -68,6 +70,30 @@ const CourseFormModal = ({
           name: values.name,
         };
         await coursesService.update(course.id, updateData);
+
+        // Handle program associations
+        const currentProgramIds = course.programCourses?.map((pc) => pc.programId) || [];
+        const newProgramIds = values.programIds || [];
+
+        // Find programs to add and remove
+        const programsToAdd = newProgramIds.filter((id: number) => !currentProgramIds.includes(id));
+        const programsToRemove = currentProgramIds.filter((id: number) => !newProgramIds.includes(id));
+
+        // Add new program associations
+        const addPromises = programsToAdd.map((programId: number) =>
+          programsService.addCourse(programId, {
+            courseId: course.id,
+            isRequired: true,
+          })
+        );
+
+        // Remove old program associations
+        const removePromises = programsToRemove.map((programId: number) =>
+          programsService.removeCourse(programId, course.id)
+        );
+
+        await Promise.all([...addPromises, ...removePromises]);
+
         message.success('Course updated successfully');
       } else {
         // Create new course with optional teacher assignment
@@ -139,31 +165,29 @@ const CourseFormModal = ({
           />
         </Form.Item>
 
-        {!course && (
-          <Form.Item
-            name="programIds"
-            label="Programs (Optional)"
-            tooltip="Select which programs this course belongs to"
-          >
-            <Select
-              mode="multiple"
-              placeholder="Select programs (optional)"
-              size="large"
-              allowClear
-              showSearch
-              filterOption={(input, option) =>
-                option?.label.toLowerCase().includes(input.toLowerCase()) ?? false
-              }
-              options={programs
-                .filter((p) => p.departmentId === departmentId && p.isActive)
-                .map((program) => ({
-                  label: `${program.name} (${program.code})`,
-                  value: program.id,
-                }))}
-              suffixIcon={<BookOutlined />}
-            />
-          </Form.Item>
-        )}
+        <Form.Item
+          name="programIds"
+          label="Programs (Optional)"
+          tooltip="Select which programs this course belongs to"
+        >
+          <Select
+            mode="multiple"
+            placeholder="Select programs (optional)"
+            size="large"
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              option?.label.toLowerCase().includes(input.toLowerCase()) ?? false
+            }
+            options={programs
+              .filter((p) => p.departmentId === departmentId && p.isActive)
+              .map((program) => ({
+                label: `${program.name} (${program.code})`,
+                value: program.id,
+              }))}
+            suffixIcon={<BookOutlined />}
+          />
+        </Form.Item>
 
         {!course && (
           <Collapse
