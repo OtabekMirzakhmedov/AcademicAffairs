@@ -207,3 +207,41 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// Scientific Task Types
+export interface ScientificTask {
+  id: number;
+  taskName: string;
+  taskDescription?: string;
+  deadline: string;
+  createdBy: number;
+  creator?: User;
+  departmentId?: number;
+  department?: Department;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  reports?: TeacherScientificReport[];
+  _count?: {
+    reports: number;
+  };
+}
+
+export interface TeacherScientificReport {
+  id: number;
+  scientificTaskId: number;
+  scientificTask?: ScientificTask;
+  teacherId: number;
+  teacher?: User;
+  executionStatus?: string;
+  completionPercentage: number;
+  filePath?: string;
+  fileName?: string;
+  status: 'in_progress' | 'submitted' | 'validated' | 'rejected';
+  submittedAt?: string;
+  validatedAt?: string;
+  validatedBy?: number;
+  validator?: User;
+  createdAt: string;
+  updatedAt: string;
+}
