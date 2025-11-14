@@ -168,7 +168,11 @@ export class ScientificTasksController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/scientific-reports',
+        destination: (req, file, cb) => {
+          const uploadDir = './uploads/scientific-reports';
+          // Directory is already created, just use it
+          cb(null, uploadDir);
+        },
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -181,7 +185,13 @@ export class ScientificTasksController {
         fileSize: 10 * 1024 * 1024, // 10MB limit
       },
       fileFilter: (req, file, cb) => {
-        // Allow common document types
+        console.log('File upload attempt:', {
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+
+        // Allow common document types - be more flexible with mime types
         const allowedMimes = [
           'application/pdf',
           'application/msword',
@@ -189,20 +199,36 @@ export class ScientificTasksController {
           'application/vnd.ms-excel',
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'text/plain',
+          'application/octet-stream', // Generic binary, check extension
         ];
 
-        if (allowedMimes.includes(file.mimetype)) {
+        // Also check by file extension as a fallback
+        const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+        const fileExt = extname(file.originalname).toLowerCase();
+
+        if (allowedMimes.includes(file.mimetype) || allowedExtensions.includes(fileExt)) {
+          console.log('File accepted');
           cb(null, true);
         } else {
-          cb(new BadRequestException('Invalid file type. Only PDF, DOC, DOCX, XLS, XLSX, and TXT files are allowed.'), false);
+          console.log('File rejected - invalid type');
+          cb(
+            new BadRequestException(
+              `Invalid file type: ${file.mimetype}. Only PDF, DOC, DOCX, XLS, XLSX, and TXT files are allowed.`,
+            ),
+            false,
+          );
         }
       },
     }),
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log('Upload handler called, file:', file ? 'present' : 'missing');
+
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
+
+    console.log('File uploaded successfully:', file.path);
 
     return {
       success: true,
