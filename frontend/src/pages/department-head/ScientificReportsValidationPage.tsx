@@ -278,26 +278,24 @@ const ScientificReportsValidationPage: React.FC = () => {
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             Close
           </Button>,
-          selectedReport?.status === 'submitted' && (
-            <>
-              <Button
-                key="reject"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={() => handleReject(selectedReport.id)}
-              >
-                Reject
-              </Button>
-              <Button
-                key="validate"
-                type="primary"
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleValidate(selectedReport.id)}
-              >
-                Validate
-              </Button>
-            </>
-          ),
+          ...(selectedReport?.status === 'submitted' ? [
+            <Button
+              key="reject"
+              danger
+              icon={<CloseCircleOutlined />}
+              onClick={() => handleReject(selectedReport.id)}
+            >
+              Reject
+            </Button>,
+            <Button
+              key="validate"
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              onClick={() => handleValidate(selectedReport.id)}
+            >
+              Validate
+            </Button>,
+          ] : []),
         ]}
         width={800}
       >
