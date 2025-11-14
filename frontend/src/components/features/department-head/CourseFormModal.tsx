@@ -44,17 +44,18 @@ const CourseFormModal = ({
 
   useEffect(() => {
     if (open) {
+      // Reset department filter
+      setSelectedDepartment(undefined);
+
+      // Always reset first to clear any previous state
+      form.resetFields();
+
+      // Then populate with current values if editing
       if (course) {
-        // Edit mode - populate course name
         form.setFieldsValue({
           name: course.name,
         });
-      } else {
-        // Create mode - reset all fields
-        form.resetFields();
       }
-      // Reset department filter
-      setSelectedDepartment(undefined);
     }
   }, [open, course, form]);
 
