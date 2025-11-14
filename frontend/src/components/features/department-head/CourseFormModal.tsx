@@ -123,11 +123,12 @@ const CourseFormModal = ({
           />
         </Form.Item>
 
-        <Collapse
-          items={[
-            {
-              key: 'assignment',
-              label: 'Assign Teacher (Optional)',
+        {!course && (
+          <Collapse
+            items={[
+              {
+                key: 'assignment',
+                label: 'Assign Teacher (Optional)',
               children: (
                 <>
                   <Form.Item
@@ -232,6 +233,7 @@ const CourseFormModal = ({
               },
             ]}
           />
+        )}
       </Form>
     </Modal>
   );
