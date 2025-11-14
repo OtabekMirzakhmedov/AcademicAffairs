@@ -116,15 +116,28 @@ class ScientificTasksService {
   // ==================== FILE UPLOAD ====================
 
   async uploadFile(file: File): Promise<{ filePath: string; fileName: string }> {
+    console.log('uploadFile service called with:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
     const formData = new FormData();
     formData.append('file', file);
 
+    console.log('FormData created, entries:', Array.from(formData.entries()).map(([key, value]) => ({
+      key,
+      value: value instanceof File ? `File: ${value.name}` : value
+    })));
+
     // Note: Don't set Content-Type header manually for FormData
     // Axios will automatically set it with the correct boundary parameter
+    console.log('Sending POST request to /scientific-tasks/reports/upload');
     const response = await api.post<ApiResponse<{ filePath: string; fileName: string }>>(
       '/scientific-tasks/reports/upload',
       formData
     );
+    console.log('Upload response received:', response.data);
     return response.data.data;
   }
 }

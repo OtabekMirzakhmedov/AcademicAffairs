@@ -94,12 +94,25 @@ const ScientificTasksPage: React.FC = () => {
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!selectedReport) return;
+    if (!selectedReport) {
+      console.error('No report selected');
+      return;
+    }
+
+    console.log('handleFileUpload called with file:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified,
+    });
 
     try {
       setUploading(true);
+      console.log('Calling uploadFile service...');
       const { filePath, fileName } = await scientificTasksService.uploadFile(file);
+      console.log('Upload response:', { filePath, fileName });
 
+      console.log('Updating report with file info...');
       await scientificTasksService.updateReport(selectedReport.id, {
         filePath,
         fileName,
@@ -112,6 +125,7 @@ const ScientificTasksPage: React.FC = () => {
       const updatedReport = await scientificTasksService.getReport(selectedReport.id);
       setSelectedReport(updatedReport);
     } catch (error: any) {
+      console.error('File upload error:', error);
       message.error(error.response?.data?.message || 'Failed to upload file');
     } finally {
       setUploading(false);
