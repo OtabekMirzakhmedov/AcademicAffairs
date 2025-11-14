@@ -38,6 +38,7 @@ model User {
   courseAssignments        CourseTeacher[]
   teachingActivities       TeachingActivity[]
   validatedActivities      TeachingActivity[] @relation("ValidatedBy")
+  createdPrograms          Program[]          @relation("ProgramCreator")
 
   @@map("users")
 }
@@ -88,6 +89,7 @@ model Department {
   head         User?         @relation("DepartmentHead", fields: [headId], references: [id])
   teachers     TeacherInfo[]
   courses      Course[]
+  programs     Program[]
 
   @@map("departments")
 }
@@ -117,6 +119,7 @@ model Course {
   department         Department         @relation(fields: [departmentId], references: [id])
   assignedTeachers   CourseTeacher[]
   teachingActivities TeachingActivity[]
+  programCourses     ProgramCourse[]
 
   @@map("courses")
 }
@@ -165,4 +168,46 @@ model TeachingActivity {
   validator      User?          @relation("ValidatedBy", fields: [validatedBy], references: [id])
 
   @@map("teaching_activities")
+}
+
+model Program {
+  id                    Int       @id @default(autoincrement())
+  name                  String // Mechanical Engineering, Mechatronics, etc.
+  code                  String    @unique // ME-MECH, ME-MECHA, etc.
+  degreeLevel           String    @map("degree_level") // BACHELOR, MASTER, DOCTORATE, UNDERGRADUATE, GRADUATE
+  departmentId          Int       @map("department_id")
+  durationYears         Int       @map("duration_years") // Program duration in years
+  totalCreditsRequired  Decimal   @map("total_credits_required") @db.Decimal(6, 2)
+  description           String?
+  isActive              Boolean   @default(true) @map("is_active")
+  createdBy             Int       @map("created_by") // ADMIN or HEAD_OF_DEPARTMENT
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  department            Department      @relation(fields: [departmentId], references: [id])
+  creator               User            @relation("ProgramCreator", fields: [createdBy], references: [id])
+  programCourses        ProgramCourse[]
+
+  @@index([departmentId])
+  @@index([degreeLevel])
+  @@index([isActive])
+  @@map("programs")
+}
+
+model ProgramCourse {
+  id                    Int       @id @default(autoincrement())
+  programId             Int       @map("program_id")
+  courseId              Int       @map("course_id")
+  isRequired            Boolean   @default(true) @map("is_required") // true = required, false = elective
+  recommendedSemester   Int?      @map("recommended_semester") // Which semester this course is typically taken
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  program               Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  course                Course    @relation(fields: [courseId], references: [id])
+
+  @@unique([programId, courseId], name: "program_course_unique")
+  @@index([programId])
+  @@index([courseId])
+  @@map("program_courses")
 }
