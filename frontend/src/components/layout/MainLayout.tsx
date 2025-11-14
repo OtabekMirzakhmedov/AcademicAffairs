@@ -73,7 +73,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       icon: <ExperimentOutlined />,
       label: 'Scientific Activities',
       onClick: () => navigate('/scientific-activities'),
-      disabled: true,
     },
     {
       key: '/research-activities',
@@ -93,10 +92,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       ? [
           { type: 'divider' as const },
           {
-            key: '/department/activities',
+            key: 'department',
             icon: <BankOutlined />,
             label: 'Department Management',
-            onClick: () => navigate('/department/activities'),
+            children: [
+              {
+                key: '/department/activities',
+                icon: <BookOutlined />,
+                label: 'Teaching Activities',
+                onClick: () => navigate('/department/activities'),
+              },
+              {
+                key: '/department/scientific-reports',
+                icon: <ExperimentOutlined />,
+                label: 'Scientific Reports',
+                onClick: () => navigate('/department/scientific-reports'),
+              },
+            ],
           },
         ]
       : []),
@@ -119,6 +131,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 icon: <BankOutlined />,
                 label: 'Departments',
                 onClick: () => navigate('/admin/departments'),
+              },
+              {
+                key: '/admin/scientific-tasks',
+                icon: <ExperimentOutlined />,
+                label: 'Scientific Tasks',
+                onClick: () => navigate('/admin/scientific-tasks'),
               },
             ],
           },
