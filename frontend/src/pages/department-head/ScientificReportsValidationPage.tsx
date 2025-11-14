@@ -18,6 +18,7 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import MainLayout from '../../components/layout/MainLayout';
 import scientificTasksService from '../../services/scientific-tasks.service';
 import type { TeacherScientificReport } from '../../types';
 import dayjs from 'dayjs';
@@ -192,11 +193,12 @@ const ScientificReportsValidationPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1>Scientific Reports Validation</h1>
-        <p>Review and validate scientific task reports submitted by teachers</p>
-      </div>
+    <MainLayout>
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <h1>Scientific Activities Management</h1>
+          <p>Review and validate scientific task reports submitted by teachers</p>
+        </div>
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
         <Card>
@@ -333,7 +335,8 @@ const ScientificReportsValidationPage: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+      </div>
+    </MainLayout>
   );
 };
 

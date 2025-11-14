@@ -22,6 +22,7 @@ import {
   CloseCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import MainLayout from '../../components/layout/MainLayout';
 import scientificTasksService from '../../services/scientific-tasks.service';
 import type { ScientificTask, TeacherScientificReport } from '../../types';
 import dayjs from 'dayjs';
@@ -206,21 +207,22 @@ const ScientificTasksManagementPage: React.FC = () => {
   const stats = getProgressStats();
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1>Scientific Tasks Management</h1>
-          <p>Create and manage scientific research tasks</p>
+    <MainLayout>
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Scientific Activities Management</h1>
+            <p>Create and manage scientific research tasks</p>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            onClick={() => setCreateModalVisible(true)}
+          >
+            Create New Task
+          </Button>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          size="large"
-          onClick={() => setCreateModalVisible(true)}
-        >
-          Create New Task
-        </Button>
-      </div>
 
       <Table
         columns={columns}
@@ -346,7 +348,8 @@ const ScientificTasksManagementPage: React.FC = () => {
           </>
         )}
       </Modal>
-    </div>
+      </div>
+    </MainLayout>
   );
 };
 
