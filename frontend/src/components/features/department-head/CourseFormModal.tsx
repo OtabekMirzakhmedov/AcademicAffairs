@@ -5,7 +5,8 @@ import coursesService, {
   type CreateCourseRequest,
   type UpdateCourseRequest,
 } from '../../../services/courses.service';
-import type { Course, User, AcademicPeriod, Department } from '../../../types';
+import programsService from '../../../services/programs.service';
+import type { Course, User, AcademicPeriod, Department, Program } from '../../../types';
 
 interface CourseFormModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface CourseFormModalProps {
   teachersLoading: boolean;
   academicPeriods: AcademicPeriod[];
   departments: Department[];
+  programs: Program[];
 }
 
 const CourseFormModal = ({
@@ -29,6 +31,7 @@ const CourseFormModal = ({
   teachersLoading,
   academicPeriods,
   departments,
+  programs,
 }: CourseFormModalProps) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -74,7 +77,19 @@ const CourseFormModal = ({
           academicPeriodId: values.academicPeriodId,
           groups: values.groups && values.groups.length > 0 ? values.groups : undefined,
         };
-        await coursesService.create(createData);
+        const newCourse = await coursesService.create(createData);
+
+        // Add course to selected programs
+        if (values.programIds && values.programIds.length > 0) {
+          const programPromises = values.programIds.map((programId: number) =>
+            programsService.addCourse(programId, {
+              courseId: newCourse.id,
+              isRequired: true,
+            })
+          );
+          await Promise.all(programPromises);
+        }
+
         message.success('Course created successfully');
       }
       onSuccess();
@@ -122,6 +137,32 @@ const CourseFormModal = ({
             size="large"
           />
         </Form.Item>
+
+        {!course && (
+          <Form.Item
+            name="programIds"
+            label="Programs (Optional)"
+            tooltip="Select which programs this course belongs to"
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select programs (optional)"
+              size="large"
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                option?.label.toLowerCase().includes(input.toLowerCase()) ?? false
+              }
+              options={programs
+                .filter((p) => p.departmentId === departmentId && p.isActive)
+                .map((program) => ({
+                  label: `${program.name} (${program.code})`,
+                  value: program.id,
+                }))}
+              suffixIcon={<BookOutlined />}
+            />
+          </Form.Item>
+        )}
 
         {!course && (
           <Collapse
