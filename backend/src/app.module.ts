@@ -9,7 +9,8 @@ import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { CourseTeachersModule } from './modules/course-teachers/course-teachers.module';
-import {AcademicPeriodsModule} from "./modules/academic-periods/academic-periods.module";
+import { AcademicPeriodsModule } from "./modules/academic-periods/academic-periods.module";
+import { ProgramsModule } from './modules/programs/programs.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import {AcademicPeriodsModule} from "./modules/academic-periods/academic-periods
     CoursesModule,
     CourseTeachersModule,
     AcademicPeriodsModule,
+    ProgramsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

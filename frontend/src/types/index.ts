@@ -139,6 +139,40 @@ export interface TeachingActivity {
   updatedAt: string;
 }
 
+// Programs
+export interface Program {
+  id: number;
+  name: string;
+  code: string;
+  degreeLevel: string; // BACHELOR, MASTER, DOCTORATE, UNDERGRADUATE, GRADUATE
+  departmentId: number;
+  department?: Department;
+  durationYears: number;
+  totalCreditsRequired: number;
+  description?: string;
+  isActive: boolean;
+  createdBy: number;
+  creator?: User;
+  createdAt: string;
+  updatedAt: string;
+  programCourses?: ProgramCourse[];
+  _count?: {
+    programCourses: number;
+  };
+}
+
+export interface ProgramCourse {
+  id: number;
+  programId: number;
+  program?: Program;
+  courseId: number;
+  course?: Course;
+  isRequired: boolean;
+  recommendedSemester?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Dashboard Statistics
 export interface TeacherStats {
   mandatoryHours: number;
