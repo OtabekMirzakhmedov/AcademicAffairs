@@ -221,11 +221,24 @@ export class ScientificTasksController {
       },
     }),
   )
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log('Upload handler called, file:', file ? 'present' : 'missing');
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: any,
+  ) {
+    console.log('Upload handler called');
+    console.log('User:', user?.id);
+    console.log('File:', file ? 'present' : 'missing');
+    console.log('File details:', file ? {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      encoding: file.encoding,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: file.path,
+    } : 'N/A');
 
     if (!file) {
-      throw new BadRequestException('No file uploaded');
+      throw new BadRequestException('No file uploaded or file was rejected');
     }
 
     console.log('File uploaded successfully:', file.path);
