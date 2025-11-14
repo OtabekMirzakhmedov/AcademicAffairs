@@ -30,12 +30,14 @@ import CourseFormModal from '../../components/features/department-head/CourseFor
 import TeacherFormModal from '../../components/features/department-head/TeacherFormModal';
 import TeacherEditModal from '../../components/features/department-head/TeacherEditModal';
 import TeacherAssignmentModal from '../../components/features/department-head/TeacherAssignmentModal';
+import ProgramFormModal from '../../components/features/department-head/ProgramFormModal';
 import coursesService from '../../services/courses.service';
 import courseTeachersService from '../../services/course-teachers.service';
 import usersService from '../../services/users.service';
 import departmentsService from '../../services/departments.service';
 import teachingActivitiesService from '../../services/teaching-activities.service';
-import type { Course, User, CourseTeacher, AcademicPeriod, Department, TeachingActivity } from '../../types';
+import programsService from '../../services/programs.service';
+import type { Course, User, CourseTeacher, AcademicPeriod, Department, TeachingActivity, Program } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import './DepartmentActivitiesPage.scss';
 
@@ -76,6 +78,13 @@ const DepartmentActivitiesPage = () => {
   const [filteredSubmissions, setFilteredSubmissions] = useState<TeachingActivity[]>([]);
   const [submissionSearchText, setSubmissionSearchText] = useState('');
 
+  // Programs state
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([]);
+  const [programSearchText, setProgramSearchText] = useState('');
+  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+
   // Academic periods (for now, we'll need to fetch this later)
   const [academicPeriods] = useState<AcademicPeriod[]>([
     {
@@ -101,6 +110,7 @@ const DepartmentActivitiesPage = () => {
       fetchTeachers();
       fetchAssignments();
       fetchSubmissions();
+      fetchPrograms();
     }
   }, [department]);
 
@@ -160,6 +170,19 @@ const DepartmentActivitiesPage = () => {
     }
     setFilteredSubmissions(filtered);
   }, [submissionSearchText, submissions]);
+
+  useEffect(() => {
+    let filtered = programs;
+    if (programSearchText) {
+      filtered = filtered.filter(
+        (program) =>
+          program.name.toLowerCase().includes(programSearchText.toLowerCase()) ||
+          program.code.toLowerCase().includes(programSearchText.toLowerCase()) ||
+          program.degreeLevel.toLowerCase().includes(programSearchText.toLowerCase())
+      );
+    }
+    setFilteredPrograms(filtered);
+  }, [programSearchText, programs]);
 
   const fetchDepartment = async () => {
     try {
@@ -225,6 +248,18 @@ const DepartmentActivitiesPage = () => {
       setFilteredSubmissions(data);
     } catch (error) {
       message.error('Failed to fetch submissions');
+    }
+  };
+
+  const fetchPrograms = async () => {
+    try {
+      const data = await programsService.getAll();
+      // Filter programs to show only those from current department
+      const departmentPrograms = data.filter((p) => p.departmentId === department?.id);
+      setPrograms(departmentPrograms);
+      setFilteredPrograms(departmentPrograms);
+    } catch (error) {
+      message.error('Failed to fetch programs');
     }
   };
 
@@ -373,6 +408,40 @@ const DepartmentActivitiesPage = () => {
         }
       },
     });
+  };
+
+  const handleAddProgram = () => {
+    setEditingProgram(null);
+    setProgramModalOpen(true);
+  };
+
+  const handleEditProgram = (program: Program) => {
+    setEditingProgram(program);
+    setProgramModalOpen(true);
+  };
+
+  const handleDeleteProgram = (id: number) => {
+    Modal.confirm({
+      title: 'Delete Program',
+      content: 'Are you sure you want to delete this program? This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await programsService.delete(id);
+          message.success('Program deleted successfully');
+          fetchPrograms();
+        } catch (error: any) {
+          message.error(
+            error?.response?.data?.error?.message || 'Failed to delete program'
+          );
+        }
+      },
+    });
+  };
+
+  const handleProgramModalSuccess = () => {
+    fetchPrograms();
   };
 
   const coursesColumns: ColumnsType<Course> = [
@@ -733,6 +802,111 @@ const DepartmentActivitiesPage = () => {
     },
   ];
 
+  const programsColumns: ColumnsType<Program> = [
+    {
+      title: 'Program Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (name) => (
+        <span className="program-name">
+          <BookOutlined /> {name}
+        </span>
+      ),
+    },
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      width: 120,
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      render: (code) => <Tag color="blue">{code}</Tag>,
+    },
+    {
+      title: 'Degree Level',
+      dataIndex: 'degreeLevel',
+      key: 'degreeLevel',
+      width: 150,
+      sorter: (a, b) => a.degreeLevel.localeCompare(b.degreeLevel),
+      render: (level) => {
+        const colors: Record<string, string> = {
+          BACHELOR: 'cyan',
+          MASTER: 'purple',
+          DOCTORATE: 'gold',
+          UNDERGRADUATE: 'blue',
+          GRADUATE: 'magenta',
+        };
+        return <Tag color={colors[level] || 'default'}>{level}</Tag>;
+      },
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'durationYears',
+      key: 'durationYears',
+      width: 100,
+      align: 'center',
+      sorter: (a, b) => a.durationYears - b.durationYears,
+      render: (years) => `${years} ${years === 1 ? 'year' : 'years'}`,
+    },
+    {
+      title: 'Credits Required',
+      dataIndex: 'totalCreditsRequired',
+      key: 'totalCreditsRequired',
+      width: 140,
+      align: 'center',
+      sorter: (a, b) => Number(a.totalCreditsRequired) - Number(b.totalCreditsRequired),
+      render: (credits) => <strong>{credits}</strong>,
+    },
+    {
+      title: 'Courses',
+      key: 'coursesCount',
+      width: 100,
+      align: 'center',
+      render: (_, record) => (
+        <Tag color="green">{record._count?.programCourses || 0}</Tag>
+      ),
+      sorter: (a, b) => (a._count?.programCourses || 0) - (b._count?.programCourses || 0),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      width: 100,
+      render: (isActive) => (
+        <Tag color={isActive ? 'success' : 'default'}>
+          {isActive ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 150,
+      fixed: 'right',
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Edit Program">
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEditProgram(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Delete Program">
+            <Button
+              type="text"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteProgram(record.id)}
+            />
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
+
   const tabItems = [
     {
       key: 'courses',
@@ -896,6 +1070,49 @@ const DepartmentActivitiesPage = () => {
         </div>
       ),
     },
+    {
+      key: 'programs',
+      label: (
+        <span>
+          <BookOutlined />
+          Programs ({programs.length})
+        </span>
+      ),
+      children: (
+        <div className="tab-content">
+          <div className="filters-section">
+            <Input
+              placeholder="Search programs..."
+              prefix={<SearchOutlined />}
+              value={programSearchText}
+              onChange={(e) => setProgramSearchText(e.target.value)}
+              className="search-input"
+              allowClear
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddProgram}
+              size="large"
+            >
+              Add Program
+            </Button>
+          </div>
+          <Table
+            columns={programsColumns}
+            dataSource={filteredPrograms}
+            loading={loading}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} programs`,
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </div>
+      ),
+    },
   ];
 
   if (!department) {
@@ -939,6 +1156,7 @@ const DepartmentActivitiesPage = () => {
           teachersLoading={teachersLoading}
           academicPeriods={academicPeriods}
           departments={departments}
+          programs={programs}
         />
 
         <TeacherFormModal
@@ -962,6 +1180,15 @@ const DepartmentActivitiesPage = () => {
           courses={courses}
           teachers={teachers}
           academicPeriods={academicPeriods}
+        />
+
+        <ProgramFormModal
+          open={programModalOpen}
+          onClose={() => setProgramModalOpen(false)}
+          onSuccess={handleProgramModalSuccess}
+          program={editingProgram}
+          departmentId={department.id}
+          departments={departments}
         />
       </div>
     </MainLayout>
