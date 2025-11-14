@@ -16,12 +16,14 @@ import {
   CloseCircleOutlined,
   EyeOutlined,
   FileTextOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
 import scientificTasksService from '../../services/scientific-tasks.service';
 import type { TeacherScientificReport } from '../../types';
 import dayjs from 'dayjs';
+import api from '../../config/api';
 
 const ScientificReportsValidationPage: React.FC = () => {
   const [reports, setReports] = useState<TeacherScientificReport[]>([]);
@@ -88,6 +90,28 @@ const ScientificReportsValidationPage: React.FC = () => {
         }
       },
     });
+  };
+
+  const handleDownload = async (reportId: number, fileName: string) => {
+    try {
+      const response = await api.get(`/scientific-tasks/reports/${reportId}/download`, {
+        responseType: 'blob',
+      });
+
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      message.success('File downloaded successfully');
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Failed to download file');
+    }
   };
 
   const getStatusTag = (status: string) => {
@@ -310,9 +334,19 @@ const ScientificReportsValidationPage: React.FC = () => {
               </Descriptions.Item>
               {selectedReport.fileName && (
                 <Descriptions.Item label="Attachment">
-                  <Tag color="blue" icon={<FileTextOutlined />}>
-                    {selectedReport.fileName}
-                  </Tag>
+                  <Space>
+                    <Tag color="blue" icon={<FileTextOutlined />}>
+                      {selectedReport.fileName}
+                    </Tag>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<DownloadOutlined />}
+                      onClick={() => handleDownload(selectedReport.id, selectedReport.fileName)}
+                    >
+                      Download
+                    </Button>
+                  </Space>
                 </Descriptions.Item>
               )}
               <Descriptions.Item label="Submitted At">

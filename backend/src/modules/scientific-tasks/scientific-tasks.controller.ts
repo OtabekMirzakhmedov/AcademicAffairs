@@ -12,10 +12,15 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Res,
+  StreamableFile,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, basename, join } from 'path';
+import { createReadStream, existsSync } from 'fs';
+import type { Response } from 'express';
 import { ScientificTasksService } from './scientific-tasks.service';
 import { CreateScientificTaskDto } from './dto/create-scientific-task.dto';
 import { UpdateScientificTaskDto } from './dto/update-scientific-task.dto';
@@ -207,6 +212,40 @@ export class ScientificTasksController {
       },
       message: 'File uploaded successfully',
     };
+  }
+
+  @Get('reports/:id/download')
+  async downloadFile(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) reportId: number,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    // Get the report to check permissions and get file path
+    const report = await this.scientificTasksService.getReport(reportId, user.id);
+
+    if (!report.filePath) {
+      throw new NotFoundException('No file attached to this report');
+    }
+
+    // Security: Ensure the file path is within the uploads directory
+    const uploadsDir = join(process.cwd(), 'uploads', 'scientific-reports');
+    const fileName = basename(report.filePath);
+    const filePath = join(uploadsDir, fileName);
+
+    // Check if file exists
+    if (!existsSync(filePath)) {
+      throw new NotFoundException('File not found');
+    }
+
+    // Set response headers for file download
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${report.fileName || fileName}"`,
+    });
+
+    // Stream the file
+    const file = createReadStream(filePath);
+    return new StreamableFile(file);
   }
 
   // ==================== PARAMETERIZED TASK ENDPOINTS ====================
