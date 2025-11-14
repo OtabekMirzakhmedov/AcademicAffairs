@@ -211,6 +211,7 @@ const ScientificReportsValidationPage: React.FC = () => {
   // Calculate statistics
   const stats = {
     total: reports.length,
+    inProgress: reports.filter(r => r.status === 'in_progress').length,
     submitted: reports.filter(r => r.status === 'submitted').length,
     validated: reports.filter(r => r.status === 'validated').length,
     rejected: reports.filter(r => r.status === 'rejected').length,
@@ -224,9 +225,16 @@ const ScientificReportsValidationPage: React.FC = () => {
           <p>Review and validate scientific task reports submitted by teachers</p>
         </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <Card>
           <Statistic title="Total Reports" value={stats.total} />
+        </Card>
+        <Card>
+          <Statistic
+            title="In Progress"
+            value={stats.inProgress}
+            valueStyle={{ color: '#1890ff' }}
+          />
         </Card>
         <Card>
           <Statistic

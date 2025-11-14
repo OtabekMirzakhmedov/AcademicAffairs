@@ -400,6 +400,8 @@ export class ScientificTasksService {
 
   /**
    * Get all submitted reports (for dept heads and admins)
+   * Department heads can see all reports (including in_progress) from their department
+   * Admins can see all reports
    */
   async getSubmittedReports(userId: number) {
     const user = await this.prisma.user.findUnique({
@@ -421,12 +423,10 @@ export class ScientificTasksService {
       throw new ForbiddenException('Teachers cannot access this endpoint');
     }
 
-    let where: any = {
-      status: { in: ['submitted', 'validated', 'rejected'] },
-    };
+    let where: any = {};
 
     if (roleName === 'departmenthead') {
-      // Dept head sees reports from their department
+      // Dept head sees ALL reports from teachers in their department
       const deptHead = user.headedDepartments[0];
       if (deptHead) {
         const teacherIds = await this.prisma.teacherInfo.findMany({
@@ -434,6 +434,9 @@ export class ScientificTasksService {
           select: { userId: true },
         });
         where.teacherId = { in: teacherIds.map((t) => t.userId) };
+      } else {
+        // If no department assigned, return empty
+        where.teacherId = { in: [] };
       }
     }
     // Admin sees all reports
