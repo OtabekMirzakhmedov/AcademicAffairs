@@ -51,52 +51,9 @@ export class ScientificTasksController {
     };
   }
 
-  @Get(':id')
-  async getTask(
-    @CurrentUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    const task = await this.scientificTasksService.findOneTask(id, user.id);
-    return {
-      success: true,
-      data: task,
-    };
-  }
-
-  @Patch(':id')
-  async updateTask(
-    @CurrentUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateScientificTaskDto: UpdateScientificTaskDto,
-  ) {
-    const task = await this.scientificTasksService.updateTask(
-      id,
-      user.id,
-      updateScientificTaskDto,
-    );
-    return {
-      success: true,
-      data: task,
-      message: 'Scientific task updated successfully',
-    };
-  }
-
-  @Get(':id/progress')
-  async getTaskProgress(
-    @CurrentUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    const progress = await this.scientificTasksService.getTaskProgress(
-      id,
-      user.id,
-    );
-    return {
-      success: true,
-      data: progress,
-    };
-  }
-
   // ==================== REPORT ENDPOINTS ====================
+  // NOTE: These must come BEFORE the parameterized routes like ':id'
+  // to avoid route conflicts where 'reports' is matched as ':id'
 
   @Get('reports/my')
   async getMyReports(@CurrentUser() user: any) {
@@ -193,6 +150,55 @@ export class ScientificTasksController {
       success: true,
       data: report,
       message: 'Report rejected successfully',
+    };
+  }
+
+  // ==================== PARAMETERIZED TASK ENDPOINTS ====================
+  // NOTE: These must come AFTER the specific 'reports/*' routes
+  // to avoid route matching conflicts
+
+  @Get(':id/progress')
+  async getTaskProgress(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const progress = await this.scientificTasksService.getTaskProgress(
+      id,
+      user.id,
+    );
+    return {
+      success: true,
+      data: progress,
+    };
+  }
+
+  @Get(':id')
+  async getTask(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const task = await this.scientificTasksService.findOneTask(id, user.id);
+    return {
+      success: true,
+      data: task,
+    };
+  }
+
+  @Patch(':id')
+  async updateTask(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateScientificTaskDto: UpdateScientificTaskDto,
+  ) {
+    const task = await this.scientificTasksService.updateTask(
+      id,
+      user.id,
+      updateScientificTaskDto,
+    );
+    return {
+      success: true,
+      data: task,
+      message: 'Scientific task updated successfully',
     };
   }
 }
