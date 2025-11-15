@@ -3,10 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -104,8 +105,8 @@ model TeacherInfo {
   userId                          Int      @unique @map("user_id")
   employmentType                  String?  @map("employment_type") // full-time, part-time, contract - set by dept head, nullable
   departmentId                    Int      @map("department_id") // Set by admin when assigning teacher to department
-  mandatoryHoursPerPeriod         Decimal? @map("mandatory_hours_per_period") @db.Decimal(10, 2) // Set by dept head or admin, nullable
-  mandatoryExtracurricularHours   Decimal? @default(0) @map("mandatory_extracurricular_hours") @db.Decimal(10, 2) // Set by dept head or admin
+  mandatoryHoursPerPeriod         Decimal? @map("mandatory_hours_per_period") // Set by dept head or admin, nullable
+  mandatoryExtracurricularHours   Decimal? @default(0) @map("mandatory_extracurricular_hours") // Set by dept head or admin
   mandatoryConferenceArticles     Int?     @default(0) @map("mandatory_conference_articles") // Set by dept head or admin
   mandatoryNationalArticles       Int?     @default(0) @map("mandatory_national_articles") // Set by dept head or admin
   mandatoryScopusArticles         Int?     @default(0) @map("mandatory_scopus_articles") // Set by dept head or admin
@@ -158,12 +159,12 @@ model TeachingActivity {
   courseId         Int       @map("course_id")
   academicPeriodId Int       @map("academic_period_id")
   groups           Json // Array of group names entered by teacher
-  lectureHours     Decimal   @default(0) @map("lecture_hours") @db.Decimal(10, 2)
-  practiceHours    Decimal   @default(0) @map("practice_hours") @db.Decimal(10, 2)
-  labHours         Decimal   @default(0) @map("lab_hours") @db.Decimal(10, 2)
-  seminarHours     Decimal   @default(0) @map("seminar_hours") @db.Decimal(10, 2)
-  advisingHours    Decimal   @default(0) @map("advising_hours") @db.Decimal(10, 2)
-  totalHours       Decimal   @default(0) @map("total_hours") @db.Decimal(10, 2) // Calculated sum but stored
+  lectureHours     Decimal   @default(0) @map("lecture_hours")
+  practiceHours    Decimal   @default(0) @map("practice_hours")
+  labHours         Decimal   @default(0) @map("lab_hours")
+  seminarHours     Decimal   @default(0) @map("seminar_hours")
+  advisingHours    Decimal   @default(0) @map("advising_hours")
+  totalHours       Decimal   @default(0) @map("total_hours") // Calculated sum but stored
   status           String    @default("draft") // draft, submitted, validated, rejected
   submittedAt      DateTime? @map("submitted_at")
   validatedAt      DateTime? @map("validated_at")
@@ -187,7 +188,7 @@ model Program {
   degreeLevel           String    @map("degree_level") // BACHELOR, MASTER, DOCTORATE, UNDERGRADUATE, GRADUATE
   departmentId          Int       @map("department_id")
   durationYears         Int       @map("duration_years") // Program duration in years
-  totalCreditsRequired  Decimal   @map("total_credits_required") @db.Decimal(6, 2)
+  totalCreditsRequired  Decimal   @map("total_credits_required")
   description           String?
   isActive              Boolean   @default(true) @map("is_active")
   createdBy             Int       @map("created_by") // ADMIN or HEAD_OF_DEPARTMENT
@@ -225,7 +226,7 @@ model ProgramCourse {
 model ScientificTask {
   id              Int       @id @default(autoincrement())
   taskName        String    @map("task_name")
-  taskDescription String?   @map("task_description") @db.Text
+  taskDescription String?   @map("task_description")
   deadline        DateTime
   createdBy       Int       @map("created_by")
   departmentId    Int?      @map("department_id") // Null if created by admin (applies to all), set if created by dept head
@@ -247,9 +248,9 @@ model TeacherScientificReport {
   id                    Int       @id @default(autoincrement())
   scientificTaskId      Int       @map("scientific_task_id")
   teacherId             Int       @map("teacher_id")
-  executionStatus       String?   @map("execution_status") @db.Text
+  executionStatus       String?   @map("execution_status")
   completionPercentage  Int       @default(0) @map("completion_percentage")
-  equivalentHours       Decimal   @default(0) @map("equivalent_hours") @db.Decimal(10, 2) // Hours worked on the task
+  equivalentHours       Decimal   @default(0) @map("equivalent_hours") // Hours worked on the task
   filePath              String?   @map("file_path")
   fileName              String?   @map("file_name")
   status                String    @default("in_progress") // in_progress, submitted, validated, rejected
@@ -275,19 +276,19 @@ model TeacherPublication {
   teacherId         Int       @map("teacher_id")
   title             String
   publicationType   String    @map("publication_type") // conference, national, scopus
-  authors           String    @db.Text // List of authors
+  authors           String // List of authors
   venue             String? // Conference/Journal name
   publicationDate   DateTime? @map("publication_date")
   doi               String?   @unique // Digital Object Identifier
   isbn              String?   // International Standard Book Number
   issn              String?   // International Standard Serial Number
   url               String?   // Link to publication
-  abstract          String?   @db.Text
-  keywords          String?   @db.Text
+  abstract          String?
+  keywords          String?
   status            String    @default("draft") // draft, submitted, validated, rejected
   submittedAt       DateTime? @map("submitted_at")
   validatedAt       DateTime? @map("validated_at")
-  rejectionReason   String?   @map("rejection_reason") @db.Text
+  rejectionReason   String?   @map("rejection_reason")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
