@@ -54,6 +54,10 @@ class ScientificTasksService {
     return response.data.data;
   }
 
+  async deleteTask(id: number): Promise<void> {
+    await api.delete(`/scientific-tasks/${id}`);
+  }
+
   async getTaskProgress(id: number): Promise<ScientificTask> {
     const response = await api.get<ApiResponse<ScientificTask>>(
       `/scientific-tasks/${id}/progress`

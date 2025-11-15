@@ -243,6 +243,7 @@ model TeacherScientificReport {
   teacherId             Int       @map("teacher_id")
   executionStatus       String?   @map("execution_status") @db.Text
   completionPercentage  Int       @default(0) @map("completion_percentage")
+  equivalentHours       Decimal   @default(0) @map("equivalent_hours") @db.Decimal(10, 2) // Hours worked on the task
   filePath              String?   @map("file_path")
   fileName              String?   @map("file_name")
   status                String    @default("in_progress") // in_progress, submitted, validated, rejected

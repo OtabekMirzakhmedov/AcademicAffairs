@@ -13,10 +13,12 @@ import {
   Statistic,
   Descriptions,
   Progress,
+  Switch,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
+  DeleteOutlined,
   EyeOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -33,10 +35,12 @@ const ScientificTasksManagementPage: React.FC = () => {
   const [tasks, setTasks] = useState<ScientificTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [progressModalVisible, setProgressModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ScientificTask | null>(null);
   const [taskProgress, setTaskProgress] = useState<ScientificTask | null>(null);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
 
   useEffect(() => {
     loadTasks();
@@ -68,6 +72,54 @@ const ScientificTasksManagementPage: React.FC = () => {
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Failed to create task');
     }
+  };
+
+  const handleEdit = (task: ScientificTask) => {
+    setSelectedTask(task);
+    editForm.setFieldsValue({
+      taskName: task.taskName,
+      taskDescription: task.taskDescription,
+      deadline: dayjs(task.deadline),
+      isActive: task.isActive,
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const values = await editForm.validateFields();
+      if (!selectedTask) return;
+
+      await scientificTasksService.updateTask(selectedTask.id, {
+        ...values,
+        deadline: values.deadline.toISOString(),
+      });
+      message.success('Task updated successfully');
+      setEditModalVisible(false);
+      editForm.resetFields();
+      setSelectedTask(null);
+      loadTasks();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Failed to update task');
+    }
+  };
+
+  const handleDelete = (task: ScientificTask) => {
+    Modal.confirm({
+      title: 'Delete Scientific Task',
+      content: `Are you sure you want to delete "${task.taskName}"? This will also delete all associated reports.`,
+      okText: 'Delete',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await scientificTasksService.deleteTask(task.id);
+          message.success('Task deleted successfully');
+          loadTasks();
+        } catch (error: any) {
+          message.error(error.response?.data?.message || 'Failed to delete task');
+        }
+      },
+    });
   };
 
   const handleViewProgress = async (task: ScientificTask) => {
@@ -142,12 +194,28 @@ const ScientificTasksManagementPage: React.FC = () => {
       render: (_: any, record: ScientificTask) => (
         <Space>
           <Button
+            type="default"
+            icon={<EditOutlined />}
+            size="small"
+            onClick={() => handleEdit(record)}
+          >
+            Edit
+          </Button>
+          <Button
             type="primary"
             icon={<EyeOutlined />}
             size="small"
             onClick={() => handleViewProgress(record)}
           >
-            View Progress
+            Progress
+          </Button>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            size="small"
+            onClick={() => handleDelete(record)}
+          >
+            Delete
           </Button>
         </Space>
       ),
@@ -268,6 +336,55 @@ const ScientificTasksManagementPage: React.FC = () => {
             rules={[{ required: true, message: 'Please select deadline' }]}
           >
             <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Edit Task Modal */}
+      <Modal
+        title="Edit Scientific Task"
+        open={editModalVisible}
+        onOk={handleUpdate}
+        onCancel={() => {
+          setEditModalVisible(false);
+          editForm.resetFields();
+          setSelectedTask(null);
+        }}
+        width={700}
+      >
+        <Form form={editForm} layout="vertical">
+          <Form.Item
+            label="Task Name"
+            name="taskName"
+            rules={[{ required: true, message: 'Please enter task name' }]}
+          >
+            <Input placeholder="Enter task name" />
+          </Form.Item>
+
+          <Form.Item
+            label="Task Description"
+            name="taskDescription"
+          >
+            <TextArea
+              rows={6}
+              placeholder="Describe the scientific task..."
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Deadline"
+            name="deadline"
+            rules={[{ required: true, message: 'Please select deadline' }]}
+          >
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Status"
+            name="isActive"
+            valuePropName="checked"
+          >
+            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
           </Form.Item>
         </Form>
       </Modal>

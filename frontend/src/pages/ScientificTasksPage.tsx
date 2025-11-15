@@ -5,6 +5,7 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
   message,
   Tag,
   Progress,
@@ -20,6 +21,7 @@ import {
   FileTextOutlined,
   ClockCircleOutlined,
   DownloadOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../components/layout/MainLayout';
@@ -60,6 +62,7 @@ const ScientificTasksPage: React.FC = () => {
     form.setFieldsValue({
       executionStatus: report.executionStatus || '',
       completionPercentage: report.completionPercentage || 0,
+      equivalentHours: report.equivalentHours || 0,
     });
     setEditModalVisible(true);
   };
@@ -205,6 +208,17 @@ const ScientificTasksPage: React.FC = () => {
       ),
     },
     {
+      title: 'Hours',
+      dataIndex: 'equivalentHours',
+      key: 'equivalentHours',
+      render: (hours: number) => (
+        <Space>
+          <FieldTimeOutlined />
+          {hours || 0}h
+        </Space>
+      ),
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
@@ -288,6 +302,23 @@ const ScientificTasksPage: React.FC = () => {
               <Slider marks={{ 0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%' }} />
             </Form.Item>
 
+            <Form.Item
+              label="Equivalent Hours"
+              name="equivalentHours"
+              tooltip="Number of hours you worked on this task"
+              rules={[{ required: false }]}
+            >
+              <InputNumber
+                min={0}
+                max={1000}
+                step={0.5}
+                precision={2}
+                style={{ width: '200px' }}
+                placeholder="0.00"
+                addonAfter="hours"
+              />
+            </Form.Item>
+
             <Form.Item label="Attachment">
               <Upload
                 beforeUpload={(file) => {
@@ -345,6 +376,12 @@ const ScientificTasksPage: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Execution Status">
                 {selectedReport.executionStatus || 'No status provided'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Equivalent Hours">
+                <Space>
+                  <FieldTimeOutlined />
+                  {selectedReport.equivalentHours || 0} hours
+                </Space>
               </Descriptions.Item>
               {selectedReport.fileName && (
                 <Descriptions.Item label="Attachment">

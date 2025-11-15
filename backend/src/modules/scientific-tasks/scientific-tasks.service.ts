@@ -246,6 +246,29 @@ export class ScientificTasksService {
   }
 
   /**
+   * Delete a scientific task
+   */
+  async deleteTask(taskId: number, userId: number) {
+    const task = await this.prisma.scientificTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Only creator can delete
+    if (task.createdBy !== userId) {
+      throw new ForbiddenException('Only the task creator can delete it');
+    }
+
+    // Delete task - associated reports will be cascade deleted
+    await this.prisma.scientificTask.delete({
+      where: { id: taskId },
+    });
+  }
+
+  /**
    * Get teacher's own reports
    */
   async getMyReports(userId: number) {

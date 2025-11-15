@@ -235,6 +235,7 @@ export interface TeacherScientificReport {
   teacher?: User;
   executionStatus?: string;
   completionPercentage: number;
+  equivalentHours: number;
   filePath?: string;
   fileName?: string;
   status: 'in_progress' | 'submitted' | 'validated' | 'rejected';

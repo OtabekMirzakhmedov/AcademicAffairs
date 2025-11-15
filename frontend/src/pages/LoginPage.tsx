@@ -14,7 +14,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && user && !user.mustChangePassword) {
-      navigate('/dashboard');
+      navigate('/teaching-activities');
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -34,7 +34,7 @@ const LoginPage = () => {
         setShowChangePassword(true);
       } else {
         message.success('Login successful!');
-        navigate('/dashboard');
+        navigate('/teaching-activities');
       }
     } catch (error: any) {
       message.error(
@@ -47,8 +47,8 @@ const LoginPage = () => {
 
   const handlePasswordChanged = () => {
     setShowChangePassword(false);
-    message.success('Password changed successfully! Redirecting to dashboard...');
-    navigate('/dashboard');
+    message.success('Password changed successfully! Redirecting...');
+    navigate('/teaching-activities');
   };
 
   return (
@@ -75,20 +75,24 @@ const LoginPage = () => {
                     }}
                 >
                   <img
-                      src={branding.universityLogo}
+                      src="src/assets/university-logo.png"
                       alt={branding.universityName}
-                      className="h-12"
+                      style={{
+                        height: '64px',
+                        width: '64px',
+                        objectFit: 'contain'
+                      }}
                       onError={(e) => {
                         // Fallback to icon if logo doesn't exist
                         e.currentTarget.style.display = 'none';
                         const parent = e.currentTarget.parentElement;
                         if (parent) {
                           parent.innerHTML = `
-                        <svg 
-                          width="48" 
-                          height="48" 
-                          fill="none" 
-                          stroke="#1890ff" 
+                        <svg
+                          width="48"
+                          height="48"
+                          fill="none"
+                          stroke="#1890ff"
                           viewBox="0 0 24 24"
                           stroke-width="2"
                         >

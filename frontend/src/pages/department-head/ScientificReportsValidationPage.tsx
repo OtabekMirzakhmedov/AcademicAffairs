@@ -10,6 +10,10 @@ import {
   Progress,
   Card,
   Statistic,
+  Collapse,
+  Tabs,
+  Row,
+  Col,
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -17,6 +21,9 @@ import {
   EyeOutlined,
   FileTextOutlined,
   DownloadOutlined,
+  UserOutlined,
+  CalendarOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
@@ -25,15 +32,40 @@ import type { TeacherScientificReport } from '../../types';
 import dayjs from 'dayjs';
 import api from '../../config/api';
 
+const { Panel } = Collapse;
+const { TabPane } = Tabs;
+
+interface TaskGroup {
+  taskId: number;
+  taskName: string;
+  taskDescription: string;
+  deadline: string;
+  reports: TeacherScientificReport[];
+  totalTeachers: number;
+  submittedCount: number;
+  validatedCount: number;
+  rejectedCount: number;
+  inProgressCount: number;
+  completionRate: number;
+  totalEquivalentHours: number;
+}
+
 const ScientificReportsValidationPage: React.FC = () => {
   const [reports, setReports] = useState<TeacherScientificReport[]>([]);
+  const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedReport, setSelectedReport] = useState<TeacherScientificReport | null>(null);
+  const [viewMode, setViewMode] = useState<'tasks' | 'all'>('tasks');
 
   useEffect(() => {
     loadReports();
   }, []);
+
+  useEffect(() => {
+    // Group reports by task whenever reports change
+    groupReportsByTask();
+  }, [reports]);
 
   const loadReports = async () => {
     try {
@@ -45,6 +77,61 @@ const ScientificReportsValidationPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const groupReportsByTask = () => {
+    const taskMap = new Map<number, TaskGroup>();
+
+    reports.forEach(report => {
+      const taskId = report.scientificTask.id;
+
+      if (!taskMap.has(taskId)) {
+        taskMap.set(taskId, {
+          taskId,
+          taskName: report.scientificTask.taskName,
+          taskDescription: report.scientificTask.taskDescription || '',
+          deadline: report.scientificTask.deadline,
+          reports: [],
+          totalTeachers: 0,
+          submittedCount: 0,
+          validatedCount: 0,
+          rejectedCount: 0,
+          inProgressCount: 0,
+          completionRate: 0,
+          totalEquivalentHours: 0,
+        });
+      }
+
+      const group = taskMap.get(taskId)!;
+      group.reports.push(report);
+      group.totalTeachers++;
+      group.totalEquivalentHours += Number(report.equivalentHours || 0);
+
+      // Count statuses
+      switch (report.status) {
+        case 'submitted':
+          group.submittedCount++;
+          break;
+        case 'validated':
+          group.validatedCount++;
+          break;
+        case 'rejected':
+          group.rejectedCount++;
+          break;
+        case 'in_progress':
+          group.inProgressCount++;
+          break;
+      }
+    });
+
+    // Calculate completion rate for each task
+    taskMap.forEach(group => {
+      group.completionRate = group.totalTeachers > 0
+        ? Math.round((group.validatedCount / group.totalTeachers) * 100)
+        : 0;
+    });
+
+    setTaskGroups(Array.from(taskMap.values()));
   };
 
   const handleViewDetails = (report: TeacherScientificReport) => {
@@ -125,24 +212,17 @@ const ScientificReportsValidationPage: React.FC = () => {
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
-  const columns: ColumnsType<TeacherScientificReport> = [
-    {
-      title: 'Task Name',
-      dataIndex: ['scientificTask', 'taskName'],
-      key: 'taskName',
-      render: (text: string) => (
-        <Space>
-          <FileTextOutlined />
-          {text}
-        </Space>
-      ),
-    },
+  // Columns for teacher reports within each task
+  const teacherColumns: ColumnsType<TeacherScientificReport> = [
     {
       title: 'Teacher',
       dataIndex: ['teacher', 'userInfo'],
       key: 'teacher',
       render: (userInfo: any) => (
-        userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : '-'
+        <Space>
+          <UserOutlined />
+          {userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : '-'}
+        </Space>
       ),
     },
     {
@@ -157,6 +237,12 @@ const ScientificReportsValidationPage: React.FC = () => {
       render: (percentage: number) => (
         <Progress percent={percentage} style={{ width: 120 }} />
       ),
+    },
+    {
+      title: 'Hours',
+      dataIndex: 'equivalentHours',
+      key: 'equivalentHours',
+      render: (hours: number) => `${hours || 0}h`,
     },
     {
       title: 'Status',
@@ -208,6 +294,22 @@ const ScientificReportsValidationPage: React.FC = () => {
     },
   ];
 
+  // Columns for flat view (all reports)
+  const allReportsColumns: ColumnsType<TeacherScientificReport> = [
+    {
+      title: 'Task Name',
+      dataIndex: ['scientificTask', 'taskName'],
+      key: 'taskName',
+      render: (text: string) => (
+        <Space>
+          <FileTextOutlined />
+          {text}
+        </Space>
+      ),
+    },
+    ...teacherColumns,
+  ];
+
   // Calculate statistics
   const stats = {
     total: reports.length,
@@ -225,49 +327,127 @@ const ScientificReportsValidationPage: React.FC = () => {
           <p>Review and validate scientific task reports submitted by teachers</p>
         </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <Card>
-          <Statistic title="Total Reports" value={stats.total} />
-        </Card>
-        <Card>
-          <Statistic
-            title="In Progress"
-            value={stats.inProgress}
-            valueStyle={{ color: '#1890ff' }}
-          />
-        </Card>
-        <Card>
-          <Statistic
-            title="Awaiting Validation"
-            value={stats.submitted}
-            valueStyle={{ color: '#faad14' }}
-          />
-        </Card>
-        <Card>
-          <Statistic
-            title="Validated"
-            value={stats.validated}
-            valueStyle={{ color: '#52c41a' }}
-            prefix={<CheckCircleOutlined />}
-          />
-        </Card>
-        <Card>
-          <Statistic
-            title="Rejected"
-            value={stats.rejected}
-            valueStyle={{ color: '#ff4d4f' }}
-            prefix={<CloseCircleOutlined />}
-          />
-        </Card>
-      </div>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <Card>
+            <Statistic title="Total Reports" value={stats.total} />
+          </Card>
+          <Card>
+            <Statistic
+              title="In Progress"
+              value={stats.inProgress}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+          <Card>
+            <Statistic
+              title="Awaiting Validation"
+              value={stats.submitted}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+          <Card>
+            <Statistic
+              title="Validated"
+              value={stats.validated}
+              valueStyle={{ color: '#52c41a' }}
+              prefix={<CheckCircleOutlined />}
+            />
+          </Card>
+          <Card>
+            <Statistic
+              title="Rejected"
+              value={stats.rejected}
+              valueStyle={{ color: '#ff4d4f' }}
+              prefix={<CloseCircleOutlined />}
+            />
+          </Card>
+        </div>
 
-      <Table
-        columns={columns}
-        dataSource={reports}
-        loading={loading}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+        <Tabs activeKey={viewMode} onChange={(key) => setViewMode(key as 'tasks' | 'all')}>
+          <TabPane tab="By Tasks" key="tasks">
+            {loading ? (
+              <Card loading={loading} />
+            ) : (
+              <Collapse accordion>
+                {taskGroups.map((taskGroup) => (
+                  <Panel
+                    key={taskGroup.taskId}
+                    header={
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                          <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                            <Space>
+                              <FileTextOutlined style={{ fontSize: '16px' }} />
+                              <strong style={{ fontSize: '16px' }}>{taskGroup.taskName}</strong>
+                            </Space>
+                            <Space size="large">
+                              <Space size="small">
+                                <CalendarOutlined />
+                                <span style={{ fontSize: '12px', color: '#666' }}>
+                                  Deadline: {dayjs(taskGroup.deadline).format('MMM DD, YYYY')}
+                                </span>
+                              </Space>
+                              <Space size="small">
+                                <UserOutlined />
+                                <span style={{ fontSize: '12px', color: '#666' }}>
+                                  {taskGroup.totalTeachers} Teachers
+                                </span>
+                              </Space>
+                              <Space size="small">
+                                <FieldTimeOutlined />
+                                <span style={{ fontSize: '12px', color: '#666', fontWeight: 'bold' }}>
+                                  {taskGroup.totalEquivalentHours.toFixed(1)} hours total
+                                </span>
+                              </Space>
+                            </Space>
+                          </Space>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                          <Space size="middle">
+                            <Tag color="blue">{taskGroup.inProgressCount} In Progress</Tag>
+                            <Tag color="orange">{taskGroup.submittedCount} Submitted</Tag>
+                            <Tag color="green">{taskGroup.validatedCount} Validated</Tag>
+                            <Tag color="red">{taskGroup.rejectedCount} Rejected</Tag>
+                          </Space>
+                          <div style={{ width: '120px' }}>
+                            <Progress
+                              percent={taskGroup.completionRate}
+                              status={taskGroup.completionRate === 100 ? 'success' : 'active'}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div style={{ padding: '16px 0' }}>
+                      {taskGroup.taskDescription && (
+                        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                          <strong>Description:</strong> {taskGroup.taskDescription}
+                        </div>
+                      )}
+                      <Table
+                        columns={teacherColumns}
+                        dataSource={taskGroup.reports}
+                        rowKey="id"
+                        pagination={false}
+                        size="small"
+                      />
+                    </div>
+                  </Panel>
+                ))}
+              </Collapse>
+            )}
+          </TabPane>
+          <TabPane tab="All Reports" key="all">
+            <Table
+              columns={allReportsColumns}
+              dataSource={reports}
+              loading={loading}
+              rowKey="id"
+              pagination={{ pageSize: 10 }}
+            />
+          </TabPane>
+        </Tabs>
 
       {/* Detail Modal */}
       <Modal
@@ -337,6 +517,9 @@ const ScientificReportsValidationPage: React.FC = () => {
                 <div style={{ whiteSpace: 'pre-wrap' }}>
                   {selectedReport.executionStatus || 'No status provided'}
                 </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="Equivalent Hours">
+                <strong>{selectedReport.equivalentHours || 0}</strong> hours worked on this task
               </Descriptions.Item>
               {selectedReport.fileName && (
                 <Descriptions.Item label="Attachment">

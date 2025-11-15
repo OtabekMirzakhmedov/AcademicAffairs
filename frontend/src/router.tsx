@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import TeacherDashboard from './pages/TeacherDashboard';
 import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
 import ScientificTasksPage from './pages/ScientificTasksPage';
 import UsersPage from './pages/admin/UsersPage';
@@ -19,15 +18,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: (
       <ProtectedRoute>
-        <Navigate to="/dashboard" replace />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard',
-    element: (
-      <ProtectedRoute>
-        <TeacherDashboard />
+        <Navigate to="/teaching-activities" replace />
       </ProtectedRoute>
     ),
   },
@@ -105,6 +96,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/teaching-activities" replace />,
   },
 ]);

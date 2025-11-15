@@ -4,23 +4,22 @@ import {
   Post,
   Body,
   Patch,
+  Delete,
   Param,
   UseGuards,
   HttpCode,
   HttpStatus,
   ParseIntPipe,
-  UseInterceptors,
-  UploadedFile,
   BadRequestException,
   Res,
   StreamableFile,
   NotFoundException,
+  Req,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { extname, basename, join } from 'path';
-import { createReadStream, existsSync } from 'fs';
-import type { Response } from 'express';
+import { createReadStream, createWriteStream, existsSync } from 'fs';
+import { pipeline } from 'stream/promises';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { ScientificTasksService } from './scientific-tasks.service';
 import { CreateScientificTaskDto } from './dto/create-scientific-task.dto';
 import { UpdateScientificTaskDto } from './dto/update-scientific-task.dto';
@@ -165,99 +164,86 @@ export class ScientificTasksController {
   }
 
   @Post('reports/upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          const uploadDir = './uploads/scientific-reports';
-          // Directory is already created, just use it
-          cb(null, uploadDir);
-        },
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          const filename = `scientific-report-${uniqueSuffix}${ext}`;
-          cb(null, filename);
-        },
-      }),
-      limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
-      },
-      fileFilter: (req, file, cb) => {
-        console.log('File upload attempt:', {
-          originalname: file.originalname,
-          mimetype: file.mimetype,
-          size: file.size,
-        });
-
-        // Allow common document types - be more flexible with mime types
-        const allowedMimes = [
-          'application/pdf',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'application/vnd.ms-excel',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'text/plain',
-          'application/octet-stream', // Generic binary, check extension
-        ];
-
-        // Also check by file extension as a fallback
-        const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
-        const fileExt = extname(file.originalname).toLowerCase();
-
-        if (allowedMimes.includes(file.mimetype) || allowedExtensions.includes(fileExt)) {
-          console.log('File accepted');
-          cb(null, true);
-        } else {
-          console.log('File rejected - invalid type');
-          cb(
-            new BadRequestException(
-              `Invalid file type: ${file.mimetype}. Only PDF, DOC, DOCX, XLS, XLSX, and TXT files are allowed.`,
-            ),
-            false,
-          );
-        }
-      },
-    }),
-  )
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
+    @Req() request: FastifyRequest,
     @CurrentUser() user: any,
   ) {
     console.log('Upload handler called');
     console.log('User:', user?.id);
-    console.log('File:', file ? 'present' : 'missing');
-    console.log('File details:', file ? {
-      fieldname: file.fieldname,
-      originalname: file.originalname,
-      encoding: file.encoding,
-      mimetype: file.mimetype,
-      size: file.size,
-      path: file.path,
-    } : 'N/A');
 
-    if (!file) {
-      throw new BadRequestException('No file uploaded or file was rejected');
+    try {
+      // Get the uploaded file from the multipart request
+      const data = await request.file();
+
+      if (!data) {
+        throw new BadRequestException('No file uploaded');
+      }
+
+      console.log('File upload attempt:', {
+        filename: data.filename,
+        mimetype: data.mimetype,
+        encoding: data.encoding,
+      });
+
+      // Validate file type
+      const allowedMimes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',
+        'application/octet-stream', // Generic binary, check extension
+      ];
+
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+      const fileExt = extname(data.filename).toLowerCase();
+
+      if (!allowedMimes.includes(data.mimetype) && !allowedExtensions.includes(fileExt)) {
+        console.log('File rejected - invalid type');
+        throw new BadRequestException(
+          `Invalid file type: ${data.mimetype}. Only PDF, DOC, DOCX, XLS, XLSX, and TXT files are allowed.`,
+        );
+      }
+
+      console.log('File accepted');
+
+      // Generate unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = extname(data.filename);
+      const filename = `scientific-report-${uniqueSuffix}${ext}`;
+
+      // Save the file
+      const uploadDir = './uploads/scientific-reports';
+      const filePath = join(uploadDir, filename);
+
+      // Use pipeline to save the file stream
+      await pipeline(data.file, createWriteStream(filePath));
+
+      console.log('File uploaded successfully:', filePath);
+
+      return {
+        success: true,
+        data: {
+          filePath: filePath,
+          fileName: data.filename,
+        },
+        message: 'File uploaded successfully',
+      };
+    } catch (error) {
+      console.error('File upload error:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to upload file: ' + error.message);
     }
-
-    console.log('File uploaded successfully:', file.path);
-
-    return {
-      success: true,
-      data: {
-        filePath: file.path,
-        fileName: file.originalname,
-      },
-      message: 'File uploaded successfully',
-    };
   }
 
   @Get('reports/:id/download')
   async downloadFile(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) reportId: number,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     // Get the report to check permissions and get file path
     const report = await this.scientificTasksService.getReport(reportId, user.id);
@@ -277,10 +263,8 @@ export class ScientificTasksController {
     }
 
     // Set response headers for file download
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${report.fileName || fileName}"`,
-    });
+    res.header('Content-Type', 'application/octet-stream');
+    res.header('Content-Disposition', `attachment; filename="${report.fileName || fileName}"`);
 
     // Stream the file
     const file = createReadStream(filePath);
@@ -333,6 +317,19 @@ export class ScientificTasksController {
       success: true,
       data: task,
       message: 'Scientific task updated successfully',
+    };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteTask(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    await this.scientificTasksService.deleteTask(id, user.id);
+    return {
+      success: true,
+      message: 'Scientific task deleted successfully',
     };
   }
 }

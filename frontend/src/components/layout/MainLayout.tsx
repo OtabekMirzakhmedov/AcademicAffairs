@@ -11,7 +11,6 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
-  DashboardOutlined,
   TeamOutlined,
   BankOutlined,
   ControlOutlined,
@@ -56,12 +55,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const isDeptHead = user?.role?.name === 'departmenthead';
 
   const menuItems: MenuProps['items'] = [
-    {
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: 'Dashboard',
-      onClick: () => navigate('/dashboard'),
-    },
     {
       key: '/teaching-activities',
       icon: <BookOutlined />,
@@ -175,7 +168,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {!collapsed && (
           <div className="logo-text">
             <img
-              src={branding.universityLogo}
+              src='src/assets/university-logo.png'
               alt={branding.universityName}
               className="logo-image"
               onError={(e) => {
@@ -187,23 +180,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         )}
         {collapsed && (
           <div className="logo-icon">
-            <BookOutlined />
+            <img
+                src='src/assets/university-logo.png'
+                alt={branding.universityName}
+                className="logo-image-collapsed"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+            />
           </div>
         )}
       </div>
 
       <Menu
-        theme="dark"
-        mode="inline"
-        selectedKeys={[location.pathname]}
-        items={menuItems}
-        className="sidebar-menu"
+          theme="dark"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          className="sidebar-menu"
       />
     </>
   );
 
   return (
-    <Layout className="main-layout">
+      <Layout className="main-layout">
       {/* Desktop Sidebar */}
       {!mobile && (
         <Sider

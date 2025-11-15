@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { IsString, IsInt, IsOptional, Min, Max, IsNumber } from 'class-validator';
 
 export class CreateReportDto {
   @IsInt()
@@ -13,4 +13,9 @@ export class CreateReportDto {
   @Max(100)
   @IsOptional()
   completionPercentage?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  equivalentHours?: number;
 }
