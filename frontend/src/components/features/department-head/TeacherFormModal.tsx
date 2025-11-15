@@ -3,20 +3,21 @@ import { useEffect, useState } from 'react';
 import usersService, { type CreateTeacherRequest } from '../../../services/users.service';
 
 interface TeacherFormModalProps {
-  visible: boolean;
-  onClose: () => void;
+  open: boolean;
+  onCancel: () => void;
   onSuccess: () => void;
+  departmentId?: number;
 }
 
-const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps) => {
+const TeacherFormModal = ({ open, onCancel, onSuccess, departmentId }: TeacherFormModalProps) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!visible) {
+    if (!open) {
       form.resetFields();
     }
-  }, [visible, form]);
+  }, [open, form]);
 
   const handleSubmit = async (values: CreateTeacherRequest) => {
     try {
@@ -24,7 +25,7 @@ const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps
       await usersService.createTeacher(values);
       message.success('Teacher created successfully! Default password: password123');
       onSuccess();
-      onClose();
+      onCancel();
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.error?.message ||
@@ -39,8 +40,8 @@ const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps
   return (
     <Modal
       title="Create Teacher"
-      open={visible}
-      onCancel={onClose}
+      open={open}
+      onCancel={onCancel}
       onOk={() => form.submit()}
       confirmLoading={loading}
       width={600}
@@ -105,7 +106,7 @@ const TeacherFormModal = ({ visible, onClose, onSuccess }: TeacherFormModalProps
         </Form.Item>
 
         <div style={{ padding: '10px', background: '#f0f2f5', borderRadius: '4px', marginTop: '10px' }}>
-          <strong>Note:</strong> The teacher will be created with default password <code>password123</code> and will be required to change it on first login.
+          <strong>Note:</strong> The teacher will be created with default password <code>password123</code>. They can change it anytime from Settings.
         </div>
       </Form>
     </Modal>

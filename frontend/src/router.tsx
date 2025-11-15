@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import SettingsPage from './pages/SettingsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import DepartmentHeadDashboardPage from './pages/department-head/DepartmentHeadDashboardPage';
 import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
@@ -73,6 +74,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ScientificTasksPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/settings',
+    element: (
+      <ProtectedRoute>
+        <SettingsPage />
       </ProtectedRoute>
     ),
   },

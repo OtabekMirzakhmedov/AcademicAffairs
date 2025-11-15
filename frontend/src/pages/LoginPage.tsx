@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Checkbox, message, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
-import ChangePasswordModal from '../components/features/auth/ChangePasswordModal';
 import branding from '../config/branding.json';
 import universityLogo from '../assets/university-logo.png';
 
@@ -11,7 +10,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, user } = useAuthStore();
   const [loading, setLoading] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const getRedirectPath = (user: any) => {
     if (!user) return '/login';
@@ -28,7 +26,7 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && user && !user.mustChangePassword) {
+    if (isAuthenticated && user) {
       navigate(getRedirectPath(user));
     }
   }, [isAuthenticated, user, navigate]);
@@ -42,30 +40,15 @@ const LoginPage = () => {
       setLoading(true);
       await login(values.login, values.password, values.remember);
 
-      // Check if user needs to change password
       const currentUser = useAuthStore.getState().user;
-      if (currentUser?.mustChangePassword) {
-        message.warning('You must change your password before continuing');
-        setShowChangePassword(true);
-      } else {
-        message.success('Login successful!');
-        navigate(getRedirectPath(currentUser));
-      }
+      message.success('Login successful!');
+      navigate(getRedirectPath(currentUser));
     } catch (error: any) {
       message.error(
           error?.response?.data?.error?.message || 'Login failed. Please check your credentials.'
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePasswordChanged = () => {
-    setShowChangePassword(false);
-    message.success('Password changed successfully! Redirecting...');
-    const currentUser = useAuthStore.getState().user;
-    if (currentUser) {
-      navigate(getRedirectPath(currentUser));
     }
   };
 
@@ -205,21 +188,6 @@ const LoginPage = () => {
             <p>&copy; 2024 {branding.universityShortName}. All rights reserved.</p>
           </div>
         </div>
-
-        {/* Change Password Modal */}
-        <ChangePasswordModal
-            open={showChangePassword}
-            onSuccess={handlePasswordChanged}
-            onCancel={() => {
-              // Don't allow closing if password must be changed
-              if (user?.mustChangePassword) {
-                message.warning('You must change your password before continuing');
-              } else {
-                setShowChangePassword(false);
-              }
-            }}
-            required={user?.mustChangePassword}
-        />
       </div>
   );
 };
