@@ -4,9 +4,11 @@ import type { MenuProps } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  DashboardOutlined,
   BookOutlined,
   ExperimentOutlined,
   FileSearchOutlined,
+  FileTextOutlined,
   AppstoreOutlined,
   UserOutlined,
   LogoutOutlined,
@@ -18,6 +20,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import branding from '../../config/branding.json';
+import universityLogo from '../../assets/university-logo.png';
 import './MainLayout.scss';
 
 const { Header, Sider, Content } = Layout;
@@ -53,36 +56,59 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const isAdmin = user?.role?.name === 'admin';
   const isDeptHead = user?.role?.name === 'departmenthead';
+  const isTeacher = user?.role?.name === 'teacher';
 
   const menuItems: MenuProps['items'] = [
-    {
-      key: '/teaching-activities',
-      icon: <BookOutlined />,
-      label: 'Teaching Activities',
-      onClick: () => navigate('/teaching-activities'),
-    },
-    {
-      key: '/scientific-activities',
-      icon: <ExperimentOutlined />,
-      label: 'Scientific Activities',
-      onClick: () => navigate('/scientific-activities'),
-    },
-    {
-      key: '/research-activities',
-      icon: <FileSearchOutlined />,
-      label: 'Research Activities',
-      onClick: () => navigate('/research-activities'),
-      disabled: true,
-    },
-    {
-      key: '/other-activities',
-      icon: <AppstoreOutlined />,
-      label: 'Other Activities',
-      onClick: () => navigate('/other-activities'),
-      disabled: true,
-    },
+    ...(isTeacher
+      ? [
+          {
+            key: '/dashboard',
+            icon: <DashboardOutlined />,
+            label: 'Dashboard',
+            onClick: () => navigate('/dashboard'),
+          },
+          {
+            key: '/teaching-activities',
+            icon: <BookOutlined />,
+            label: 'Teaching Activities',
+            onClick: () => navigate('/teaching-activities'),
+          },
+          {
+            key: '/scientific-activities',
+            icon: <ExperimentOutlined />,
+            label: 'Publications',
+            onClick: () => navigate('/scientific-activities'),
+          },
+          {
+            key: '/scientific-tasks',
+            icon: <FileTextOutlined />,
+            label: 'Scientific Tasks',
+            onClick: () => navigate('/scientific-tasks'),
+          },
+          {
+            key: '/research-activities',
+            icon: <FileSearchOutlined />,
+            label: 'Research Activities',
+            onClick: () => navigate('/research-activities'),
+            disabled: true,
+          },
+          {
+            key: '/other-activities',
+            icon: <AppstoreOutlined />,
+            label: 'Other Activities',
+            onClick: () => navigate('/other-activities'),
+            disabled: true,
+          },
+        ]
+      : []),
     ...(isDeptHead
       ? [
+          {
+            key: '/department/dashboard',
+            icon: <DashboardOutlined />,
+            label: 'Dashboard',
+            onClick: () => navigate('/department/dashboard'),
+          },
           { type: 'divider' as const },
           {
             key: 'department',
@@ -96,6 +122,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 onClick: () => navigate('/department/activities'),
               },
               {
+                key: '/department/teachers',
+                icon: <TeamOutlined />,
+                label: 'Teachers',
+                onClick: () => navigate('/department/teachers'),
+              },
+              {
                 key: '/department/scientific-reports',
                 icon: <ExperimentOutlined />,
                 label: 'Scientific Reports',
@@ -107,6 +139,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       : []),
     ...(isAdmin
       ? [
+          {
+            key: '/admin/dashboard',
+            icon: <DashboardOutlined />,
+            label: 'Dashboard',
+            onClick: () => navigate('/admin/dashboard'),
+          },
           { type: 'divider' as const },
           {
             key: 'administration',
@@ -168,7 +206,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {!collapsed && (
           <div className="logo-text">
             <img
-              src='src/assets/university-logo.png'
+              src={universityLogo}
               alt={branding.universityName}
               className="logo-image"
               onError={(e) => {
@@ -181,7 +219,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {collapsed && (
           <div className="logo-icon">
             <img
-                src='src/assets/university-logo.png'
+                src={universityLogo}
                 alt={branding.universityName}
                 className="logo-image-collapsed"
                 onError={(e) => {

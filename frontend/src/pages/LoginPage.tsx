@@ -5,6 +5,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import ChangePasswordModal from '../components/features/auth/ChangePasswordModal';
 import branding from '../config/branding.json';
+import universityLogo from '../assets/university-logo.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -12,9 +13,23 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
+  const getRedirectPath = (user: any) => {
+    if (!user) return '/login';
+    switch (user.role.name) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'departmenthead':
+        return '/department/dashboard';
+      case 'teacher':
+        return '/dashboard';
+      default:
+        return '/login';
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated && user && !user.mustChangePassword) {
-      navigate('/teaching-activities');
+      navigate(getRedirectPath(user));
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -34,7 +49,7 @@ const LoginPage = () => {
         setShowChangePassword(true);
       } else {
         message.success('Login successful!');
-        navigate('/teaching-activities');
+        navigate(getRedirectPath(currentUser));
       }
     } catch (error: any) {
       message.error(
@@ -48,7 +63,10 @@ const LoginPage = () => {
   const handlePasswordChanged = () => {
     setShowChangePassword(false);
     message.success('Password changed successfully! Redirecting...');
-    navigate('/teaching-activities');
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser) {
+      navigate(getRedirectPath(currentUser));
+    }
   };
 
   return (
@@ -75,7 +93,7 @@ const LoginPage = () => {
                     }}
                 >
                   <img
-                      src="src/assets/university-logo.png"
+                      src={universityLogo}
                       alt={branding.universityName}
                       style={{
                         height: '64px',

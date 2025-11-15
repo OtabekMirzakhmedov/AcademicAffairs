@@ -27,8 +27,6 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
 import CourseFormModal from '../../components/features/department-head/CourseFormModal';
-import TeacherFormModal from '../../components/features/department-head/TeacherFormModal';
-import TeacherEditModal from '../../components/features/department-head/TeacherEditModal';
 import TeacherAssignmentModal from '../../components/features/department-head/TeacherAssignmentModal';
 import ProgramFormModal from '../../components/features/department-head/ProgramFormModal';
 import coursesService from '../../services/courses.service';
@@ -57,14 +55,8 @@ const DepartmentActivitiesPage = () => {
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
-  // Teachers state
+  // Teachers state (for course assignments)
   const [teachers, setTeachers] = useState<User[]>([]);
-  const [filteredTeachers, setFilteredTeachers] = useState<User[]>([]);
-  const [teacherSearchText, setTeacherSearchText] = useState('');
-  const [teacherModalOpen, setTeacherModalOpen] = useState(false);
-  const [teacherEditModalOpen, setTeacherEditModalOpen] = useState(false);
-  const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
-  const [teachersLoading, setTeachersLoading] = useState(false);
 
   // Assignments state
   const [assignments, setAssignments] = useState<CourseTeacher[]>([]);
@@ -123,19 +115,6 @@ const DepartmentActivitiesPage = () => {
     }
     setFilteredCourses(filtered);
   }, [courseSearchText, courses]);
-
-  useEffect(() => {
-    let filtered = teachers;
-    if (teacherSearchText) {
-      filtered = filtered.filter(
-        (teacher) =>
-          teacher.userInfo?.firstName.toLowerCase().includes(teacherSearchText.toLowerCase()) ||
-          teacher.userInfo?.lastName.toLowerCase().includes(teacherSearchText.toLowerCase()) ||
-          teacher.login.toLowerCase().includes(teacherSearchText.toLowerCase())
-      );
-    }
-    setFilteredTeachers(filtered);
-  }, [teacherSearchText, teachers]);
 
   useEffect(() => {
     let filtered = assignments;
@@ -214,20 +193,12 @@ const DepartmentActivitiesPage = () => {
 
   const fetchTeachers = async () => {
     try {
-      setTeachersLoading(true);
       const allUsers = await usersService.getAll();
-      // For the teachers table, show only department teachers
-      const departmentTeachers = allUsers.filter(
-        (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === department?.id
-      );
-      // For course assignment, get ALL teachers
+      // Get ALL teachers for course assignments
       const allTeachers = allUsers.filter((u) => u.role.name === 'teacher');
       setTeachers(allTeachers);
-      setFilteredTeachers(departmentTeachers);
     } catch (error) {
       message.error('Failed to fetch teachers');
-    } finally {
-      setTeachersLoading(false);
     }
   };
 
@@ -295,43 +266,6 @@ const DepartmentActivitiesPage = () => {
 
   const handleCourseModalSuccess = () => {
     fetchCourses();
-  };
-
-  const handleAddTeacher = () => {
-    setTeacherModalOpen(true);
-  };
-
-  const handleTeacherModalSuccess = () => {
-    fetchTeachers();
-  };
-
-  const handleEditTeacher = (teacher: User) => {
-    setEditingTeacher(teacher);
-    setTeacherEditModalOpen(true);
-  };
-
-  const handleTeacherEditModalSuccess = () => {
-    fetchTeachers();
-  };
-
-  const handleDeleteTeacher = (id: number) => {
-    Modal.confirm({
-      title: 'Delete Teacher',
-      content: 'Are you sure you want to delete this teacher? This will deactivate their account.',
-      okText: 'Delete',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          await usersService.delete(id);
-          message.success('Teacher deleted successfully');
-          fetchTeachers();
-        } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to delete teacher'
-          );
-        }
-      },
-    });
   };
 
   const handleAddAssignment = () => {
@@ -488,83 +422,6 @@ const DepartmentActivitiesPage = () => {
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDeleteCourse(record.id)}
-            />
-          </Tooltip>
-        </Space>
-      ),
-    },
-  ];
-
-  const teachersColumns: ColumnsType<User> = [
-    {
-      title: 'Teacher Name',
-      key: 'name',
-      render: (_, record) => (
-        <span>
-          <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-          {`${record.userInfo?.firstName} ${record.userInfo?.lastName}`}
-        </span>
-      ),
-      sorter: (a, b) =>
-        `${a.userInfo?.firstName} ${a.userInfo?.lastName}`.localeCompare(
-          `${b.userInfo?.firstName} ${b.userInfo?.lastName}`
-        ),
-    },
-    {
-      title: 'Username',
-      dataIndex: 'login',
-      key: 'login',
-    },
-    {
-      title: 'Employment Type',
-      key: 'employmentType',
-      render: (_, record) => {
-        const type = record.teacherInfo?.employmentType;
-        if (!type) return <Tag>Not Set</Tag>;
-        const colors: Record<string, string> = {
-          'full-time': 'green',
-          'part-time': 'orange',
-          'contract': 'blue',
-        };
-        return <Tag color={colors[type]}>{type}</Tag>;
-      },
-    },
-    {
-      title: 'Mandatory Hours',
-      key: 'mandatoryHours',
-      render: (_, record) => record.teacherInfo?.mandatoryHoursPerPeriod || 'Not Set',
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (_, record) => (
-        <Tag color={record.isActive ? 'green' : 'red'}>
-          {record.isActive ? 'Active' : 'Inactive'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 150,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="Edit Teacher Info">
-            <Button
-              type="text"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEditTeacher(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete Teacher">
-            <Button
-              type="text"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDeleteTeacher(record.id)}
             />
           </Tooltip>
         </Space>
@@ -951,48 +808,6 @@ const DepartmentActivitiesPage = () => {
       ),
     },
     {
-      key: 'teachers',
-      label: (
-        <span>
-          <UserOutlined />
-          Teachers ({teachers.length})
-        </span>
-      ),
-      children: (
-        <div className="tab-content">
-          <div className="filters-section">
-            <Input
-              placeholder="Search teachers..."
-              prefix={<SearchOutlined />}
-              value={teacherSearchText}
-              onChange={(e) => setTeacherSearchText(e.target.value)}
-              className="search-input"
-              allowClear
-            />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAddTeacher}
-              size="large"
-            >
-              Add Teacher
-            </Button>
-          </div>
-          <Table
-            columns={teachersColumns}
-            dataSource={filteredTeachers}
-            loading={loading}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} teachers`,
-            }}
-          />
-        </div>
-      ),
-    },
-    {
       key: 'assignments',
       label: (
         <span>
@@ -1153,23 +968,10 @@ const DepartmentActivitiesPage = () => {
           course={editingCourse}
           departmentId={department.id}
           teachers={teachers}
-          teachersLoading={teachersLoading}
+          teachersLoading={loading}
           academicPeriods={academicPeriods}
           departments={departments}
           programs={programs}
-        />
-
-        <TeacherFormModal
-          visible={teacherModalOpen}
-          onClose={() => setTeacherModalOpen(false)}
-          onSuccess={handleTeacherModalSuccess}
-        />
-
-        <TeacherEditModal
-          visible={teacherEditModalOpen}
-          onClose={() => setTeacherEditModalOpen(false)}
-          onSuccess={handleTeacherEditModalSuccess}
-          teacher={editingTeacher}
         />
 
         <TeacherAssignmentModal

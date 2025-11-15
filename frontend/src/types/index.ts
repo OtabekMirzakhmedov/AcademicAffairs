@@ -36,6 +36,11 @@ export interface TeacherInfo {
   departmentId: number;
   department?: Department;
   mandatoryHoursPerPeriod?: number;
+  mandatoryExtracurricularHours?: number;
+  mandatoryConferenceArticles?: number;
+  mandatoryNationalArticles?: number;
+  mandatoryScopusArticles?: number;
+  mandatoryDocumentation?: number;
 }
 
 // Auth Response
@@ -245,4 +250,40 @@ export interface TeacherScientificReport {
   validator?: User;
   createdAt: string;
   updatedAt: string;
+}
+
+// Publication Types
+export interface TeacherPublication {
+  id: number;
+  teacherId: number;
+  teacher?: User;
+  title: string;
+  publicationType: 'conference' | 'national' | 'scopus';
+  authors: string;
+  venue?: string;
+  publicationDate?: string;
+  doi?: string;
+  isbn?: string;
+  issn?: string;
+  url?: string;
+  abstract?: string;
+  keywords?: string;
+  status: 'draft' | 'submitted' | 'validated' | 'rejected';
+  submittedAt?: string;
+  validatedAt?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicationStatistics {
+  mandatoryConferenceArticles: number;
+  mandatoryNationalArticles: number;
+  mandatoryScopusArticles: number;
+  submittedConferenceArticles: number;
+  submittedNationalArticles: number;
+  submittedScopusArticles: number;
+  validatedConferenceArticles: number;
+  validatedNationalArticles: number;
+  validatedScopusArticles: number;
 }

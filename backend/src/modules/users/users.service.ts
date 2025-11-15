@@ -292,6 +292,11 @@ export class UsersService {
       data: {
         employmentType: updateTeacherInfoDto.employmentType,
         mandatoryHoursPerPeriod: updateTeacherInfoDto.mandatoryHoursPerPeriod,
+        mandatoryExtracurricularHours: updateTeacherInfoDto.mandatoryExtracurricularHours,
+        mandatoryConferenceArticles: updateTeacherInfoDto.mandatoryConferenceArticles,
+        mandatoryNationalArticles: updateTeacherInfoDto.mandatoryNationalArticles,
+        mandatoryScopusArticles: updateTeacherInfoDto.mandatoryScopusArticles,
+        mandatoryDocumentation: updateTeacherInfoDto.mandatoryDocumentation,
       },
     });
 
@@ -385,6 +390,11 @@ export class UsersService {
 
     // Delete course teacher assignments
     await this.prisma.courseTeacher.deleteMany({
+      where: { teacherId: id },
+    });
+
+    // Delete teacher scientific reports
+    await this.prisma.teacherScientificReport.deleteMany({
       where: { teacherId: id },
     });
 

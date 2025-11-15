@@ -1,13 +1,19 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import DepartmentHeadDashboardPage from './pages/department-head/DepartmentHeadDashboardPage';
 import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
+import PublicationsPage from './pages/PublicationsPage';
 import ScientificTasksPage from './pages/ScientificTasksPage';
 import UsersPage from './pages/admin/UsersPage';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
 import ScientificTasksManagementPage from './pages/admin/ScientificTasksManagementPage';
 import DepartmentActivitiesPage from './pages/department-head/DepartmentActivitiesPage';
 import ScientificReportsValidationPage from './pages/department-head/ScientificReportsValidationPage';
+import TeachersManagementPage from './pages/department-head/TeachersManagementPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import RoleBasedRedirect from './components/common/RoleBasedRedirect';
 
 export const router = createBrowserRouter([
   {
@@ -18,7 +24,31 @@ export const router = createBrowserRouter([
     path: '/',
     element: (
       <ProtectedRoute>
-        <Navigate to="/teaching-activities" replace />
+        <RoleBasedRedirect />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/dashboard',
+    element: (
+      <ProtectedRoute>
+        <DashboardPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/dashboard',
+    element: (
+      <ProtectedRoute>
+        <AdminDashboardPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/department/dashboard',
+    element: (
+      <ProtectedRoute>
+        <DepartmentHeadDashboardPage />
       </ProtectedRoute>
     ),
   },
@@ -32,6 +62,14 @@ export const router = createBrowserRouter([
   },
   {
     path: '/scientific-activities',
+    element: (
+      <ProtectedRoute>
+        <PublicationsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/scientific-tasks',
     element: (
       <ProtectedRoute>
         <ScientificTasksPage />
@@ -95,7 +133,19 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/department/teachers',
+    element: (
+      <ProtectedRoute>
+        <TeachersManagementPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '*',
-    element: <Navigate to="/teaching-activities" replace />,
+    element: (
+      <ProtectedRoute>
+        <RoleBasedRedirect />
+      </ProtectedRoute>
+    ),
   },
 ]);

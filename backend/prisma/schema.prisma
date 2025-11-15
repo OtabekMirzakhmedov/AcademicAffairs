@@ -42,6 +42,7 @@ model User {
   createdScientificTasks   ScientificTask[]            @relation("ScientificTaskCreator")
   scientificReports        TeacherScientificReport[]   @relation("TeacherScientificReports")
   validatedScientificReports TeacherScientificReport[] @relation("ScientificReportValidator")
+  publications             TeacherPublication[]
 
   @@map("users")
 }
@@ -99,13 +100,18 @@ model Department {
 }
 
 model TeacherInfo {
-  id                      Int      @id @default(autoincrement())
-  userId                  Int      @unique @map("user_id")
-  employmentType          String?  @map("employment_type") // full-time, part-time, contract - set by dept head, nullable
-  departmentId            Int      @map("department_id") // Set by admin when assigning teacher to department
-  mandatoryHoursPerPeriod Decimal? @map("mandatory_hours_per_period") @db.Decimal(10, 2) // Set by dept head, nullable
-  createdAt               DateTime @default(now()) @map("created_at")
-  updatedAt               DateTime @updatedAt @map("updated_at")
+  id                              Int      @id @default(autoincrement())
+  userId                          Int      @unique @map("user_id")
+  employmentType                  String?  @map("employment_type") // full-time, part-time, contract - set by dept head, nullable
+  departmentId                    Int      @map("department_id") // Set by admin when assigning teacher to department
+  mandatoryHoursPerPeriod         Decimal? @map("mandatory_hours_per_period") @db.Decimal(10, 2) // Set by dept head or admin, nullable
+  mandatoryExtracurricularHours   Decimal? @default(0) @map("mandatory_extracurricular_hours") @db.Decimal(10, 2) // Set by dept head or admin
+  mandatoryConferenceArticles     Int?     @default(0) @map("mandatory_conference_articles") // Set by dept head or admin
+  mandatoryNationalArticles       Int?     @default(0) @map("mandatory_national_articles") // Set by dept head or admin
+  mandatoryScopusArticles         Int?     @default(0) @map("mandatory_scopus_articles") // Set by dept head or admin
+  mandatoryDocumentation          Int?     @default(0) @map("mandatory_documentation") // Set by dept head or admin
+  createdAt                       DateTime @default(now()) @map("created_at")
+  updatedAt                       DateTime @updatedAt @map("updated_at")
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   department Department @relation(fields: [departmentId], references: [id])
@@ -262,4 +268,33 @@ model TeacherScientificReport {
   @@index([teacherId])
   @@index([status])
   @@map("teacher_scientific_reports")
+}
+
+model TeacherPublication {
+  id                Int       @id @default(autoincrement())
+  teacherId         Int       @map("teacher_id")
+  title             String
+  publicationType   String    @map("publication_type") // conference, national, scopus
+  authors           String    @db.Text // List of authors
+  venue             String? // Conference/Journal name
+  publicationDate   DateTime? @map("publication_date")
+  doi               String?   @unique // Digital Object Identifier
+  isbn              String?   // International Standard Book Number
+  issn              String?   // International Standard Serial Number
+  url               String?   // Link to publication
+  abstract          String?   @db.Text
+  keywords          String?   @db.Text
+  status            String    @default("draft") // draft, submitted, validated, rejected
+  submittedAt       DateTime? @map("submitted_at")
+  validatedAt       DateTime? @map("validated_at")
+  rejectionReason   String?   @map("rejection_reason") @db.Text
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  teacher           User      @relation(fields: [teacherId], references: [id])
+
+  @@index([teacherId])
+  @@index([publicationType])
+  @@index([status])
+  @@map("teacher_publications")
 }

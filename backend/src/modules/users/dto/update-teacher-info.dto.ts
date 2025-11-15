@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsInt, Min } from 'class-validator';
 
 export class UpdateTeacherInfoDto {
   @IsString()
@@ -8,4 +8,29 @@ export class UpdateTeacherInfoDto {
   @IsNumber()
   @IsOptional()
   mandatoryHoursPerPeriod?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  mandatoryExtracurricularHours?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  mandatoryConferenceArticles?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  mandatoryNationalArticles?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  mandatoryScopusArticles?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  mandatoryDocumentation?: number;
 }

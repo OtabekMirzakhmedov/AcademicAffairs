@@ -39,6 +39,11 @@ export interface CreateTeacherRequest {
 export interface UpdateTeacherInfoRequest {
   employmentType?: string;
   mandatoryHoursPerPeriod?: number;
+  mandatoryExtracurricularHours?: number;
+  mandatoryConferenceArticles?: number;
+  mandatoryNationalArticles?: number;
+  mandatoryScopusArticles?: number;
+  mandatoryDocumentation?: number;
 }
 
 class UsersService {
