@@ -130,14 +130,15 @@ class ScientificTasksService {
       value: value instanceof File ? `File: ${value.name}` : value
     })));
 
-    // IMPORTANT: Override the default Content-Type header to let axios set multipart/form-data with boundary
+    // IMPORTANT: Delete the default Content-Type header to let axios automatically set
+    // multipart/form-data with the required boundary parameter
     console.log('Sending POST request to /scientific-tasks/reports/upload');
     const response = await api.post<ApiResponse<{ filePath: string; fileName: string }>>(
       '/scientific-tasks/reports/upload',
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined,
         },
       }
     );
