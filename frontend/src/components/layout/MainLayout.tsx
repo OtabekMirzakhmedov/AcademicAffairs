@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Drawer, Button, Avatar, Dropdown } from 'antd';
+import { Layout, Menu, Drawer, Button, Avatar } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   MenuFoldOutlined,
@@ -175,21 +175,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       : []),
   ];
 
-  const userMenuItems = [
+  const bottomMenuItems: MenuProps['items'] = [
     {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
-      onClick: () => navigate('/profile'),
-    },
-    {
-      key: 'settings',
+      key: '/settings',
       icon: <SettingOutlined />,
       label: 'Settings',
       onClick: () => navigate('/settings'),
-    },
-    {
-      type: 'divider' as const,
     },
     {
       key: 'logout',
@@ -197,12 +188,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       label: 'Logout',
       onClick: handleLogout,
       danger: true,
+      style: { color: '#ff4d4f' },
     },
   ];
 
+
   const siderContent = (
-    <>
-      <div className="logo-container">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="logo-container" style={{ flexShrink: 0 }}>
         {!collapsed && (
           <div className="logo-text">
             <img
@@ -230,14 +223,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         )}
       </div>
 
-      <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          className="sidebar-menu"
-      />
-    </>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+        <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            className="sidebar-menu"
+            style={{ borderBottom: 'none' }}
+        />
+      </div>
+
+      <div style={{ flexShrink: 0 }}>
+        <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={bottomMenuItems}
+            style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}
+            className="bottom-menu"
+        />
+      </div>
+    </div>
   );
 
   return (
@@ -250,6 +257,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           collapsed={collapsed}
           className="main-sider"
           width={250}
+          style={{
+            overflow: 'hidden',
+            height: '100vh',
+            position: 'fixed',
+            left: 0,
+          }}
         >
           {siderContent}
         </Sider>
@@ -264,13 +277,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           closable={false}
           width={250}
           className="mobile-drawer"
-          styles={{ body: { padding: 0, background: '#001529' } }}
+          styles={{ body: { padding: 0, background: '#001529', height: '100%' } }}
         >
           {siderContent}
         </Drawer>
       )}
 
-      <Layout>
+      <Layout style={{ marginLeft: !mobile ? (collapsed ? 80 : 250) : 0 }}>
         <Header className="main-header">
           <div className="header-left">
             <Button
@@ -293,18 +306,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 Administration
               </Button>
             )}
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <div className="user-profile">
-                <Avatar
-                  size="default"
-                  icon={<UserOutlined />}
-                  className="user-avatar"
-                />
-                <span className="user-name">
-                  {user?.userInfo?.firstName || user?.login}
-                </span>
-              </div>
-            </Dropdown>
+            <div className="user-profile">
+              <Avatar
+                size="default"
+                icon={<UserOutlined />}
+                className="user-avatar"
+              />
+              <span className="user-name">
+                {user?.userInfo?.firstName && user?.userInfo?.lastName
+                  ? `${user.userInfo.firstName} ${user.userInfo.lastName}`
+                  : user?.login}
+              </span>
+            </div>
           </div>
         </Header>
 
