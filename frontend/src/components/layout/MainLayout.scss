@@ -38,8 +38,15 @@
       }
 
       .logo-icon {
-        font-size: 24px;
-        color: $primary-light;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .logo-image-collapsed {
+          height: 40px;
+          width: 40px;
+          object-fit: contain;
+        }
       }
     }
 

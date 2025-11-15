@@ -11,6 +11,7 @@ import { CoursesModule } from './modules/courses/courses.module';
 import { CourseTeachersModule } from './modules/course-teachers/course-teachers.module';
 import { AcademicPeriodsModule } from "./modules/academic-periods/academic-periods.module";
 import { ProgramsModule } from './modules/programs/programs.module';
+import { ScientificTasksModule } from './modules/scientific-tasks/scientific-tasks.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ProgramsModule } from './modules/programs/programs.module';
     CourseTeachersModule,
     AcademicPeriodsModule,
     ProgramsModule,
+    ScientificTasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

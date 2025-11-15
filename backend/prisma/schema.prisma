@@ -31,14 +31,17 @@ model User {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  role                     Role               @relation(fields: [roleId], references: [id])
+  role                     Role                        @relation(fields: [roleId], references: [id])
   userInfo                 UserInfo?
   teacherInfo              TeacherInfo?
-  headedDepartments        Department[]       @relation("DepartmentHead")
+  headedDepartments        Department[]                @relation("DepartmentHead")
   courseAssignments        CourseTeacher[]
   teachingActivities       TeachingActivity[]
-  validatedActivities      TeachingActivity[] @relation("ValidatedBy")
-  createdPrograms          Program[]          @relation("ProgramCreator")
+  validatedActivities      TeachingActivity[]          @relation("ValidatedBy")
+  createdPrograms          Program[]                   @relation("ProgramCreator")
+  createdScientificTasks   ScientificTask[]            @relation("ScientificTaskCreator")
+  scientificReports        TeacherScientificReport[]   @relation("TeacherScientificReports")
+  validatedScientificReports TeacherScientificReport[] @relation("ScientificReportValidator")
 
   @@map("users")
 }
@@ -86,10 +89,11 @@ model Department {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  head         User?         @relation("DepartmentHead", fields: [headId], references: [id])
-  teachers     TeacherInfo[]
-  courses      Course[]
-  programs     Program[]
+  head             User?              @relation("DepartmentHead", fields: [headId], references: [id])
+  teachers         TeacherInfo[]
+  courses          Course[]
+  programs         Program[]
+  scientificTasks  ScientificTask[]
 
   @@map("departments")
 }
@@ -210,4 +214,52 @@ model ProgramCourse {
   @@index([programId])
   @@index([courseId])
   @@map("program_courses")
+}
+
+model ScientificTask {
+  id              Int       @id @default(autoincrement())
+  taskName        String    @map("task_name")
+  taskDescription String?   @map("task_description") @db.Text
+  deadline        DateTime
+  createdBy       Int       @map("created_by")
+  departmentId    Int?      @map("department_id") // Null if created by admin (applies to all), set if created by dept head
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  creator         User                       @relation("ScientificTaskCreator", fields: [createdBy], references: [id])
+  department      Department?                @relation(fields: [departmentId], references: [id])
+  reports         TeacherScientificReport[]
+
+  @@index([createdBy])
+  @@index([departmentId])
+  @@index([isActive])
+  @@map("scientific_tasks")
+}
+
+model TeacherScientificReport {
+  id                    Int       @id @default(autoincrement())
+  scientificTaskId      Int       @map("scientific_task_id")
+  teacherId             Int       @map("teacher_id")
+  executionStatus       String?   @map("execution_status") @db.Text
+  completionPercentage  Int       @default(0) @map("completion_percentage")
+  equivalentHours       Decimal   @default(0) @map("equivalent_hours") @db.Decimal(10, 2) // Hours worked on the task
+  filePath              String?   @map("file_path")
+  fileName              String?   @map("file_name")
+  status                String    @default("in_progress") // in_progress, submitted, validated, rejected
+  submittedAt           DateTime? @map("submitted_at")
+  validatedAt           DateTime? @map("validated_at")
+  validatedBy           Int?      @map("validated_by")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  scientificTask        ScientificTask @relation(fields: [scientificTaskId], references: [id], onDelete: Cascade)
+  teacher               User           @relation("TeacherScientificReports", fields: [teacherId], references: [id])
+  validator             User?          @relation("ScientificReportValidator", fields: [validatedBy], references: [id])
+
+  @@unique([scientificTaskId, teacherId], name: "task_teacher_unique")
+  @@index([scientificTaskId])
+  @@index([teacherId])
+  @@index([status])
+  @@map("teacher_scientific_reports")
 }

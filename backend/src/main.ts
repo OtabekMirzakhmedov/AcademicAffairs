@@ -5,6 +5,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import fastifyCors from '@fastify/cors';
+import fastifyMultipart from '@fastify/multipart';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -16,6 +17,13 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  });
+
+  // Register multipart plugin for file uploads
+  await fastifyAdapter.register(fastifyMultipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
   });
 
   const app = await NestFactory.create<NestFastifyApplication>(

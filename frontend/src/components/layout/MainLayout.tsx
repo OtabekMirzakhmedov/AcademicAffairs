@@ -11,7 +11,6 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
-  DashboardOutlined,
   TeamOutlined,
   BankOutlined,
   ControlOutlined,
@@ -57,12 +56,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const menuItems: MenuProps['items'] = [
     {
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: 'Dashboard',
-      onClick: () => navigate('/dashboard'),
-    },
-    {
       key: '/teaching-activities',
       icon: <BookOutlined />,
       label: 'Teaching Activities',
@@ -73,7 +66,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       icon: <ExperimentOutlined />,
       label: 'Scientific Activities',
       onClick: () => navigate('/scientific-activities'),
-      disabled: true,
     },
     {
       key: '/research-activities',
@@ -93,10 +85,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       ? [
           { type: 'divider' as const },
           {
-            key: '/department/activities',
+            key: 'department',
             icon: <BankOutlined />,
             label: 'Department Management',
-            onClick: () => navigate('/department/activities'),
+            children: [
+              {
+                key: '/department/activities',
+                icon: <BookOutlined />,
+                label: 'Teaching Activities',
+                onClick: () => navigate('/department/activities'),
+              },
+              {
+                key: '/department/scientific-reports',
+                icon: <ExperimentOutlined />,
+                label: 'Scientific Reports',
+                onClick: () => navigate('/department/scientific-reports'),
+              },
+            ],
           },
         ]
       : []),
@@ -119,6 +124,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 icon: <BankOutlined />,
                 label: 'Departments',
                 onClick: () => navigate('/admin/departments'),
+              },
+              {
+                key: '/admin/scientific-tasks',
+                icon: <ExperimentOutlined />,
+                label: 'Scientific Tasks',
+                onClick: () => navigate('/admin/scientific-tasks'),
               },
             ],
           },
@@ -157,7 +168,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {!collapsed && (
           <div className="logo-text">
             <img
-              src={branding.universityLogo}
+              src='src/assets/university-logo.png'
               alt={branding.universityName}
               className="logo-image"
               onError={(e) => {
@@ -169,23 +180,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         )}
         {collapsed && (
           <div className="logo-icon">
-            <BookOutlined />
+            <img
+                src='src/assets/university-logo.png'
+                alt={branding.universityName}
+                className="logo-image-collapsed"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+            />
           </div>
         )}
       </div>
 
       <Menu
-        theme="dark"
-        mode="inline"
-        selectedKeys={[location.pathname]}
-        items={menuItems}
-        className="sidebar-menu"
+          theme="dark"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          className="sidebar-menu"
       />
     </>
   );
 
   return (
-    <Layout className="main-layout">
+      <Layout className="main-layout">
       {/* Desktop Sidebar */}
       {!mobile && (
         <Sider

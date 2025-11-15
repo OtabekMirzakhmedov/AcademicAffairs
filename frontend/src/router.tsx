@@ -1,10 +1,12 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import TeacherDashboard from './pages/TeacherDashboard';
 import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
+import ScientificTasksPage from './pages/ScientificTasksPage';
 import UsersPage from './pages/admin/UsersPage';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
+import ScientificTasksManagementPage from './pages/admin/ScientificTasksManagementPage';
 import DepartmentActivitiesPage from './pages/department-head/DepartmentActivitiesPage';
+import ScientificReportsValidationPage from './pages/department-head/ScientificReportsValidationPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -16,15 +18,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: (
       <ProtectedRoute>
-        <Navigate to="/dashboard" replace />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dashboard',
-    element: (
-      <ProtectedRoute>
-        <TeacherDashboard />
+        <Navigate to="/teaching-activities" replace />
       </ProtectedRoute>
     ),
   },
@@ -40,7 +34,7 @@ export const router = createBrowserRouter([
     path: '/scientific-activities',
     element: (
       <ProtectedRoute>
-        <div>Scientific Activities - Coming Soon</div>
+        <ScientificTasksPage />
       </ProtectedRoute>
     ),
   },
@@ -77,6 +71,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/admin/scientific-tasks',
+    element: (
+      <ProtectedRoute>
+        <ScientificTasksManagementPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/department/activities',
     element: (
       <ProtectedRoute>
@@ -85,7 +87,15 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/department/scientific-reports',
+    element: (
+      <ProtectedRoute>
+        <ScientificReportsValidationPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '*',
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/teaching-activities" replace />,
   },
 ]);
