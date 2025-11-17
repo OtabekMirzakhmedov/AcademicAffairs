@@ -6,8 +6,8 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: cd backend && npm install && npx prisma generate && npm run build
-    startCommand: cd backend && npx prisma migrate deploy && npx prisma db seed && npm run start:prod
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build && npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --resolveJsonModule --skipLibCheck
+    startCommand: cd backend && chmod +x scripts/start-production.sh && ./scripts/start-production.sh
     disk:
       name: database
       mountPath: /opt/render/project/src/backend/prisma
