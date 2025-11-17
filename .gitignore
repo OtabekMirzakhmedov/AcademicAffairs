@@ -40,6 +40,12 @@ prisma/migrations/*
 !prisma/migrations/.gitkeep
 migration_lock.toml
 
+# SQLite database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
 # Misc
 .cache/
 .temp/
