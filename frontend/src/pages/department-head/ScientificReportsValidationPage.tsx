@@ -12,8 +12,6 @@ import {
   Statistic,
   Collapse,
   Tabs,
-  Row,
-  Col,
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -83,6 +81,8 @@ const ScientificReportsValidationPage: React.FC = () => {
     const taskMap = new Map<number, TaskGroup>();
 
     reports.forEach(report => {
+      if (!report.scientificTask) return;
+
       const taskId = report.scientificTask.id;
 
       if (!taskMap.has(taskId)) {
@@ -531,7 +531,7 @@ const ScientificReportsValidationPage: React.FC = () => {
                       type="primary"
                       size="small"
                       icon={<DownloadOutlined />}
-                      onClick={() => handleDownload(selectedReport.id, selectedReport.fileName)}
+                      onClick={() => selectedReport.fileName && handleDownload(selectedReport.id, selectedReport.fileName)}
                     >
                       Download
                     </Button>

@@ -7,17 +7,14 @@ import {
   Spin,
   Alert,
   Tag,
-  Progress,
 } from 'antd';
 import {
   UserOutlined,
   BankOutlined,
   TeamOutlined,
-  BookOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  ExperimentOutlined,
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
 import { useAuthStore } from '../../store/authStore';

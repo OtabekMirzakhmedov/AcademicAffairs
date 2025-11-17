@@ -12,7 +12,6 @@ import {
   UserOutlined,
   BankOutlined,
   TeamOutlined,
-  ExperimentOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,

@@ -9,7 +9,7 @@ interface TeacherFormModalProps {
   departmentId?: number;
 }
 
-const TeacherFormModal = ({ open, onCancel, onSuccess, departmentId }: TeacherFormModalProps) => {
+const TeacherFormModal = ({ open, onCancel, onSuccess }: TeacherFormModalProps) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 

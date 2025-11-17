@@ -326,7 +326,6 @@ const ScientificTasksPage: React.FC = () => {
                   return false; // Prevent default upload
                 }}
                 maxCount={1}
-                loading={uploading}
               >
                 <Button icon={<UploadOutlined />} loading={uploading}>
                   Upload File
@@ -393,7 +392,7 @@ const ScientificTasksPage: React.FC = () => {
                       type="primary"
                       size="small"
                       icon={<DownloadOutlined />}
-                      onClick={() => handleDownload(selectedReport.id, selectedReport.fileName)}
+                      onClick={() => selectedReport.fileName && handleDownload(selectedReport.id, selectedReport.fileName)}
                     >
                       Download
                     </Button>
