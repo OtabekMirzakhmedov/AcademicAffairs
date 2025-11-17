@@ -1,0 +1,60 @@
+services:
+  # Backend API Service
+  - type: web
+    name: academic-affairs-backend
+    runtime: node
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    startCommand: cd backend && npx prisma migrate deploy && npm run start:prod
+    disk:
+      name: database
+      mountPath: /opt/render/project/src/backend/prisma
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/opt/render/project/src/backend/prisma/prod.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 30m
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN_REMEMBER_ME
+        value: 30d
+      - key: PORT
+        value: 3000
+      - key: FRONTEND_URL
+        sync: false # Set this manually to your frontend URL after deployment
+    healthCheckPath: /api
+    autoDeploy: true
+
+  # Frontend Static Site
+  - type: web
+    name: academic-affairs-frontend
+    runtime: static
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Set this manually to your backend URL after deployment
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    autoDeploy: true
