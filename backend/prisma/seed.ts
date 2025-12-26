@@ -79,6 +79,29 @@ async function main() {
 
   console.log(`✅ Academic period created: ${academicYear} - Semester 1`);
 
+  // Create departments
+  const mechanicalEngDept = await prisma.department.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: 'Mechanical Engineering',
+      phone: '+998974953804',
+      roomNumber: 'B-601',
+    },
+  });
+
+  const energyDept = await prisma.department.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'Energy and applied sciences',
+      phone: '+998974953804',
+      roomNumber: 'B-611',
+    },
+  });
+
+  console.log('✅ Departments created');
+
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📝 Default credentials:');
   console.log('   Login: admin');
