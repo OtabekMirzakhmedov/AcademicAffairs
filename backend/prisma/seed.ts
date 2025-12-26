@@ -320,6 +320,88 @@ async function main() {
 
   console.log('✅ Teachers created');
 
+  // Create courses
+  const engineeringLinearSystems = await prisma.course.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: 'Engineering linear systems',
+      departmentId: mechanicalEngDept.id,
+    },
+  });
+
+  const rationalMechanics = await prisma.course.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'Rational mechanics',
+      departmentId: mechanicalEngDept.id,
+    },
+  });
+
+  const projectManagement = await prisma.course.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      name: 'Project management',
+      departmentId: mechanicalEngDept.id,
+    },
+  });
+
+  const strengthOfMaterials = await prisma.course.upsert({
+    where: { id: 4 },
+    update: {},
+    create: {
+      name: 'Strength of Materials',
+      departmentId: energyDept.id,
+    },
+  });
+
+  console.log('✅ Courses created');
+
+  // Create course-teacher assignments for the active academic period
+  const courseTeacher1 = await prisma.courseTeacher.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      courseId: engineeringLinearSystems.id,
+      teacherId: otabekMirzakhmedov.id,
+      academicPeriodId: academicPeriod.id,
+    },
+  });
+
+  const courseTeacher2 = await prisma.courseTeacher.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      courseId: rationalMechanics.id,
+      teacherId: otabekMirzakhmedov.id,
+      academicPeriodId: academicPeriod.id,
+    },
+  });
+
+  const courseTeacher3 = await prisma.courseTeacher.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      courseId: projectManagement.id,
+      teacherId: abrorXoshimov.id,
+      academicPeriodId: academicPeriod.id,
+    },
+  });
+
+  const courseTeacher4 = await prisma.courseTeacher.upsert({
+    where: { id: 4 },
+    update: {},
+    create: {
+      courseId: strengthOfMaterials.id,
+      teacherId: malikaPlatoshina.id,
+      academicPeriodId: academicPeriod.id,
+    },
+  });
+
+  console.log('✅ Course assignments created');
+
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📝 Default credentials:');
   console.log('   Login: admin');
