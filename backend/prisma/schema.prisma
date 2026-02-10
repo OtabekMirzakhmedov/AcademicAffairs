@@ -49,16 +49,29 @@ model User {
 }
 
 model UserInfo {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique @map("user_id")
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  email1    String?  @map("email_1")
-  email2    String?  @map("email_2")
-  phone1    String?  @map("phone_1")
-  phone2    String?  @map("phone_2")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                      Int       @id @default(autoincrement())
+  userId                  Int       @unique @map("user_id")
+  firstName               String    @map("first_name")
+  lastName                String    @map("last_name")
+  middleName              String?   @map("middle_name")
+  dateOfBirth             DateTime? @map("date_of_birth")
+  gender                  String?   // male, female, other
+  nationality             String?
+  countryOfBirth          String?   @map("country_of_birth")
+  regionOfBirth           String?   @map("region_of_birth")
+  currentAddress          String?   @map("current_address")
+  permanentAddress        String?   @map("permanent_address")
+  passportSerial          String?   @map("passport_serial")
+  personalId              String?   @map("personal_id") // 14 digits
+  stirInn                 String?   @map("stir_inn")
+  englishLevel            String?   @map("english_level") // A1, A2, B1, B2, C1, C2
+  profileImage            String?   @map("profile_image")
+  email1                  String?   @map("email_1")
+  email2                  String?   @map("email_2")
+  phone1                  String?   @map("phone_1")
+  phone2                  String?   @map("phone_2")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -111,6 +124,75 @@ model TeacherInfo {
   mandatoryNationalArticles       Int?     @default(0) @map("mandatory_national_articles") // Set by dept head or admin
   mandatoryScopusArticles         Int?     @default(0) @map("mandatory_scopus_articles") // Set by dept head or admin
   mandatoryDocumentation          Int?     @default(0) @map("mandatory_documentation") // Set by dept head or admin
+
+  // Educational Background - Bachelor
+  bachelorUniversity              String?  @map("bachelor_university")
+  bachelorYear                    Int?     @map("bachelor_year")
+  bachelorDirection               String?  @map("bachelor_direction")
+  bachelorDiplomaNumber           String?  @map("bachelor_diploma_number")
+
+  // Educational Background - Master
+  masterUniversity                String?  @map("master_university")
+  masterYear                      Int?     @map("master_year")
+  masterDirection                 String?  @map("master_direction")
+  masterDiplomaNumber             String?  @map("master_diploma_number")
+
+  // Research
+  researchArea                    String?  @map("research_area")
+
+  // PhD Information
+  hasPhdDegree                    Boolean? @default(false) @map("has_phd_degree")
+  phdYear                         Int?     @map("phd_year")
+  phdSpeciality                   String?  @map("phd_speciality")
+  phdTopic                        String?  @map("phd_topic")
+  phdDiplomaNumber                String?  @map("phd_diploma_number")
+  phdCountry                      String?  @map("phd_country")
+  phdOrganization                 String?  @map("phd_organization")
+
+  // DSc Information
+  hasDscDegree                    Boolean? @default(false) @map("has_dsc_degree")
+  dscYear                         Int?     @map("dsc_year")
+  dscSpeciality                   String?  @map("dsc_speciality")
+  dscTopic                        String?  @map("dsc_topic")
+  dscDiplomaNumber                String?  @map("dsc_diploma_number")
+  dscCountry                      String?  @map("dsc_country")
+  dscOrganization                 String?  @map("dsc_organization")
+
+  // Academic Title
+  hasAcademicTitle                Boolean? @default(false) @map("has_academic_title")
+  academicTitleName               String?  @map("academic_title_name")
+  academicTitleSpeciality         String?  @map("academic_title_speciality")
+  academicTitleYear               Int?     @map("academic_title_year")
+  academicTitleAttestat           String?  @map("academic_title_attestat")
+
+  // Training and Development
+  internshipsCount                Int?     @default(0) @map("internships_count")
+  internshipsInfo                 String?  @map("internships_info")
+  trainingCount                   Int?     @default(0) @map("training_count")
+  trainingInfo                    String?  @map("training_info")
+
+  // Awards and Recognition
+  awardsField                     String?  @map("awards_field")
+  awardsState                     String?  @map("awards_state")
+
+  // Supervision
+  supervisedPhd                   Int?     @default(0) @map("supervised_phd")
+  supervisedDsc                   Int?     @default(0) @map("supervised_dsc")
+
+  // Conference and Seminar Participation
+  conferencesRepublic             Int?     @default(0) @map("conferences_republic")
+  conferencesInternational        Int?     @default(0) @map("conferences_international")
+  seminarsRepublic                Int?     @default(0) @map("seminars_republic")
+  seminarsInternational           Int?     @default(0) @map("seminars_international")
+
+  // Projects
+  projectsFundamental             Int?     @default(0) @map("projects_fundamental")
+  projectsPractical               Int?     @default(0) @map("projects_practical")
+  projectsYouth                   Int?     @default(0) @map("projects_youth")
+  projectsBusiness                Int?     @default(0) @map("projects_business")
+  projectsInnovation              Int?     @default(0) @map("projects_innovation")
+  innovativeIdeasCount            Int?     @default(0) @map("innovative_ideas_count")
+
   createdAt                       DateTime @default(now()) @map("created_at")
   updatedAt                       DateTime @updatedAt @map("updated_at")
 

@@ -16,6 +16,7 @@ import {
   TeamOutlined,
   BankOutlined,
   ControlOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
@@ -84,6 +85,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             icon: <FileTextOutlined />,
             label: 'Scientific Tasks',
             onClick: () => navigate('/scientific-tasks'),
+          },
+          {
+            key: '/account-info',
+            icon: <IdcardOutlined />,
+            label: 'Account Information',
+            onClick: () => navigate('/account-info'),
           },
           {
             key: '/research-activities',

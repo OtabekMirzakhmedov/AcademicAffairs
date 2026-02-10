@@ -10,6 +10,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateTeacherInfoDto } from './dto/update-teacher-info.dto';
+import { UpdateUserAccountDto } from './dto/update-user-account.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -316,6 +317,104 @@ export class UsersService {
 
     if (!updatedUser) {
       throw new NotFoundException('Teacher not found after update');
+    }
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  }
+
+  async updateUserAccount(userId: number, updateAccountDto: UpdateUserAccountDto) {
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: true,
+        userInfo: true,
+        teacherInfo: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Separate UserInfo fields from TeacherInfo fields
+    const userInfoData: any = {};
+    const teacherInfoData: any = {};
+
+    // UserInfo fields
+    const userInfoFields = [
+      'firstName', 'lastName', 'middleName', 'dateOfBirth', 'gender', 'nationality',
+      'countryOfBirth', 'regionOfBirth', 'currentAddress', 'permanentAddress',
+      'passportSerial', 'personalId', 'stirInn', 'englishLevel', 'profileImage',
+      'email1', 'email2', 'phone1', 'phone2'
+    ];
+
+    // TeacherInfo fields
+    const teacherInfoFields = [
+      'bachelorUniversity', 'bachelorYear', 'bachelorDirection', 'bachelorDiplomaNumber',
+      'masterUniversity', 'masterYear', 'masterDirection', 'masterDiplomaNumber',
+      'researchArea', 'hasPhdDegree', 'phdYear', 'phdSpeciality', 'phdTopic',
+      'phdDiplomaNumber', 'phdCountry', 'phdOrganization', 'hasDscDegree', 'dscYear',
+      'dscSpeciality', 'dscTopic', 'dscDiplomaNumber', 'dscCountry', 'dscOrganization',
+      'hasAcademicTitle', 'academicTitleName', 'academicTitleSpeciality', 'academicTitleYear',
+      'academicTitleAttestat', 'internshipsCount', 'internshipsInfo', 'trainingCount',
+      'trainingInfo', 'awardsField', 'awardsState', 'supervisedPhd', 'supervisedDsc',
+      'conferencesRepublic', 'conferencesInternational', 'seminarsRepublic', 'seminarsInternational',
+      'projectsFundamental', 'projectsPractical', 'projectsYouth', 'projectsBusiness',
+      'projectsInnovation', 'innovativeIdeasCount'
+    ];
+
+    // Populate userInfoData
+    userInfoFields.forEach((field) => {
+      if (updateAccountDto[field] !== undefined) {
+        userInfoData[field] = updateAccountDto[field];
+      }
+    });
+
+    // Populate teacherInfoData (only for teachers)
+    if (user.role.name === 'teacher') {
+      teacherInfoFields.forEach((field) => {
+        if (updateAccountDto[field] !== undefined) {
+          teacherInfoData[field] = updateAccountDto[field];
+        }
+      });
+    }
+
+    // Update UserInfo if there are fields to update
+    if (Object.keys(userInfoData).length > 0) {
+      await this.prisma.userInfo.update({
+        where: { userId },
+        data: userInfoData,
+      });
+    }
+
+    // Update TeacherInfo if it's a teacher and there are fields to update
+    if (user.role.name === 'teacher' && Object.keys(teacherInfoData).length > 0) {
+      if (user.teacherInfo) {
+        await this.prisma.teacherInfo.update({
+          where: { userId },
+          data: teacherInfoData,
+        });
+      }
+    }
+
+    // Return updated user
+    const updatedUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: true,
+        userInfo: true,
+        teacherInfo: {
+          include: {
+            department: true,
+          },
+        },
+      },
+    });
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found after update');
     }
 
     const { password: _, ...userWithoutPassword } = updatedUser;

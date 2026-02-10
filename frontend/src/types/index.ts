@@ -23,6 +23,19 @@ export interface UserInfo {
   userId: number;
   firstName: string;
   lastName: string;
+  middleName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  countryOfBirth?: string;
+  regionOfBirth?: string;
+  currentAddress?: string;
+  permanentAddress?: string;
+  passportSerial?: string;
+  personalId?: string;
+  stirInn?: string;
+  englishLevel?: string;
+  profileImage?: string;
   email1?: string;
   email2?: string;
   phone1?: string;
@@ -41,6 +54,72 @@ export interface TeacherInfo {
   mandatoryNationalArticles?: number;
   mandatoryScopusArticles?: number;
   mandatoryDocumentation?: number;
+
+  // Educational Background
+  bachelorUniversity?: string;
+  bachelorYear?: number;
+  bachelorDirection?: string;
+  bachelorDiplomaNumber?: string;
+  masterUniversity?: string;
+  masterYear?: number;
+  masterDirection?: string;
+  masterDiplomaNumber?: string;
+
+  // Research
+  researchArea?: string;
+
+  // PhD Information
+  hasPhdDegree?: boolean;
+  phdYear?: number;
+  phdSpeciality?: string;
+  phdTopic?: string;
+  phdDiplomaNumber?: string;
+  phdCountry?: string;
+  phdOrganization?: string;
+
+  // DSc Information
+  hasDscDegree?: boolean;
+  dscYear?: number;
+  dscSpeciality?: string;
+  dscTopic?: string;
+  dscDiplomaNumber?: string;
+  dscCountry?: string;
+  dscOrganization?: string;
+
+  // Academic Title
+  hasAcademicTitle?: boolean;
+  academicTitleName?: string;
+  academicTitleSpeciality?: string;
+  academicTitleYear?: number;
+  academicTitleAttestat?: string;
+
+  // Training and Development
+  internshipsCount?: number;
+  internshipsInfo?: string;
+  trainingCount?: number;
+  trainingInfo?: string;
+
+  // Awards and Recognition
+  awardsField?: string;
+  awardsState?: string;
+
+  // Supervision
+  supervisedPhd?: number;
+  supervisedDsc?: number;
+
+  // Conference and Seminar Participation
+  conferencesRepublic?: number;
+  conferencesInternational?: number;
+  seminarsRepublic?: number;
+  seminarsInternational?: number;
+
+  // Projects
+  projectsFundamental?: number;
+  projectsPractical?: number;
+  projectsYouth?: number;
+  projectsBusiness?: number;
+  projectsInnovation?: number;
+  innovativeIdeasCount?: number;
 }
 
 // Auth Response

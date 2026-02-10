@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import authService from '../services/auth.service';
 
 const SettingsPage = () => {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
 

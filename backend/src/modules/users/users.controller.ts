@@ -16,6 +16,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateTeacherInfoDto } from './dto/update-teacher-info.dto';
+import { UpdateUserAccountDto } from './dto/update-user-account.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -81,6 +82,26 @@ export class UsersController {
       success: true,
       data: teacher,
       message: 'Teacher info updated successfully',
+    };
+  }
+
+  @Patch(':id/account')
+  @Roles('admin', 'departmenthead', 'teacher')
+  async updateAccount(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateAccountDto: UpdateUserAccountDto,
+    @CurrentUser() user: any,
+  ) {
+    // Teachers can only update their own account
+    if (user.role === 'teacher' && user.id !== id) {
+      throw new Error('You can only update your own account');
+    }
+
+    const updatedUser = await this.usersService.updateUserAccount(id, updateAccountDto);
+    return {
+      success: true,
+      data: updatedUser,
+      message: 'Account updated successfully',
     };
   }
 
