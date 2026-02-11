@@ -8,9 +8,11 @@ import DepartmentHeadDashboardPage from './pages/department-head/DepartmentHeadD
 import TeachingActivitiesPage from './pages/TeachingActivitiesPage';
 import PublicationsPage from './pages/PublicationsPage';
 import ScientificTasksPage from './pages/ScientificTasksPage';
+import ResearchActivitiesPage from './pages/ResearchActivitiesPage';
 import UsersPage from './pages/admin/UsersPage';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
 import ScientificTasksManagementPage from './pages/admin/ScientificTasksManagementPage';
+import ResearchActivitiesManagementPage from './pages/admin/ResearchActivitiesManagementPage';
 import DepartmentActivitiesPage from './pages/department-head/DepartmentActivitiesPage';
 import ScientificReportsValidationPage from './pages/department-head/ScientificReportsValidationPage';
 import TeachersManagementPage from './pages/department-head/TeachersManagementPage';
@@ -98,7 +100,7 @@ export const router = createBrowserRouter([
     path: '/research-activities',
     element: (
       <ProtectedRoute>
-        <div>Research Activities - Coming Soon</div>
+        <ResearchActivitiesPage />
       </ProtectedRoute>
     ),
   },
@@ -131,6 +133,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ScientificTasksManagementPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/research-activities',
+    element: (
+      <ProtectedRoute>
+        <ResearchActivitiesManagementPage />
       </ProtectedRoute>
     ),
   },

@@ -97,7 +97,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             icon: <FileSearchOutlined />,
             label: 'Research Activities',
             onClick: () => navigate('/research-activities'),
-            disabled: true,
           },
           {
             key: '/other-activities',
@@ -175,6 +174,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 icon: <ExperimentOutlined />,
                 label: 'Scientific Tasks',
                 onClick: () => navigate('/admin/scientific-tasks'),
+              },
+              {
+                key: '/admin/research-activities',
+                icon: <FileSearchOutlined />,
+                label: 'Research Activities',
+                onClick: () => navigate('/admin/research-activities'),
               },
             ],
           },

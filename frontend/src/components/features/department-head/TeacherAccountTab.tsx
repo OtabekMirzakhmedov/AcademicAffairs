@@ -12,10 +12,9 @@ import {
   message,
   Space,
   Typography,
-  Upload,
   Checkbox,
 } from 'antd';
-import { EditOutlined, SaveOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons';
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import usersService, { type UpdateUserAccountRequest } from '../../../services/users.service';
 import type { User } from '../../../types';
 import dayjs from 'dayjs';

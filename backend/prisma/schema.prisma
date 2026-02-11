@@ -44,6 +44,8 @@ model User {
   scientificReports        TeacherScientificReport[]   @relation("TeacherScientificReports")
   validatedScientificReports TeacherScientificReport[] @relation("ScientificReportValidator")
   publications             TeacherPublication[]
+  researchActivities       TeacherResearchActivity[] @relation("TeacherResearchActivities")
+  validatedResearchActivities TeacherResearchActivity[] @relation("ResearchActivityValidator")
 
   @@map("users")
 }
@@ -351,6 +353,48 @@ model TeacherScientificReport {
   @@index([teacherId])
   @@index([status])
   @@map("teacher_scientific_reports")
+}
+
+model ResearchActivityTemplate {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  maxAmount   Float?   @map("max_amount")
+  penalty     Float?   // Penalty % for not completing
+  category    String   @default("scientific_main") // scientific_main, scientific_exchange, educational_additional, additional, educational
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  teacherActivities TeacherResearchActivity[]
+
+  @@map("research_activity_templates")
+}
+
+model TeacherResearchActivity {
+  id                   Int       @id @default(autoincrement())
+  teacherId            Int       @map("teacher_id")
+  templateId           Int       @map("template_id")
+  completionPercentage Int       @default(0) @map("completion_percentage")
+  filePath             String?   @map("file_path")
+  fileName             String?   @map("file_name")
+  status               String    @default("in_progress") // in_progress, submitted, validated, rejected
+  deadline             DateTime?
+  submittedAt          DateTime? @map("submitted_at")
+  validatedAt          DateTime? @map("validated_at")
+  validatedBy          Int?      @map("validated_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  teacher   User                     @relation("TeacherResearchActivities", fields: [teacherId], references: [id])
+  template  ResearchActivityTemplate @relation(fields: [templateId], references: [id])
+  validator User?                    @relation("ResearchActivityValidator", fields: [validatedBy], references: [id])
+
+  @@unique([teacherId, templateId], name: "teacher_template_unique")
+  @@index([teacherId])
+  @@index([templateId])
+  @@index([status])
+  @@map("teacher_research_activities")
 }
 
 model TeacherPublication {

@@ -366,3 +366,34 @@ export interface PublicationStatistics {
   validatedNationalArticles: number;
   validatedScopusArticles: number;
 }
+
+// Research Activity Types
+export interface ResearchActivityTemplate {
+  id: number;
+  name: string;
+  description?: string;
+  maxAmount?: number;
+  penalty?: number;
+  category: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeacherResearchActivity {
+  id: number;
+  teacherId: number;
+  templateId: number;
+  template?: ResearchActivityTemplate;
+  completionPercentage: number;
+  filePath?: string;
+  fileName?: string;
+  status: 'in_progress' | 'submitted' | 'validated' | 'rejected';
+  deadline?: string;
+  submittedAt?: string;
+  validatedAt?: string;
+  validatedBy?: number;
+  validator?: User;
+  createdAt: string;
+  updatedAt: string;
+}

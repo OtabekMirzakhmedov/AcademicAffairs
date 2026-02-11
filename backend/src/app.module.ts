@@ -13,6 +13,7 @@ import { AcademicPeriodsModule } from "./modules/academic-periods/academic-perio
 import { ProgramsModule } from './modules/programs/programs.module';
 import { ScientificTasksModule } from './modules/scientific-tasks/scientific-tasks.module';
 import { PublicationsModule } from './modules/publications/publications.module';
+import { ResearchActivitiesModule } from './modules/research-activities/research-activities.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PublicationsModule } from './modules/publications/publications.module';
     ProgramsModule,
     ScientificTasksModule,
     PublicationsModule,
+    ResearchActivitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -402,6 +402,59 @@ async function main() {
 
   console.log('✅ Course assignments created');
 
+  // Seed research activity templates
+  const researchTemplates = [
+    {
+      name: 'Participation in international scientific conferences',
+      description: 'Active participation in international scientific conferences with presentation or publication.',
+      penalty: 5.0,
+      category: 'scientific_main',
+    },
+    {
+      name: "Supervising a master's student's thesis",
+      description: "Supervising and guiding master's students in their thesis research and preparation.",
+      penalty: 10.0,
+      category: 'scientific_main',
+    },
+    {
+      name: 'Populating the LMS and UMO platforms with data',
+      description: 'Uploading and maintaining course materials, resources, and data on the LMS and UMO platforms.',
+      penalty: 15.0,
+      category: 'scientific_main',
+    },
+    {
+      name: 'Project preparation and participation in international grants (Erasmus+, HORIZON 2020, etc.)',
+      description: 'Preparing proposals and participating in international research grant programs such as Erasmus+, HORIZON 2020, and similar.',
+      penalty: 5.0,
+      category: 'scientific_main',
+    },
+    {
+      name: 'Publication of articles in Scopus journals and conferences',
+      description: 'Authoring and publishing research articles in Scopus-indexed journals and conference proceedings.',
+      penalty: 10.0,
+      category: 'scientific_main',
+    },
+    {
+      name: 'Preparation and publication of articles in national scientific journals recommended by the Higher Attestation Committee',
+      description: 'Writing and publishing articles in national scientific journals recommended by the Higher Attestation Committee (VAK).',
+      penalty: 10.0,
+      category: 'scientific_main',
+    },
+    {
+      name: 'Documentations',
+      description: 'Preparation and maintenance of required academic and research documentation.',
+      penalty: 5.0,
+      category: 'scientific_main',
+    },
+  ];
+
+  const existingTemplates = await prisma.researchActivityTemplate.count();
+  if (existingTemplates === 0) {
+    await prisma.researchActivityTemplate.createMany({ data: researchTemplates });
+  }
+
+  console.log('✅ Research activity templates created');
+
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📝 Default credentials:');
   console.log('   Login: admin');
