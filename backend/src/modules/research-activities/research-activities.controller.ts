@@ -17,6 +17,7 @@ import {
   StreamableFile,
   Req,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { extname, basename, join } from 'path';
 import { createReadStream, createWriteStream, existsSync } from 'fs';
 import { pipeline } from 'stream/promises';
@@ -28,6 +29,8 @@ import { CreateTemplateDto } from './dto/create-template.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('research-activities')
+@ApiBearerAuth('JWT-auth')
 @Controller('research-activities')
 @UseGuards(JwtAuthGuard)
 export class ResearchActivitiesController {
@@ -38,6 +41,9 @@ export class ResearchActivitiesController {
   // ==================== TEMPLATE ENDPOINTS ====================
 
   @Get('templates')
+  @ApiOperation({ summary: 'Get active templates', description: 'Get active research activity templates' })
+  @ApiQuery({ name: 'category', required: false, description: 'Filter by category' })
+  @ApiResponse({ status: 200, description: 'Returns list of templates' })
   async getTemplates(@Query('category') category?: string) {
     const templates =
       await this.researchActivitiesService.getTemplates(category);
@@ -45,6 +51,8 @@ export class ResearchActivitiesController {
   }
 
   @Get('templates/admin')
+  @ApiOperation({ summary: 'Get all templates (admin)', description: 'Get all templates including inactive ones' })
+  @ApiResponse({ status: 200, description: 'Returns list of all templates' })
   async getAllTemplatesAdmin() {
     const templates =
       await this.researchActivitiesService.getAllTemplatesAdmin();
@@ -52,12 +60,19 @@ export class ResearchActivitiesController {
   }
 
   @Post('templates')
+  @ApiOperation({ summary: 'Create template', description: 'Create a new research activity template (admin)' })
+  @ApiResponse({ status: 201, description: 'Template created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
   async createTemplate(@Body() dto: CreateTemplateDto) {
     const template = await this.researchActivitiesService.createTemplate(dto);
     return { success: true, data: template, message: 'Template created successfully' };
   }
 
   @Patch('templates/:id')
+  @ApiOperation({ summary: 'Update template', description: 'Update a research activity template' })
+  @ApiParam({ name: 'id', description: 'Template ID' })
+  @ApiResponse({ status: 200, description: 'Template updated successfully' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
   async updateTemplate(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateTemplateDto,
@@ -68,15 +83,20 @@ export class ResearchActivitiesController {
 
   @Delete('templates/:id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete template', description: 'Delete a research activity template' })
+  @ApiParam({ name: 'id', description: 'Template ID' })
+  @ApiResponse({ status: 200, description: 'Template deleted' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
   async deleteTemplate(@Param('id', ParseIntPipe) id: number) {
     await this.researchActivitiesService.deleteTemplate(id);
     return { success: true, message: 'Template deleted successfully' };
   }
 
   // ==================== TEACHER ACTIVITY ENDPOINTS ====================
-  // NOTE: Specific paths before parameterized ones to avoid route conflicts
 
   @Get('my')
+  @ApiOperation({ summary: 'Get my research activities', description: 'Get all research activities for the current teacher' })
+  @ApiResponse({ status: 200, description: 'Returns list of teacher activities' })
   async getMyActivities(@CurrentUser() user: any) {
     const activities =
       await this.researchActivitiesService.getMyActivities(user.id);
@@ -84,6 +104,11 @@ export class ResearchActivitiesController {
   }
 
   @Post('upload')
+  @ApiOperation({ summary: 'Upload activity file', description: 'Upload a file for a research activity' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'File to upload (PDF, DOC, DOCX, XLS, XLSX, TXT, or images)' })
+  @ApiResponse({ status: 200, description: 'File uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or no file uploaded' })
   async uploadFile(
     @Req() request: FastifyRequest,
     @CurrentUser() user: any,
@@ -141,6 +166,9 @@ export class ResearchActivitiesController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Add research activity', description: 'Add a new research activity from a template' })
+  @ApiResponse({ status: 201, description: 'Activity added successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error or already exists' })
   async addActivity(
     @CurrentUser() user: any,
     @Body() dto: CreateResearchActivityDto,
@@ -157,6 +185,11 @@ export class ResearchActivitiesController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update activity', description: 'Update a research activity' })
+  @ApiParam({ name: 'id', description: 'Activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity updated successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot update submitted activity' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async updateActivity(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -176,6 +209,11 @@ export class ResearchActivitiesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete activity', description: 'Delete a research activity' })
+  @ApiParam({ name: 'id', description: 'Activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity deleted' })
+  @ApiResponse({ status: 400, description: 'Cannot delete submitted activity' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async deleteActivity(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -186,6 +224,11 @@ export class ResearchActivitiesController {
 
   @Post(':id/submit')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Submit activity', description: 'Submit a research activity for validation' })
+  @ApiParam({ name: 'id', description: 'Activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity submitted successfully' })
+  @ApiResponse({ status: 400, description: 'Activity already submitted' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async submitActivity(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -203,6 +246,11 @@ export class ResearchActivitiesController {
 
   @Post(':id/validate')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validate activity', description: 'Validate a submitted activity (department head)' })
+  @ApiParam({ name: 'id', description: 'Activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity validated successfully' })
+  @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async validateActivity(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -220,6 +268,11 @@ export class ResearchActivitiesController {
 
   @Post(':id/reject')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reject activity', description: 'Reject a submitted activity (department head)' })
+  @ApiParam({ name: 'id', description: 'Activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity rejected' })
+  @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async rejectActivity(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -236,6 +289,10 @@ export class ResearchActivitiesController {
   }
 
   @Get(':id/download')
+  @ApiOperation({ summary: 'Download activity file', description: 'Download the file attached to a research activity' })
+  @ApiParam({ name: 'id', description: 'Activity ID' })
+  @ApiResponse({ status: 200, description: 'File download' })
+  @ApiResponse({ status: 404, description: 'Activity or file not found' })
   async downloadFile(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,

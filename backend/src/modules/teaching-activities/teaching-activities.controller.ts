@@ -12,12 +12,15 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { TeachingActivitiesService } from './teaching-activities.service';
 import { CreateTeachingActivityDto } from './dto/create-teaching-activity.dto';
 import { UpdateTeachingActivityDto } from './dto/update-teaching-activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('teaching-activities')
+@ApiBearerAuth('JWT-auth')
 @Controller('teaching-activities')
 @UseGuards(JwtAuthGuard)
 export class TeachingActivitiesController {
@@ -26,6 +29,9 @@ export class TeachingActivitiesController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create teaching activity', description: 'Create a new teaching activity record' })
+  @ApiResponse({ status: 201, description: 'Teaching activity created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
   async create(
     @CurrentUser() user: any,
     @Body() createTeachingActivityDto: CreateTeachingActivityDto,
@@ -42,6 +48,9 @@ export class TeachingActivitiesController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get teaching activities', description: 'Get all teaching activities for the current user' })
+  @ApiQuery({ name: 'academicPeriodId', required: false, description: 'Filter by academic period ID' })
+  @ApiResponse({ status: 200, description: 'Returns list of teaching activities' })
   async findAll(
     @CurrentUser() user: any,
     @Query('academicPeriodId') academicPeriodId?: string,
@@ -57,6 +66,9 @@ export class TeachingActivitiesController {
   }
 
   @Get('stats')
+  @ApiOperation({ summary: 'Get teaching statistics', description: 'Get teaching hours statistics for current user' })
+  @ApiQuery({ name: 'academicPeriodId', required: false, description: 'Filter by academic period ID' })
+  @ApiResponse({ status: 200, description: 'Returns teaching statistics' })
   async getStatistics(
     @CurrentUser() user: any,
     @Query('academicPeriodId') academicPeriodId?: string,
@@ -72,6 +84,11 @@ export class TeachingActivitiesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get activity by ID', description: 'Retrieve a specific teaching activity' })
+  @ApiParam({ name: 'id', description: 'Teaching activity ID' })
+  @ApiResponse({ status: 200, description: 'Returns teaching activity' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async findOne(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -84,6 +101,12 @@ export class TeachingActivitiesController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update activity', description: 'Update a teaching activity (only in draft status)' })
+  @ApiParam({ name: 'id', description: 'Teaching activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity updated successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot update submitted activity' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async update(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -103,6 +126,12 @@ export class TeachingActivitiesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete activity', description: 'Delete a teaching activity (only in draft status)' })
+  @ApiParam({ name: 'id', description: 'Teaching activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity deleted' })
+  @ApiResponse({ status: 400, description: 'Cannot delete submitted activity' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async remove(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -116,6 +145,12 @@ export class TeachingActivitiesController {
 
   @Post(':id/submit')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Submit activity', description: 'Submit teaching activity for validation' })
+  @ApiParam({ name: 'id', description: 'Teaching activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity submitted successfully' })
+  @ApiResponse({ status: 400, description: 'Activity already submitted' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async submit(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -129,6 +164,8 @@ export class TeachingActivitiesController {
   }
 
   @Get('submitted/all')
+  @ApiOperation({ summary: 'Get all submitted activities', description: 'Get all submitted activities (for validation)' })
+  @ApiResponse({ status: 200, description: 'Returns list of submitted activities' })
   async getAllSubmitted() {
     const activities = await this.teachingActivitiesService.getAllSubmitted();
     return {
@@ -139,6 +176,11 @@ export class TeachingActivitiesController {
 
   @Post(':id/validate')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validate activity', description: 'Validate a submitted teaching activity (department head)' })
+  @ApiParam({ name: 'id', description: 'Teaching activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity validated successfully' })
+  @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async validate(@Param('id', ParseIntPipe) id: number) {
     const activity = await this.teachingActivitiesService.validate(id);
     return {
@@ -150,6 +192,11 @@ export class TeachingActivitiesController {
 
   @Post(':id/reject')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reject activity', description: 'Reject a submitted teaching activity (department head)' })
+  @ApiParam({ name: 'id', description: 'Teaching activity ID' })
+  @ApiResponse({ status: 200, description: 'Activity rejected' })
+  @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
+  @ApiResponse({ status: 404, description: 'Activity not found' })
   async reject(@Param('id', ParseIntPipe) id: number) {
     const activity = await this.teachingActivitiesService.reject(id);
     return {

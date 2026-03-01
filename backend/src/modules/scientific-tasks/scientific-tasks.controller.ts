@@ -16,6 +16,7 @@ import {
   NotFoundException,
   Req,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { extname, basename, join } from 'path';
 import { createReadStream, createWriteStream, existsSync } from 'fs';
 import { pipeline } from 'stream/promises';
@@ -27,6 +28,8 @@ import { UpdateReportDto } from './dto/update-report.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('scientific-tasks')
+@ApiBearerAuth('JWT-auth')
 @Controller('scientific-tasks')
 @UseGuards(JwtAuthGuard)
 export class ScientificTasksController {
@@ -37,6 +40,9 @@ export class ScientificTasksController {
   // ==================== TASK ENDPOINTS ====================
 
   @Post()
+  @ApiOperation({ summary: 'Create scientific task', description: 'Create a new scientific task (admin/department head)' })
+  @ApiResponse({ status: 201, description: 'Task created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
   async createTask(
     @CurrentUser() user: any,
     @Body() createScientificTaskDto: CreateScientificTaskDto,
@@ -53,6 +59,8 @@ export class ScientificTasksController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all scientific tasks', description: 'Get all tasks visible to the current user' })
+  @ApiResponse({ status: 200, description: 'Returns list of scientific tasks' })
   async getAllTasks(@CurrentUser() user: any) {
     const tasks = await this.scientificTasksService.findAllTasks(user.id);
     return {
@@ -62,10 +70,10 @@ export class ScientificTasksController {
   }
 
   // ==================== REPORT ENDPOINTS ====================
-  // NOTE: These must come BEFORE the parameterized routes like ':id'
-  // to avoid route conflicts where 'reports' is matched as ':id'
 
   @Get('reports/my')
+  @ApiOperation({ summary: 'Get my reports', description: 'Get all reports for the current teacher' })
+  @ApiResponse({ status: 200, description: 'Returns list of teacher reports' })
   async getMyReports(@CurrentUser() user: any) {
     const reports = await this.scientificTasksService.getMyReports(user.id);
     return {
@@ -75,6 +83,8 @@ export class ScientificTasksController {
   }
 
   @Get('reports/submitted')
+  @ApiOperation({ summary: 'Get submitted reports', description: 'Get all submitted reports for validation (department head)' })
+  @ApiResponse({ status: 200, description: 'Returns list of submitted reports' })
   async getSubmittedReports(@CurrentUser() user: any) {
     const reports = await this.scientificTasksService.getSubmittedReports(
       user.id,
@@ -86,6 +96,10 @@ export class ScientificTasksController {
   }
 
   @Get('reports/:id')
+  @ApiOperation({ summary: 'Get report by ID', description: 'Retrieve a specific report' })
+  @ApiParam({ name: 'id', description: 'Report ID' })
+  @ApiResponse({ status: 200, description: 'Returns report data' })
+  @ApiResponse({ status: 404, description: 'Report not found' })
   async getReport(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -98,6 +112,11 @@ export class ScientificTasksController {
   }
 
   @Patch('reports/:id')
+  @ApiOperation({ summary: 'Update report', description: 'Update a scientific report (in progress status only)' })
+  @ApiParam({ name: 'id', description: 'Report ID' })
+  @ApiResponse({ status: 200, description: 'Report updated successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot update submitted report' })
+  @ApiResponse({ status: 404, description: 'Report not found' })
   async updateReport(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -117,6 +136,11 @@ export class ScientificTasksController {
 
   @Post('reports/:id/submit')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Submit report', description: 'Submit a report for validation' })
+  @ApiParam({ name: 'id', description: 'Report ID' })
+  @ApiResponse({ status: 200, description: 'Report submitted successfully' })
+  @ApiResponse({ status: 400, description: 'Report already submitted' })
+  @ApiResponse({ status: 404, description: 'Report not found' })
   async submitReport(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -134,6 +158,11 @@ export class ScientificTasksController {
 
   @Post('reports/:id/validate')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validate report', description: 'Validate a submitted report (department head)' })
+  @ApiParam({ name: 'id', description: 'Report ID' })
+  @ApiResponse({ status: 200, description: 'Report validated successfully' })
+  @ApiResponse({ status: 400, description: 'Report not in submitted status' })
+  @ApiResponse({ status: 404, description: 'Report not found' })
   async validateReport(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -151,6 +180,11 @@ export class ScientificTasksController {
 
   @Post('reports/:id/reject')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reject report', description: 'Reject a submitted report (department head)' })
+  @ApiParam({ name: 'id', description: 'Report ID' })
+  @ApiResponse({ status: 200, description: 'Report rejected' })
+  @ApiResponse({ status: 400, description: 'Report not in submitted status' })
+  @ApiResponse({ status: 404, description: 'Report not found' })
   async rejectReport(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -164,6 +198,11 @@ export class ScientificTasksController {
   }
 
   @Post('reports/upload')
+  @ApiOperation({ summary: 'Upload report file', description: 'Upload a file for a scientific report' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'File to upload (PDF, DOC, DOCX, XLS, XLSX, TXT)' })
+  @ApiResponse({ status: 200, description: 'File uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or no file uploaded' })
   async uploadFile(
     @Req() request: FastifyRequest,
     @CurrentUser() user: any,
@@ -240,6 +279,10 @@ export class ScientificTasksController {
   }
 
   @Get('reports/:id/download')
+  @ApiOperation({ summary: 'Download report file', description: 'Download the file attached to a report' })
+  @ApiParam({ name: 'id', description: 'Report ID' })
+  @ApiResponse({ status: 200, description: 'File download' })
+  @ApiResponse({ status: 404, description: 'Report or file not found' })
   async downloadFile(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) reportId: number,
@@ -272,10 +315,12 @@ export class ScientificTasksController {
   }
 
   // ==================== PARAMETERIZED TASK ENDPOINTS ====================
-  // NOTE: These must come AFTER the specific 'reports/*' routes
-  // to avoid route matching conflicts
 
   @Get(':id/progress')
+  @ApiOperation({ summary: 'Get task progress', description: 'Get progress statistics for a task' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Returns task progress data' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
   async getTaskProgress(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -291,6 +336,10 @@ export class ScientificTasksController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get task by ID', description: 'Retrieve a specific scientific task' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Returns task data' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
   async getTask(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -303,6 +352,11 @@ export class ScientificTasksController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update task', description: 'Update a scientific task (creator only)' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Task updated successfully' })
+  @ApiResponse({ status: 403, description: 'Not task creator' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
   async updateTask(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -322,6 +376,11 @@ export class ScientificTasksController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete task', description: 'Delete a scientific task (creator only)' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Task deleted' })
+  @ApiResponse({ status: 403, description: 'Not task creator' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
   async deleteTask(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
