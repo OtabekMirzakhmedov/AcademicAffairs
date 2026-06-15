@@ -27,12 +27,14 @@ import { CreateResearchActivityDto } from './dto/create-research-activity.dto';
 import { UpdateResearchActivityDto } from './dto/update-research-activity.dto';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('research-activities')
 @ApiBearerAuth('JWT-auth')
 @Controller('research-activities')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ResearchActivitiesController {
   constructor(
     private readonly researchActivitiesService: ResearchActivitiesService,
@@ -51,6 +53,7 @@ export class ResearchActivitiesController {
   }
 
   @Get('templates/admin')
+  @Roles('admin')
   @ApiOperation({ summary: 'Get all templates (admin)', description: 'Get all templates including inactive ones' })
   @ApiResponse({ status: 200, description: 'Returns list of all templates' })
   async getAllTemplatesAdmin() {
@@ -60,6 +63,7 @@ export class ResearchActivitiesController {
   }
 
   @Post('templates')
+  @Roles('admin')
   @ApiOperation({ summary: 'Create template', description: 'Create a new research activity template (admin)' })
   @ApiResponse({ status: 201, description: 'Template created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -69,6 +73,7 @@ export class ResearchActivitiesController {
   }
 
   @Patch('templates/:id')
+  @Roles('admin')
   @ApiOperation({ summary: 'Update template', description: 'Update a research activity template' })
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiResponse({ status: 200, description: 'Template updated successfully' })
@@ -82,6 +87,7 @@ export class ResearchActivitiesController {
   }
 
   @Delete('templates/:id')
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete template', description: 'Delete a research activity template' })
   @ApiParam({ name: 'id', description: 'Template ID' })
@@ -245,6 +251,7 @@ export class ResearchActivitiesController {
   }
 
   @Post(':id/validate')
+  @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Validate activity', description: 'Validate a submitted activity (department head)' })
   @ApiParam({ name: 'id', description: 'Activity ID' })
@@ -267,6 +274,7 @@ export class ResearchActivitiesController {
   }
 
   @Post(':id/reject')
+  @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reject activity', description: 'Reject a submitted activity (department head)' })
   @ApiParam({ name: 'id', description: 'Activity ID' })

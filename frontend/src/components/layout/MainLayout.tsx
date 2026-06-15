@@ -21,7 +21,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import branding from '../../config/branding.json';
-import universityLogo from '../../assets/university-logo.png';
+import universityLogo from '../../../public/university-logo.png';
 import './MainLayout.scss';
 
 const { Header, Sider, Content } = Layout;

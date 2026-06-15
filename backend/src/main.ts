@@ -6,11 +6,20 @@ import {
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import fastifyCors from '@fastify/cors';
+import fastifyHelmet from '@fastify/helmet';
 import fastifyMultipart from '@fastify/multipart';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter();
+
+  // Security headers. CSP is disabled because Swagger UI at /api/docs
+  // depends on inline scripts/styles; the other defaults (X-Frame-Options,
+  // X-Content-Type-Options, Referrer-Policy, HSTS, etc.) still apply.
+  await fastifyAdapter.register(fastifyHelmet, {
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  });
 
   // Register CORS plugin for Fastify
   // Remove trailing slash from FRONTEND_URL to avoid CORS mismatch

@@ -3,4 +3,5 @@ export interface JwtPayload {
   login: string;
   roleId: number;
   roleName: string;
+  tv?: number; // refresh-token version (refresh tokens only)
 }

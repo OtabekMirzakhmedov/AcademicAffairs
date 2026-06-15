@@ -189,6 +189,40 @@ export class ResearchActivitiesService {
     });
   }
 
+  private async assertValidatorScope(
+    validatorId: number,
+    activityTeacherId: number,
+  ) {
+    const [validator, teacherInfo] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: validatorId },
+        include: { role: true, headedDepartments: true },
+      }),
+      this.prisma.teacherInfo.findUnique({
+        where: { userId: activityTeacherId },
+        select: { departmentId: true },
+      }),
+    ]);
+
+    const roleName = validator?.role.name.toLowerCase();
+
+    if (roleName === 'admin') return;
+
+    if (roleName === 'departmenthead') {
+      const headedDeptId = validator?.headedDepartments[0]?.id;
+      if (!headedDeptId || headedDeptId !== teacherInfo?.departmentId) {
+        throw new ForbiddenException(
+          'You can only act on activities from your department',
+        );
+      }
+      return;
+    }
+
+    throw new ForbiddenException(
+      'Only admins and department heads can perform this action',
+    );
+  }
+
   async validateActivity(id: number, validatorId: number) {
     const activity = await this.prisma.teacherResearchActivity.findUnique({
       where: { id },
@@ -197,6 +231,8 @@ export class ResearchActivitiesService {
     if (activity.status !== 'submitted') {
       throw new ForbiddenException('Activity is not submitted for validation');
     }
+
+    await this.assertValidatorScope(validatorId, activity.teacherId);
 
     return this.prisma.teacherResearchActivity.update({
       where: { id },
@@ -217,6 +253,8 @@ export class ResearchActivitiesService {
     if (activity.status !== 'submitted') {
       throw new ForbiddenException('Activity is not submitted');
     }
+
+    await this.assertValidatorScope(validatorId, activity.teacherId);
 
     return this.prisma.teacherResearchActivity.update({
       where: { id },

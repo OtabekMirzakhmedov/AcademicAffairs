@@ -29,6 +29,7 @@ model User {
   roleId             Int      @map("role_id")
   isActive           Boolean  @default(true) @map("is_active")
   mustChangePassword Boolean  @default(true) @map("must_change_password")
+  refreshTokenVersion Int     @default(0) @map("refresh_token_version")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 

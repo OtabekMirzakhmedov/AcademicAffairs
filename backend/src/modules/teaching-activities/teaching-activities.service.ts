@@ -265,11 +265,66 @@ export class TeachingActivitiesService {
     };
   }
 
-  async getAllSubmitted() {
+  private async assertValidatorScope(
+    userId: number,
+    activityTeacherId: number,
+  ) {
+    const [user, teacherInfo] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { role: true, headedDepartments: true },
+      }),
+      this.prisma.teacherInfo.findUnique({
+        where: { userId: activityTeacherId },
+        select: { departmentId: true },
+      }),
+    ]);
+
+    const roleName = user?.role.name.toLowerCase();
+
+    if (roleName === 'admin') return;
+
+    if (roleName === 'departmenthead') {
+      const headedDeptId = user?.headedDepartments[0]?.id;
+      if (!headedDeptId || headedDeptId !== teacherInfo?.departmentId) {
+        throw new ForbiddenException(
+          'You can only act on activities from your department',
+        );
+      }
+      return;
+    }
+
+    throw new ForbiddenException(
+      'Only admins and department heads can perform this action',
+    );
+  }
+
+  async getAllSubmitted(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true, headedDepartments: true },
+    });
+
+    const roleName = user?.role.name.toLowerCase();
+
+    const where: any = { status: 'submitted' };
+
+    if (roleName === 'departmenthead') {
+      const headedDeptId = user?.headedDepartments[0]?.id;
+      if (!headedDeptId) {
+        return [];
+      }
+      where.teacher = {
+        teacherInfo: { departmentId: headedDeptId },
+      };
+    } else if (roleName !== 'admin') {
+      throw new ForbiddenException(
+        'Only admins and department heads can view submitted activities',
+      );
+    }
+
     return this.prisma.teachingActivity.findMany({
-      where: {
-        status: 'submitted',
-      },
+      where,
       include: {
         course: true,
         teacher: {
@@ -285,23 +340,27 @@ export class TeachingActivitiesService {
     });
   }
 
-  async validate(id: number) {
+  async validate(id: number, userId: number) {
     const activity = await this.prisma.teachingActivity.findUnique({
       where: { id },
     });
 
     if (!activity) {
-      throw new BadRequestException('Teaching activity not found');
+      throw new NotFoundException('Teaching activity not found');
     }
 
     if (activity.status !== 'submitted') {
       throw new BadRequestException('Only submitted activities can be validated');
     }
 
+    await this.assertValidatorScope(userId, activity.teacherId);
+
     return this.prisma.teachingActivity.update({
       where: { id },
       data: {
         status: 'validated',
+        validatedAt: new Date(),
+        validatedBy: userId,
       },
       include: {
         course: true,
@@ -314,23 +373,27 @@ export class TeachingActivitiesService {
     });
   }
 
-  async reject(id: number) {
+  async reject(id: number, userId: number) {
     const activity = await this.prisma.teachingActivity.findUnique({
       where: { id },
     });
 
     if (!activity) {
-      throw new BadRequestException('Teaching activity not found');
+      throw new NotFoundException('Teaching activity not found');
     }
 
     if (activity.status !== 'submitted') {
       throw new BadRequestException('Only submitted activities can be rejected');
     }
 
+    await this.assertValidatorScope(userId, activity.teacherId);
+
     return this.prisma.teachingActivity.update({
       where: { id },
       data: {
         status: 'rejected',
+        validatedAt: new Date(),
+        validatedBy: userId,
       },
       include: {
         course: true,

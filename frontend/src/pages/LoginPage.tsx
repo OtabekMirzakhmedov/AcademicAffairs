@@ -4,7 +4,7 @@ import { Form, Input, Button, Checkbox, message, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import branding from '../config/branding.json';
-import universityLogo from '../assets/university-logo.png';
+import universityLogo from '../../public/university-logo.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();

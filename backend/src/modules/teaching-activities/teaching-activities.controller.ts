@@ -17,12 +17,14 @@ import { TeachingActivitiesService } from './teaching-activities.service';
 import { CreateTeachingActivityDto } from './dto/create-teaching-activity.dto';
 import { UpdateTeachingActivityDto } from './dto/update-teaching-activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('teaching-activities')
 @ApiBearerAuth('JWT-auth')
 @Controller('teaching-activities')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TeachingActivitiesController {
   constructor(
     private readonly teachingActivitiesService: TeachingActivitiesService,
@@ -164,10 +166,11 @@ export class TeachingActivitiesController {
   }
 
   @Get('submitted/all')
+  @Roles('departmenthead', 'admin')
   @ApiOperation({ summary: 'Get all submitted activities', description: 'Get all submitted activities (for validation)' })
   @ApiResponse({ status: 200, description: 'Returns list of submitted activities' })
-  async getAllSubmitted() {
-    const activities = await this.teachingActivitiesService.getAllSubmitted();
+  async getAllSubmitted(@CurrentUser() user: any) {
+    const activities = await this.teachingActivitiesService.getAllSubmitted(user.id);
     return {
       success: true,
       data: activities,
@@ -175,14 +178,18 @@ export class TeachingActivitiesController {
   }
 
   @Post(':id/validate')
+  @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Validate activity', description: 'Validate a submitted teaching activity (department head)' })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity validated successfully' })
   @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
   @ApiResponse({ status: 404, description: 'Activity not found' })
-  async validate(@Param('id', ParseIntPipe) id: number) {
-    const activity = await this.teachingActivitiesService.validate(id);
+  async validate(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const activity = await this.teachingActivitiesService.validate(id, user.id);
     return {
       success: true,
       data: activity,
@@ -191,14 +198,18 @@ export class TeachingActivitiesController {
   }
 
   @Post(':id/reject')
+  @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reject activity', description: 'Reject a submitted teaching activity (department head)' })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity rejected' })
   @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
   @ApiResponse({ status: 404, description: 'Activity not found' })
-  async reject(@Param('id', ParseIntPipe) id: number) {
-    const activity = await this.teachingActivitiesService.reject(id);
+  async reject(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const activity = await this.teachingActivitiesService.reject(id, user.id);
     return {
       success: true,
       data: activity,
