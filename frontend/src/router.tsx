@@ -14,6 +14,7 @@ import DepartmentsPage from './pages/admin/DepartmentsPage';
 import ScientificTasksManagementPage from './pages/admin/ScientificTasksManagementPage';
 import ResearchActivitiesManagementPage from './pages/admin/ResearchActivitiesManagementPage';
 import DepartmentActivitiesPage from './pages/department-head/DepartmentActivitiesPage';
+import ProgramDetailPage from './pages/department-head/ProgramDetailPage';
 import ScientificReportsValidationPage from './pages/department-head/ScientificReportsValidationPage';
 import TeachersManagementPage from './pages/department-head/TeachersManagementPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -149,6 +150,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <DepartmentActivitiesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/department/programs/:id',
+    element: (
+      <ProtectedRoute>
+        <ProgramDetailPage />
       </ProtectedRoute>
     ),
   },

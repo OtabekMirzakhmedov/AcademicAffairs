@@ -205,11 +205,13 @@ model TeacherInfo {
 }
 
 model Course {
-  id           Int      @id @default(autoincrement())
-  departmentId Int      @map("department_id")
-  name         String
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            Int      @id @default(autoincrement())
+  departmentId  Int      @map("department_id")
+  name          String
+  lectureHours  Decimal  @default(0) @map("lecture_hours")
+  practiceHours Decimal  @default(0) @map("practice_hours")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   department         Department         @relation(fields: [departmentId], references: [id])
   assignedTeachers   CourseTeacher[]

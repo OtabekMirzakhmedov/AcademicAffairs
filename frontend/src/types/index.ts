@@ -162,6 +162,8 @@ export interface Course {
   departmentId: number;
   department?: Department;
   name: string;
+  lectureHours: number;
+  practiceHours: number;
   programCourses?: ProgramCourse[];
   _count?: {
     assignedTeachers: number;

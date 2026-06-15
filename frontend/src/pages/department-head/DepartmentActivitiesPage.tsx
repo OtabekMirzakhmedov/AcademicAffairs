@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Tabs,
@@ -23,6 +24,8 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
+  DownloadOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import MainLayout from '../../components/layout/MainLayout';
@@ -41,6 +44,7 @@ import './DepartmentActivitiesPage.scss';
 
 const DepartmentActivitiesPage = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('courses');
   const [loading, setLoading] = useState(false);
 
@@ -376,6 +380,17 @@ const DepartmentActivitiesPage = () => {
 
   const handleProgramModalSuccess = () => {
     fetchPrograms();
+  };
+
+  const handleDownloadProgramTemplate = async (program: Program) => {
+    try {
+      await programsService.downloadTemplate(program.id, program.code);
+      message.success('Program template downloaded successfully');
+    } catch (error: any) {
+      message.error(
+        error?.response?.data?.message || 'Failed to download program template'
+      );
+    }
   };
 
   const coursesColumns: ColumnsType<Course> = [
@@ -738,10 +753,26 @@ const DepartmentActivitiesPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 150,
+      width: 200,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
+          <Tooltip title="View Details">
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/department/programs/${record.id}`)}
+            />
+          </Tooltip>
+          <Tooltip title="Download Template">
+            <Button
+              type="text"
+              size="small"
+              icon={<DownloadOutlined />}
+              onClick={() => handleDownloadProgramTemplate(record)}
+            />
+          </Tooltip>
           <Tooltip title="Edit Program">
             <Button
               type="text"

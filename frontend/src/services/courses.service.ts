@@ -4,6 +4,8 @@ import type { ApiResponse, Course } from '../types';
 export interface CreateCourseRequest {
   name: string;
   departmentId: number;
+  lectureHours?: number;
+  practiceHours?: number;
   teacherId?: number;
   academicPeriodId?: number;
   groups?: string[];
@@ -11,6 +13,8 @@ export interface CreateCourseRequest {
 
 export interface UpdateCourseRequest {
   name?: string;
+  lectureHours?: number;
+  practiceHours?: number;
 }
 
 class CoursesService {

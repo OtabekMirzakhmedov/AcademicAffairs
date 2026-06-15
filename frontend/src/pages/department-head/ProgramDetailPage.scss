@@ -1,0 +1,94 @@
+.program-detail-page {
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+  }
+
+  .back-button {
+    margin-bottom: 16px;
+    padding-left: 0;
+  }
+
+  .program-header-card {
+    margin-bottom: 24px;
+
+    .program-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+      }
+
+      .program-info {
+        flex: 1;
+
+        .program-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 12px;
+
+          h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+          }
+        }
+
+        .program-meta {
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 8px;
+
+          .separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+          }
+        }
+
+        .program-description {
+          color: #666;
+          margin-top: 12px;
+          margin-bottom: 0;
+        }
+      }
+
+      .program-actions {
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .semesters-card {
+    .semester-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .semester-content {
+      padding: 8px 0;
+    }
+
+    .ant-collapse-header {
+      font-weight: 500;
+    }
+
+    .ant-table-small {
+      .ant-table-thead > tr > th {
+        background: #fafafa;
+      }
+    }
+
+    .ant-empty {
+      padding: 24px 0;
+    }
+  }
+}

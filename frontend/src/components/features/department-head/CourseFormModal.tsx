@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, message, Select, Tag, Collapse } from 'antd';
-import { BookOutlined, UserOutlined, CalendarOutlined, TeamOutlined, ApartmentOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, InputNumber, message, Select, Tag, Collapse, Row, Col } from 'antd';
+import { BookOutlined, UserOutlined, CalendarOutlined, TeamOutlined, ApartmentOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import coursesService, {
   type CreateCourseRequest,
   type UpdateCourseRequest,
@@ -55,6 +55,8 @@ const CourseFormModal = ({
         const currentProgramIds = course.programCourses?.map((pc) => pc.programId) || [];
         form.setFieldsValue({
           name: course.name,
+          lectureHours: course.lectureHours || 0,
+          practiceHours: course.practiceHours || 0,
           programIds: currentProgramIds,
         });
       }
@@ -68,6 +70,8 @@ const CourseFormModal = ({
         // Update existing course
         const updateData: UpdateCourseRequest = {
           name: values.name,
+          lectureHours: values.lectureHours,
+          practiceHours: values.practiceHours,
         };
         await coursesService.update(course.id, updateData);
 
@@ -100,6 +104,8 @@ const CourseFormModal = ({
         const createData: CreateCourseRequest = {
           name: values.name,
           departmentId,
+          lectureHours: values.lectureHours,
+          practiceHours: values.practiceHours,
           teacherId: values.teacherId,
           academicPeriodId: values.academicPeriodId,
           groups: values.groups && values.groups.length > 0 ? values.groups : undefined,
@@ -164,6 +170,43 @@ const CourseFormModal = ({
             size="large"
           />
         </Form.Item>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="lectureHours"
+              label="Lecture Hours"
+              tooltip="Contact hours for lectures"
+              initialValue={0}
+            >
+              <InputNumber
+                min={0}
+                max={500}
+                style={{ width: '100%' }}
+                size="large"
+                prefix={<ClockCircleOutlined />}
+                placeholder="e.g., 30"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="practiceHours"
+              label="Practice Hours"
+              tooltip="Hours for seminars, labs, PBL/CBL"
+              initialValue={0}
+            >
+              <InputNumber
+                min={0}
+                max={500}
+                style={{ width: '100%' }}
+                size="large"
+                prefix={<ClockCircleOutlined />}
+                placeholder="e.g., 15"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           name="programIds"
