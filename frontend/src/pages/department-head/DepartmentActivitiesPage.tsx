@@ -28,6 +28,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import CourseFormModal from '../../components/features/department-head/CourseFormModal';
 import TeacherAssignmentModal from '../../components/features/department-head/TeacherAssignmentModal';
@@ -45,43 +46,37 @@ import './DepartmentActivitiesPage.scss';
 const DepartmentActivitiesPage = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const [activeTab, setActiveTab] = useState('courses');
   const [loading, setLoading] = useState(false);
 
-  // Department state
   const [department, setDepartment] = useState<Department | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
 
-  // Courses state
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [courseSearchText, setCourseSearchText] = useState('');
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
-  // Teachers state (for course assignments)
   const [teachers, setTeachers] = useState<User[]>([]);
 
-  // Assignments state
   const [assignments, setAssignments] = useState<CourseTeacher[]>([]);
   const [filteredAssignments, setFilteredAssignments] = useState<CourseTeacher[]>([]);
   const [assignmentSearchText, setAssignmentSearchText] = useState('');
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<CourseTeacher | null>(null);
 
-  // Submissions state
   const [submissions, setSubmissions] = useState<TeachingActivity[]>([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState<TeachingActivity[]>([]);
   const [submissionSearchText, setSubmissionSearchText] = useState('');
 
-  // Programs state
   const [programs, setPrograms] = useState<Program[]>([]);
   const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([]);
   const [programSearchText, setProgramSearchText] = useState('');
   const [programModalOpen, setProgramModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
 
-  // Academic periods (for now, we'll need to fetch this later)
   const [academicPeriods] = useState<AcademicPeriod[]>([
     {
       id: 1,
@@ -126,12 +121,8 @@ const DepartmentActivitiesPage = () => {
       filtered = filtered.filter(
         (assignment) =>
           assignment.course?.name.toLowerCase().includes(assignmentSearchText.toLowerCase()) ||
-          assignment.teacher?.userInfo?.firstName
-            .toLowerCase()
-            .includes(assignmentSearchText.toLowerCase()) ||
-          assignment.teacher?.userInfo?.lastName
-            .toLowerCase()
-            .includes(assignmentSearchText.toLowerCase())
+          assignment.teacher?.userInfo?.firstName.toLowerCase().includes(assignmentSearchText.toLowerCase()) ||
+          assignment.teacher?.userInfo?.lastName.toLowerCase().includes(assignmentSearchText.toLowerCase())
       );
     }
     setFilteredAssignments(filtered);
@@ -143,12 +134,8 @@ const DepartmentActivitiesPage = () => {
       filtered = filtered.filter(
         (submission) =>
           submission.course?.name.toLowerCase().includes(submissionSearchText.toLowerCase()) ||
-          submission.teacher?.userInfo?.firstName
-            .toLowerCase()
-            .includes(submissionSearchText.toLowerCase()) ||
-          submission.teacher?.userInfo?.lastName
-            .toLowerCase()
-            .includes(submissionSearchText.toLowerCase())
+          submission.teacher?.userInfo?.firstName.toLowerCase().includes(submissionSearchText.toLowerCase()) ||
+          submission.teacher?.userInfo?.lastName.toLowerCase().includes(submissionSearchText.toLowerCase())
       );
     }
     setFilteredSubmissions(filtered);
@@ -175,10 +162,10 @@ const DepartmentActivitiesPage = () => {
       if (myDepartment) {
         setDepartment(myDepartment);
       } else {
-        message.warning('You are not assigned as head of any department');
+        message.warning(t('head:activities.noDepartmentMsg'));
       }
-    } catch (error) {
-      message.error('Failed to fetch department information');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
@@ -188,8 +175,8 @@ const DepartmentActivitiesPage = () => {
       const data = await coursesService.getAll();
       setCourses(data);
       setFilteredCourses(data);
-    } catch (error) {
-      message.error('Failed to fetch courses');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -198,11 +185,9 @@ const DepartmentActivitiesPage = () => {
   const fetchTeachers = async () => {
     try {
       const allUsers = await usersService.getAll();
-      // Get ALL teachers for course assignments
-      const allTeachers = allUsers.filter((u) => u.role.name === 'teacher');
-      setTeachers(allTeachers);
-    } catch (error) {
-      message.error('Failed to fetch teachers');
+      setTeachers(allUsers.filter((u) => u.role.name === 'teacher'));
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
@@ -211,8 +196,8 @@ const DepartmentActivitiesPage = () => {
       const data = await courseTeachersService.getAll();
       setAssignments(data);
       setFilteredAssignments(data);
-    } catch (error) {
-      message.error('Failed to fetch assignments');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
@@ -221,181 +206,132 @@ const DepartmentActivitiesPage = () => {
       const data = await teachingActivitiesService.getAllSubmitted();
       setSubmissions(data);
       setFilteredSubmissions(data);
-    } catch (error) {
-      message.error('Failed to fetch submissions');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
   const fetchPrograms = async () => {
     try {
       const data = await programsService.getAll();
-      // Filter programs to show only those from current department
       const departmentPrograms = data.filter((p) => p.departmentId === department?.id);
       setPrograms(departmentPrograms);
       setFilteredPrograms(departmentPrograms);
-    } catch (error) {
-      message.error('Failed to fetch programs');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     }
-  };
-
-  const handleAddCourse = () => {
-    setEditingCourse(null);
-    setCourseModalOpen(true);
-  };
-
-  const handleEditCourse = (course: Course) => {
-    setEditingCourse(course);
-    setCourseModalOpen(true);
   };
 
   const handleDeleteCourse = (id: number) => {
     Modal.confirm({
-      title: 'Delete Course',
-      content: 'Are you sure you want to delete this course? This action cannot be undone.',
-      okText: 'Delete',
+      title: t('head:course.deleteTitle'),
+      content: t('head:course.deleteConfirm'),
+      okText: t('common:button.delete'),
       okType: 'danger',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await coursesService.delete(id);
-          message.success('Course deleted successfully');
+          message.success(t('head:course.deleteSuccess'));
           fetchCourses();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to delete course'
-          );
+          message.error(error?.response?.data?.error?.message || t('head:course.deleteFailed'));
         }
       },
     });
-  };
-
-  const handleCourseModalSuccess = () => {
-    fetchCourses();
-  };
-
-  const handleAddAssignment = () => {
-    setEditingAssignment(null);
-    setAssignmentModalOpen(true);
-  };
-
-  const handleEditAssignment = (assignment: CourseTeacher) => {
-    setEditingAssignment(assignment);
-    setAssignmentModalOpen(true);
   };
 
   const handleDeleteAssignment = (id: number) => {
     Modal.confirm({
-      title: 'Remove Assignment',
-      content: 'Are you sure you want to remove this teacher assignment?',
-      okText: 'Remove',
+      title: t('head:assignment.remove'),
+      content: t('head:assignment.removeConfirm'),
+      okText: t('common:button.remove'),
       okType: 'danger',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await courseTeachersService.delete(id);
-          message.success('Assignment removed successfully');
+          message.success(t('head:assignment.removeSuccess'));
           fetchAssignments();
-          fetchCourses(); // Refresh courses to update assignment counts
+          fetchCourses();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to remove assignment'
-          );
+          message.error(error?.response?.data?.error?.message || t('head:assignment.removeFailed'));
         }
       },
     });
   };
 
-  const handleAssignmentModalSuccess = () => {
-    fetchAssignments();
-    fetchCourses(); // Refresh courses to update assignment counts
-  };
-
   const handleValidateSubmission = (submission: TeachingActivity) => {
+    const name = `${submission.teacher?.userInfo?.firstName} ${submission.teacher?.userInfo?.lastName}`;
     Modal.confirm({
-      title: 'Validate Teaching Hours',
-      content: `Are you sure you want to validate the teaching hours submitted by ${submission.teacher?.userInfo?.firstName} ${submission.teacher?.userInfo?.lastName} for "${submission.course?.name}"?`,
-      okText: 'Validate',
+      title: t('head:activities.validateTitle'),
+      content: t('head:activities.validateConfirm', { name, courseName: submission.course?.name }),
+      okText: t('common:button.validate'),
       okType: 'primary',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await teachingActivitiesService.validate(submission.id);
-          message.success('Teaching hours validated successfully');
+          message.success(t('head:activities.validateSuccess'));
           fetchSubmissions();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to validate submission'
-          );
+          message.error(error?.response?.data?.error?.message || t('head:activities.validateFailed'));
         }
       },
     });
   };
 
   const handleRejectSubmission = (submission: TeachingActivity) => {
+    const name = `${submission.teacher?.userInfo?.firstName} ${submission.teacher?.userInfo?.lastName}`;
     Modal.confirm({
-      title: 'Reject Teaching Hours',
-      content: `Are you sure you want to reject the teaching hours submitted by ${submission.teacher?.userInfo?.firstName} ${submission.teacher?.userInfo?.lastName} for "${submission.course?.name}"? The teacher will be able to update and resubmit.`,
-      okText: 'Reject',
+      title: t('head:activities.rejectTitle'),
+      content: `${t('head:activities.rejectConfirm', { name, courseName: submission.course?.name })} ${t('head:activities.rejectDesc')}`,
+      okText: t('common:button.reject'),
       okType: 'danger',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await teachingActivitiesService.reject(submission.id);
-          message.success('Teaching hours rejected');
+          message.success(t('head:activities.rejectSuccess'));
           fetchSubmissions();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to reject submission'
-          );
+          message.error(error?.response?.data?.error?.message || t('head:activities.rejectFailed'));
         }
       },
     });
-  };
-
-  const handleAddProgram = () => {
-    setEditingProgram(null);
-    setProgramModalOpen(true);
-  };
-
-  const handleEditProgram = (program: Program) => {
-    setEditingProgram(program);
-    setProgramModalOpen(true);
   };
 
   const handleDeleteProgram = (id: number) => {
     Modal.confirm({
-      title: 'Delete Program',
-      content: 'Are you sure you want to delete this program? This action cannot be undone.',
-      okText: 'Delete',
+      title: t('head:program.deleteTitle'),
+      content: t('head:program.deleteConfirm'),
+      okText: t('common:button.delete'),
       okType: 'danger',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await programsService.delete(id);
-          message.success('Program deleted successfully');
+          message.success(t('head:program.deleteSuccess'));
           fetchPrograms();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to delete program'
-          );
+          message.error(error?.response?.data?.error?.message || t('head:program.deleteFailed'));
         }
       },
     });
-  };
-
-  const handleProgramModalSuccess = () => {
-    fetchPrograms();
   };
 
   const handleDownloadProgramTemplate = async (program: Program) => {
     try {
       await programsService.downloadTemplate(program.id, program.code);
-      message.success('Program template downloaded successfully');
+      message.success(t('head:program.downloadSuccess'));
     } catch (error: any) {
-      message.error(
-        error?.response?.data?.message || 'Failed to download program template'
-      );
+      message.error(error?.response?.data?.message || t('head:program.downloadFailed'));
     }
   };
 
   const coursesColumns: ColumnsType<Course> = [
     {
-      title: 'Course Name',
+      title: t('head:activities.courseName'),
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
@@ -406,7 +342,7 @@ const DepartmentActivitiesPage = () => {
       ),
     },
     {
-      title: 'Assigned Teachers',
+      title: t('head:activities.assignedTeachers'),
       key: 'assignedTeachers',
       width: 150,
       align: 'center',
@@ -416,21 +352,21 @@ const DepartmentActivitiesPage = () => {
       sorter: (a, b) => (a._count?.assignedTeachers || 0) - (b._count?.assignedTeachers || 0),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Edit Course">
+          <Tooltip title={t('head:course.editTitle')}>
             <Button
               type="text"
               size="small"
               icon={<EditOutlined />}
-              onClick={() => handleEditCourse(record)}
+              onClick={() => { setEditingCourse(record); setCourseModalOpen(true); }}
             />
           </Tooltip>
-          <Tooltip title="Delete Course">
+          <Tooltip title={t('head:course.deleteTitle')}>
             <Button
               type="text"
               size="small"
@@ -446,7 +382,7 @@ const DepartmentActivitiesPage = () => {
 
   const assignmentsColumns: ColumnsType<CourseTeacher> = [
     {
-      title: 'Course',
+      title: t('common:label.course'),
       key: 'course',
       render: (_, record) => (
         <span>
@@ -457,7 +393,7 @@ const DepartmentActivitiesPage = () => {
       sorter: (a, b) => (a.course?.name || '').localeCompare(b.course?.name || ''),
     },
     {
-      title: 'Teacher',
+      title: t('domain:role.teacher'),
       key: 'teacher',
       render: (_, record) => (
         <span>
@@ -471,25 +407,25 @@ const DepartmentActivitiesPage = () => {
         ),
     },
     {
-      title: 'Academic Period',
+      title: t('common:label.academicPeriod'),
       key: 'period',
       render: (_, record) => (
         <span>
-          {record.academicPeriod?.academicYear} - Semester {record.academicPeriod?.semester}
+          {record.academicPeriod?.academicYear} - {t('teacher:dashboard.semester')} {record.academicPeriod?.semester}
           {record.academicPeriod?.isActive && (
             <Tag color="green" style={{ marginLeft: 8 }}>
-              Active
+              {t('domain:status.active')}
             </Tag>
           )}
         </span>
       ),
     },
     {
-      title: 'Groups',
+      title: t('common:label.groups'),
       key: 'groups',
       render: (_, record) => {
         if (!record.groups || record.groups.length === 0) {
-          return <Tag>No Groups</Tag>;
+          return <Tag>{t('common:label.noGroups')}</Tag>;
         }
         return (
           <Space size="small">
@@ -503,21 +439,21 @@ const DepartmentActivitiesPage = () => {
       },
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Edit Groups">
+          <Tooltip title={t('head:assignment.editGroups')}>
             <Button
               type="text"
               size="small"
               icon={<EditOutlined />}
-              onClick={() => handleEditAssignment(record)}
+              onClick={() => { setEditingAssignment(record); setAssignmentModalOpen(true); }}
             />
           </Tooltip>
-          <Tooltip title="Remove Assignment">
+          <Tooltip title={t('head:assignment.remove')}>
             <Button
               type="text"
               size="small"
@@ -533,7 +469,7 @@ const DepartmentActivitiesPage = () => {
 
   const submissionsColumns: ColumnsType<TeachingActivity> = [
     {
-      title: 'Teacher',
+      title: t('domain:role.teacher'),
       key: 'teacher',
       render: (_, record) => (
         <span>
@@ -547,7 +483,7 @@ const DepartmentActivitiesPage = () => {
         ),
     },
     {
-      title: 'Course',
+      title: t('common:label.course'),
       key: 'course',
       render: (_, record) => (
         <span>
@@ -558,11 +494,11 @@ const DepartmentActivitiesPage = () => {
       sorter: (a, b) => (a.course?.name || '').localeCompare(b.course?.name || ''),
     },
     {
-      title: 'Groups',
+      title: t('common:label.groups'),
       key: 'groups',
       render: (_, record) => {
         if (!record.groups || record.groups.length === 0) {
-          return <Tag>No Groups</Tag>;
+          return <Tag>{t('common:label.noGroups')}</Tag>;
         }
         return (
           <Space size="small">
@@ -576,7 +512,7 @@ const DepartmentActivitiesPage = () => {
       },
     },
     {
-      title: 'Lecture',
+      title: t('domain:hourType.lecture'),
       dataIndex: 'lectureHours',
       key: 'lectureHours',
       width: 90,
@@ -584,7 +520,7 @@ const DepartmentActivitiesPage = () => {
       render: (hours) => `${hours || 0}h`,
     },
     {
-      title: 'Practice',
+      title: t('domain:hourType.practice'),
       dataIndex: 'practiceHours',
       key: 'practiceHours',
       width: 90,
@@ -592,7 +528,7 @@ const DepartmentActivitiesPage = () => {
       render: (hours) => `${hours || 0}h`,
     },
     {
-      title: 'Lab',
+      title: t('domain:hourType.lab'),
       dataIndex: 'labHours',
       key: 'labHours',
       width: 90,
@@ -600,7 +536,7 @@ const DepartmentActivitiesPage = () => {
       render: (hours) => `${hours || 0}h`,
     },
     {
-      title: 'Total',
+      title: t('common:label.total'),
       dataIndex: 'totalHours',
       key: 'totalHours',
       width: 90,
@@ -609,7 +545,7 @@ const DepartmentActivitiesPage = () => {
       render: (hours) => <strong>{hours || 0}h</strong>,
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       dataIndex: 'status',
       key: 'status',
       width: 110,
@@ -621,13 +557,13 @@ const DepartmentActivitiesPage = () => {
         };
         return (
           <Tag color={colors[status] || 'default'}>
-            {status?.charAt(0).toUpperCase() + status?.slice(1)}
+            {t(`domain:status.${status}`, { defaultValue: status })}
           </Tag>
         );
       },
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       width: 180,
       fixed: 'right',
@@ -635,7 +571,7 @@ const DepartmentActivitiesPage = () => {
         <Space size="small">
           {record.status === 'submitted' && (
             <>
-              <Tooltip title="Validate submission">
+              <Tooltip title={t('head:activities.validateTooltip')}>
                 <Button
                   type="primary"
                   size="small"
@@ -643,10 +579,10 @@ const DepartmentActivitiesPage = () => {
                   onClick={() => handleValidateSubmission(record)}
                   style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
                 >
-                  Validate
+                  {t('common:button.validate')}
                 </Button>
               </Tooltip>
-              <Tooltip title="Reject submission">
+              <Tooltip title={t('head:activities.rejectTooltip')}>
                 <Button
                   danger
                   type="primary"
@@ -654,19 +590,19 @@ const DepartmentActivitiesPage = () => {
                   icon={<CloseCircleOutlined />}
                   onClick={() => handleRejectSubmission(record)}
                 >
-                  Reject
+                  {t('common:button.reject')}
                 </Button>
               </Tooltip>
             </>
           )}
           {record.status === 'validated' && (
             <Tag color="success" icon={<CheckCircleOutlined />}>
-              Validated
+              {t('domain:status.validated')}
             </Tag>
           )}
           {record.status === 'rejected' && (
             <Tag color="error" icon={<CloseCircleOutlined />}>
-              Rejected
+              {t('domain:status.rejected')}
             </Tag>
           )}
         </Space>
@@ -676,7 +612,7 @@ const DepartmentActivitiesPage = () => {
 
   const programsColumns: ColumnsType<Program> = [
     {
-      title: 'Program Name',
+      title: t('head:program.name'),
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
@@ -687,7 +623,7 @@ const DepartmentActivitiesPage = () => {
       ),
     },
     {
-      title: 'Code',
+      title: t('head:program.code'),
       dataIndex: 'code',
       key: 'code',
       width: 120,
@@ -695,7 +631,7 @@ const DepartmentActivitiesPage = () => {
       render: (code) => <Tag color="blue">{code}</Tag>,
     },
     {
-      title: 'Degree Level',
+      title: t('head:program.degreeLevel'),
       dataIndex: 'degreeLevel',
       key: 'degreeLevel',
       width: 150,
@@ -708,20 +644,24 @@ const DepartmentActivitiesPage = () => {
           UNDERGRADUATE: 'blue',
           GRADUATE: 'magenta',
         };
-        return <Tag color={colors[level] || 'default'}>{level}</Tag>;
+        return (
+          <Tag color={colors[level] || 'default'}>
+            {t(`domain:degreeLevel.${level}`, { defaultValue: level })}
+          </Tag>
+        );
       },
     },
     {
-      title: 'Duration',
+      title: t('head:program.duration'),
       dataIndex: 'durationYears',
       key: 'durationYears',
-      width: 100,
+      width: 110,
       align: 'center',
       sorter: (a, b) => a.durationYears - b.durationYears,
-      render: (years) => `${years} ${years === 1 ? 'year' : 'years'}`,
+      render: (years) => `${years} ${t('common:label.hours', { defaultValue: 'yr' })}`,
     },
     {
-      title: 'Credits Required',
+      title: t('head:program.creditsRequired'),
       dataIndex: 'totalCreditsRequired',
       key: 'totalCreditsRequired',
       width: 140,
@@ -730,7 +670,7 @@ const DepartmentActivitiesPage = () => {
       render: (credits) => <strong>{credits}</strong>,
     },
     {
-      title: 'Courses',
+      title: t('head:program.coursesCount'),
       key: 'coursesCount',
       width: 100,
       align: 'center',
@@ -740,24 +680,24 @@ const DepartmentActivitiesPage = () => {
       sorter: (a, b) => (a._count?.programCourses || 0) - (b._count?.programCourses || 0),
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
       render: (isActive) => (
         <Tag color={isActive ? 'success' : 'default'}>
-          {isActive ? 'Active' : 'Inactive'}
+          {isActive ? t('domain:status.active') : t('domain:status.inactive')}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       width: 200,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="View Details">
+          <Tooltip title={t('head:program.viewDetails')}>
             <Button
               type="text"
               size="small"
@@ -765,7 +705,7 @@ const DepartmentActivitiesPage = () => {
               onClick={() => navigate(`/department/programs/${record.id}`)}
             />
           </Tooltip>
-          <Tooltip title="Download Template">
+          <Tooltip title={t('head:program.downloadTemplate')}>
             <Button
               type="text"
               size="small"
@@ -773,15 +713,15 @@ const DepartmentActivitiesPage = () => {
               onClick={() => handleDownloadProgramTemplate(record)}
             />
           </Tooltip>
-          <Tooltip title="Edit Program">
+          <Tooltip title={t('head:program.editTitle')}>
             <Button
               type="text"
               size="small"
               icon={<EditOutlined />}
-              onClick={() => handleEditProgram(record)}
+              onClick={() => { setEditingProgram(record); setProgramModalOpen(true); }}
             />
           </Tooltip>
-          <Tooltip title="Delete Program">
+          <Tooltip title={t('head:program.deleteTitle')}>
             <Button
               type="text"
               size="small"
@@ -801,14 +741,14 @@ const DepartmentActivitiesPage = () => {
       label: (
         <span>
           <BookOutlined />
-          Courses ({courses.length})
+          {t('head:activities.courses', { count: courses.length })}
         </span>
       ),
       children: (
         <div className="tab-content">
           <div className="filters-section">
             <Input
-              placeholder="Search courses..."
+              placeholder={t('head:activities.searchCourses')}
               prefix={<SearchOutlined />}
               value={courseSearchText}
               onChange={(e) => setCourseSearchText(e.target.value)}
@@ -818,10 +758,10 @@ const DepartmentActivitiesPage = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleAddCourse}
+              onClick={() => { setEditingCourse(null); setCourseModalOpen(true); }}
               size="large"
             >
-              Add Course
+              {t('head:activities.addCourse')}
             </Button>
           </div>
           <Table
@@ -832,7 +772,7 @@ const DepartmentActivitiesPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} courses`,
+              showTotal: (total) => t('head:activities.totalCourses', { total }),
             }}
           />
         </div>
@@ -843,14 +783,14 @@ const DepartmentActivitiesPage = () => {
       label: (
         <span>
           <LinkOutlined />
-          Course Assignments ({assignments.length})
+          {t('head:activities.courseAssignments', { count: assignments.length })}
         </span>
       ),
       children: (
         <div className="tab-content">
           <div className="filters-section">
             <Input
-              placeholder="Search assignments..."
+              placeholder={t('head:activities.searchAssignments')}
               prefix={<SearchOutlined />}
               value={assignmentSearchText}
               onChange={(e) => setAssignmentSearchText(e.target.value)}
@@ -860,10 +800,10 @@ const DepartmentActivitiesPage = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleAddAssignment}
+              onClick={() => { setEditingAssignment(null); setAssignmentModalOpen(true); }}
               size="large"
             >
-              Assign Teacher
+              {t('head:activities.assignTeacher')}
             </Button>
           </div>
           <Table
@@ -874,7 +814,7 @@ const DepartmentActivitiesPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} assignments`,
+              showTotal: (total) => t('head:activities.totalAssignments', { total }),
             }}
             scroll={{ x: 1200 }}
           />
@@ -886,14 +826,14 @@ const DepartmentActivitiesPage = () => {
       label: (
         <span>
           <FileTextOutlined />
-          Hour Submissions ({submissions.length})
+          {t('head:activities.hourSubmissions', { count: submissions.length })}
         </span>
       ),
       children: (
         <div className="tab-content">
           <div className="filters-section">
             <Input
-              placeholder="Search submissions..."
+              placeholder={t('head:activities.searchSubmissions')}
               prefix={<SearchOutlined />}
               value={submissionSearchText}
               onChange={(e) => setSubmissionSearchText(e.target.value)}
@@ -909,7 +849,7 @@ const DepartmentActivitiesPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} submissions`,
+              showTotal: (total) => t('head:activities.totalSubmissions', { total }),
             }}
             scroll={{ x: 1200 }}
           />
@@ -921,14 +861,14 @@ const DepartmentActivitiesPage = () => {
       label: (
         <span>
           <BookOutlined />
-          Programs ({programs.length})
+          {t('head:activities.programs', { count: programs.length })}
         </span>
       ),
       children: (
         <div className="tab-content">
           <div className="filters-section">
             <Input
-              placeholder="Search programs..."
+              placeholder={t('head:activities.searchPrograms')}
               prefix={<SearchOutlined />}
               value={programSearchText}
               onChange={(e) => setProgramSearchText(e.target.value)}
@@ -938,10 +878,10 @@ const DepartmentActivitiesPage = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleAddProgram}
+              onClick={() => { setEditingProgram(null); setProgramModalOpen(true); }}
               size="large"
             >
-              Add Program
+              {t('head:activities.addProgram')}
             </Button>
           </div>
           <Table
@@ -952,7 +892,7 @@ const DepartmentActivitiesPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} programs`,
+              showTotal: (total) => t('head:activities.totalPrograms', { total }),
             }}
             scroll={{ x: 1200 }}
           />
@@ -965,7 +905,7 @@ const DepartmentActivitiesPage = () => {
     return (
       <MainLayout>
         <Card>
-          <p>You are not assigned as head of any department. Please contact an administrator.</p>
+          <p>{t('head:activities.noDepartmentMsg')}</p>
         </Card>
       </MainLayout>
     );
@@ -976,10 +916,8 @@ const DepartmentActivitiesPage = () => {
       <div className="department-activities-page">
         <div className="page-header">
           <div>
-            <h1 className="page-title">Department Management</h1>
-            <p className="page-subtitle">
-              Manage courses, teachers, and course assignments for your department
-            </p>
+            <h1 className="page-title">{t('head:activities.title')}</h1>
+            <p className="page-subtitle">{t('head:activities.desc')}</p>
           </div>
         </div>
 
@@ -995,7 +933,7 @@ const DepartmentActivitiesPage = () => {
         <CourseFormModal
           open={courseModalOpen}
           onClose={() => setCourseModalOpen(false)}
-          onSuccess={handleCourseModalSuccess}
+          onSuccess={fetchCourses}
           course={editingCourse}
           departmentId={department.id}
           teachers={teachers}
@@ -1008,7 +946,7 @@ const DepartmentActivitiesPage = () => {
         <TeacherAssignmentModal
           open={assignmentModalOpen}
           onClose={() => setAssignmentModalOpen(false)}
-          onSuccess={handleAssignmentModalSuccess}
+          onSuccess={() => { fetchAssignments(); fetchCourses(); }}
           assignment={editingAssignment}
           courses={courses}
           teachers={teachers}
@@ -1018,7 +956,7 @@ const DepartmentActivitiesPage = () => {
         <ProgramFormModal
           open={programModalOpen}
           onClose={() => setProgramModalOpen(false)}
-          onSuccess={handleProgramModalSuccess}
+          onSuccess={fetchPrograms}
           program={editingProgram}
           departmentId={department.id}
           departments={departments}

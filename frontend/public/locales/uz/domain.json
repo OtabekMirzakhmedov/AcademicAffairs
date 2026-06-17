@@ -1,0 +1,60 @@
+{
+  "status": {
+    "draft": "Qoralama",
+    "submitted": "Topshirilgan",
+    "validated": "Tasdiqlangan",
+    "rejected": "Rad etilgan",
+    "in_progress": "Bajarilmoqda",
+    "active": "Faol",
+    "inactive": "Nofaol"
+  },
+  "role": {
+    "admin": "Administrator",
+    "departmenthead": "Kafedra mudiri",
+    "teacher": "O'qituvchi"
+  },
+  "employment": {
+    "full-time": "To'liq stavka",
+    "part-time": "Yarim stavka",
+    "contract": "Shartnoma"
+  },
+  "publicationType": {
+    "conference": "Konferensiya",
+    "national": "Milliy jurnal",
+    "scopus": "Scopus"
+  },
+  "degreeLevel": {
+    "BACHELOR": "Bakalavr",
+    "MASTER": "Magistr",
+    "DOCTORATE": "Doktoratura",
+    "UNDERGRADUATE": "Bakalavrgacha",
+    "GRADUATE": "Magistratura"
+  },
+  "hourType": {
+    "lecture": "Ma'ruza",
+    "practice": "Amaliy",
+    "lab": "Laboratoriya",
+    "seminar": "Seminar",
+    "advising": "Maslahat"
+  },
+  "courseType": {
+    "required": "Majburiy",
+    "elective": "Tanlama"
+  },
+  "gender": {
+    "male": "Erkak",
+    "female": "Ayol",
+    "other": "Boshqa"
+  },
+  "semester": {
+    "1": "Kuz",
+    "2": "Bahor"
+  },
+  "researchCategory": {
+    "scientific_main": "Ilmiy (Asosiy)",
+    "scientific_exchange": "Ilmiy (Almashinuv)",
+    "educational_additional": "Ta'limiy (Qo'shimcha)",
+    "additional": "Qo'shimcha",
+    "educational": "Ta'limiy"
+  }
+}

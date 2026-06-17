@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, message } from 'antd';
 import { BookOutlined, CodeOutlined, ApartmentOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import programsService, {
   type CreateProgramRequest,
   type UpdateProgramRequest,
@@ -18,13 +19,7 @@ interface ProgramFormModalProps {
   departments: Department[];
 }
 
-const DEGREE_LEVELS = [
-  { value: 'BACHELOR', label: 'Bachelor' },
-  { value: 'MASTER', label: 'Master' },
-  { value: 'DOCTORATE', label: 'Doctorate' },
-  { value: 'UNDERGRADUATE', label: 'Undergraduate' },
-  { value: 'GRADUATE', label: 'Graduate' },
-];
+const DEGREE_LEVELS = ['BACHELOR', 'MASTER', 'DOCTORATE', 'UNDERGRADUATE', 'GRADUATE'];
 
 const ProgramFormModal = ({
   open,
@@ -34,13 +29,13 @@ const ProgramFormModal = ({
   departmentId,
   departments,
 }: ProgramFormModalProps) => {
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       if (program) {
-        // Edit mode - populate form
         form.setFieldsValue({
           name: program.name,
           code: program.code,
@@ -52,12 +47,8 @@ const ProgramFormModal = ({
           isActive: program.isActive,
         });
       } else {
-        // Create mode - reset with department default
         form.resetFields();
-        form.setFieldsValue({
-          departmentId: departmentId,
-          isActive: true,
-        });
+        form.setFieldsValue({ departmentId, isActive: true });
       }
     }
   }, [open, program, form, departmentId]);
@@ -66,7 +57,6 @@ const ProgramFormModal = ({
     try {
       setLoading(true);
       if (program) {
-        // Update existing program
         const updateData: UpdateProgramRequest = {
           name: values.name,
           code: values.code,
@@ -78,9 +68,8 @@ const ProgramFormModal = ({
           isActive: values.isActive,
         };
         await programsService.update(program.id, updateData);
-        message.success('Program updated successfully');
+        message.success(t('head:program.updateSuccess'));
       } else {
-        // Create new program
         const createData: CreateProgramRequest = {
           name: values.name,
           code: values.code,
@@ -92,15 +81,12 @@ const ProgramFormModal = ({
           isActive: values.isActive !== undefined ? values.isActive : true,
         };
         await programsService.create(createData);
-        message.success('Program created successfully');
+        message.success(t('head:program.createSuccess'));
       }
       onSuccess();
       onClose();
     } catch (error: any) {
-      message.error(
-        error?.response?.data?.error?.message ||
-          `Failed to ${program ? 'update' : 'create'} program`
-      );
+      message.error(error?.response?.data?.error?.message || (program ? t('head:program.updateFailed') : t('head:program.createFailed')));
     } finally {
       setLoading(false);
     }
@@ -111,44 +97,40 @@ const ProgramFormModal = ({
       title={
         <span>
           <BookOutlined style={{ marginRight: 8 }} />
-          {program ? 'Edit Program' : 'Create New Program'}
+          {program ? t('head:program.editTitle') : t('head:program.createTitle')}
         </span>
       }
       open={open}
       onCancel={onClose}
       onOk={() => form.submit()}
-      okText={program ? 'Update' : 'Create'}
-      cancelText="Cancel"
+      okText={program ? t('common:button.update') : t('common:button.create')}
+      cancelText={t('common:button.cancel')}
       confirmLoading={loading}
       width={600}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="name"
-          label="Program Name"
+          label={t('head:program.name')}
           rules={[
-            { required: true, message: 'Please enter program name' },
-            { min: 3, message: 'Program name must be at least 3 characters' },
+            { required: true, message: t('common:label.required') },
+            { min: 3, message: t('common:label.required') },
           ]}
         >
-          <Input
-            prefix={<BookOutlined />}
-            placeholder="e.g., Mechanical Engineering, Computer Science"
-            size="large"
-          />
+          <Input prefix={<BookOutlined />} placeholder={t('head:program.namePlaceholder')} size="large" />
         </Form.Item>
 
         <Form.Item
           name="code"
-          label="Program Code"
+          label={t('head:program.code')}
           rules={[
-            { required: true, message: 'Please enter program code' },
-            { pattern: /^[A-Z0-9-]+$/, message: 'Code must contain only uppercase letters, numbers, and hyphens' },
+            { required: true, message: t('common:label.required') },
+            { pattern: /^[A-Z0-9-]+$/, message: t('head:program.codePattern') },
           ]}
         >
           <Input
             prefix={<CodeOutlined />}
-            placeholder="e.g., ME-MECH, CS-BACH"
+            placeholder={t('head:program.codePlaceholder')}
             size="large"
             style={{ textTransform: 'uppercase' }}
           />
@@ -156,26 +138,24 @@ const ProgramFormModal = ({
 
         <Form.Item
           name="degreeLevel"
-          label="Degree Level"
-          rules={[{ required: true, message: 'Please select degree level' }]}
+          label={t('head:program.degreeLevel')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Select
-            placeholder="Select degree level"
-            size="large"
-            options={DEGREE_LEVELS}
-          />
+          <Select placeholder={t('head:program.degreeLevel')} size="large">
+            {DEGREE_LEVELS.map((level) => (
+              <Select.Option key={level} value={level}>
+                {t(`domain:degreeLevel.${level}`, { defaultValue: level })}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Form.Item
           name="departmentId"
-          label="Department"
-          rules={[{ required: true, message: 'Please select department' }]}
+          label={t('common:label.department')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Select
-            placeholder="Select department"
-            size="large"
-            suffixIcon={<ApartmentOutlined />}
-          >
+          <Select placeholder={t('common:label.department')} size="large" suffixIcon={<ApartmentOutlined />}>
             {departments.map((dept) => (
               <Select.Option key={dept.id} value={dept.id}>
                 {dept.name}
@@ -186,57 +166,38 @@ const ProgramFormModal = ({
 
         <Form.Item
           name="durationYears"
-          label="Duration (Years)"
+          label={t('head:program.duration')}
           rules={[
-            { required: true, message: 'Please enter duration' },
-            { type: 'number', min: 1, max: 10, message: 'Duration must be between 1 and 10 years' },
+            { required: true, message: t('common:label.required') },
+            { type: 'number', min: 1, max: 10, message: t('head:program.durationValidation') },
           ]}
         >
-          <InputNumber
-            min={1}
-            max={10}
-            placeholder="4"
-            size="large"
-            style={{ width: '100%' }}
-          />
+          <InputNumber min={1} max={10} placeholder="4" size="large" style={{ width: '100%' }} />
         </Form.Item>
 
         <Form.Item
           name="totalCreditsRequired"
-          label="Total Credits Required"
+          label={t('head:program.totalCredits')}
           rules={[
-            { required: true, message: 'Please enter total credits' },
-            { type: 'number', min: 0, message: 'Credits must be positive' },
+            { required: true, message: t('common:label.required') },
+            { type: 'number', min: 0, message: t('head:program.creditsValidation') },
           ]}
         >
-          <InputNumber
-            min={0}
-            step={0.5}
-            placeholder="120"
-            size="large"
-            style={{ width: '100%' }}
-          />
+          <InputNumber min={0} step={0.5} placeholder="120" size="large" style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item
-          name="description"
-          label="Description (Optional)"
-        >
-          <TextArea
-            rows={3}
-            placeholder="Brief description of the program..."
-            maxLength={500}
-          />
+        <Form.Item name="description" label={t('head:program.descriptionOptional')}>
+          <TextArea rows={3} placeholder={t('head:program.descriptionPlaceholder')} maxLength={500} />
         </Form.Item>
 
         <Form.Item
           name="isActive"
-          label="Status"
-          rules={[{ required: true, message: 'Please select status' }]}
+          label={t('head:program.statusLabel')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
           <Select size="large">
-            <Select.Option value={true}>Active</Select.Option>
-            <Select.Option value={false}>Inactive</Select.Option>
+            <Select.Option value={true}>{t('domain:status.active')}</Select.Option>
+            <Select.Option value={false}>{t('domain:status.inactive')}</Select.Option>
           </Select>
         </Form.Item>
       </Form>

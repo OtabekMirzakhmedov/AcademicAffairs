@@ -1,0 +1,75 @@
+{
+  "loading": "Loading...",
+  "appTitle": "Academic Affairs",
+  "button": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "submit": "Submit",
+    "validate": "Validate",
+    "reject": "Reject",
+    "search": "Search",
+    "close": "Close",
+    "download": "Download",
+    "upload": "Upload",
+    "confirm": "Confirm",
+    "back": "Back",
+    "resubmit": "Resubmit",
+    "view": "View",
+    "remove": "Remove"
+  },
+  "label": {
+    "name": "Name",
+    "description": "Description",
+    "status": "Status",
+    "actions": "Actions",
+    "total": "Total",
+    "deadline": "Deadline",
+    "department": "Department",
+    "createdBy": "Created By",
+    "hours": "hours",
+    "progress": "Progress",
+    "noData": "No data",
+    "notSet": "Not set",
+    "noGroups": "No groups",
+    "yes": "Yes",
+    "no": "No",
+    "required": "Required",
+    "course": "Course",
+    "teacher": "Teacher",
+    "academicPeriod": "Academic Period",
+    "groups": "Groups",
+    "type": "Type",
+    "role": "Role",
+    "category": "Category",
+    "created": "Created"
+  },
+  "settings": {
+    "subtitle": "Manage your account settings and preferences",
+    "profileTab": "Profile Information",
+    "userInfo": "User Information",
+    "username": "Username",
+    "fullName": "Full Name",
+    "security": "Security"
+  },
+  "nav": {
+    "settings": "Settings",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "administration": "Administration"
+  },
+  "message": {
+    "errorLoading": "Error Loading Data",
+    "failedToLoad": "Failed to load data"
+  },
+  "language": {
+    "label": "Language",
+    "uz": "O'zbek",
+    "ru": "Русский",
+    "en": "English"
+  }
+}

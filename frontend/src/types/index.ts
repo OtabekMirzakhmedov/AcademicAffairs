@@ -35,6 +35,7 @@ export interface UserInfo {
   personalId?: string;
   stirInn?: string;
   englishLevel?: string;
+  locale?: string;
   profileImage?: string;
   email1?: string;
   email2?: string;

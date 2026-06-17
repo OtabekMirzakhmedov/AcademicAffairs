@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, message } from 'antd';
 import { BankOutlined, PhoneOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import departmentsService, {
   type CreateDepartmentRequest,
   type UpdateDepartmentRequest,
@@ -22,6 +23,7 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
   department,
   departmentHeads,
 }) => {
+  const { t } = useTranslation(['admin', 'common']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -53,7 +55,7 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
           roomNumber: values.roomNumber,
         };
         await departmentsService.update(department.id, updateData);
-        message.success('Department updated successfully!');
+        message.success(t('admin:departments.updateSuccess'));
       } else {
         // Create new department
         const createData: CreateDepartmentRequest = {
@@ -63,7 +65,7 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
           roomNumber: values.roomNumber,
         };
         await departmentsService.create(createData);
-        message.success('Department created successfully!');
+        message.success(t('admin:departments.createSuccess'));
       }
 
       form.resetFields();
@@ -71,7 +73,7 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
       onClose();
     } catch (error: any) {
       message.error(
-        error?.response?.data?.error?.message || 'Failed to save department'
+        error?.response?.data?.error?.message || t('admin:departments.saveFailed')
       );
     } finally {
       setLoading(false);
@@ -80,13 +82,13 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
 
   return (
     <Modal
-      title={department ? 'Edit Department' : 'Create New Department'}
+      title={department ? t('admin:departments.editTitle') : t('admin:departments.createTitle')}
       open={open}
       onCancel={onClose}
       onOk={() => form.submit()}
       confirmLoading={loading}
-      okText={department ? 'Update' : 'Create'}
-      cancelText="Cancel"
+      okText={department ? t('common:button.update') : t('common:button.create')}
+      cancelText={t('common:button.cancel')}
       width={600}
     >
       <Form
@@ -95,25 +97,20 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
         onFinish={handleSubmit}
         autoComplete="off"
       >
-        {/* Department Name */}
         <Form.Item
           name="name"
-          label="Department Name"
+          label={t('admin:departments.name')}
           rules={[
-            { required: true, message: 'Please enter department name!' },
-            { min: 3, message: 'Name must be at least 3 characters' },
+            { required: true, message: t('admin:departments.nameRequired') },
+            { min: 3, message: t('admin:departments.nameMinLength') },
           ]}
         >
-          <Input
-            prefix={<BankOutlined />}
-            placeholder="Enter department name"
-          />
+          <Input prefix={<BankOutlined />} placeholder={t('admin:departments.namePlaceholder')} />
         </Form.Item>
 
-        {/* Department Head */}
-        <Form.Item name="headId" label="Department Head">
+        <Form.Item name="headId" label={t('admin:departments.head')}>
           <Select
-            placeholder="Select department head (optional)"
+            placeholder={t('admin:departments.headPlaceholder')}
             allowClear
             showSearch
             filterOption={(input, option) =>
@@ -126,20 +123,12 @@ const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
           />
         </Form.Item>
 
-        {/* Phone */}
-        <Form.Item name="phone" label="Phone Number">
-          <Input
-            prefix={<PhoneOutlined />}
-            placeholder="Enter phone number (optional)"
-          />
+        <Form.Item name="phone" label={t('admin:departments.phone')}>
+          <Input prefix={<PhoneOutlined />} placeholder={t('admin:departments.phonePlaceholder')} />
         </Form.Item>
 
-        {/* Room Number */}
-        <Form.Item name="roomNumber" label="Room Number">
-          <Input
-            prefix={<EnvironmentOutlined />}
-            placeholder="Enter room number (optional)"
-          />
+        <Form.Item name="roomNumber" label={t('admin:departments.room')}>
+          <Input prefix={<EnvironmentOutlined />} placeholder={t('admin:departments.roomPlaceholder')} />
         </Form.Item>
       </Form>
     </Modal>

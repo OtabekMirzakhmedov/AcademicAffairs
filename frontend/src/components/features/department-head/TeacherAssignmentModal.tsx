@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Select, message, Tag } from 'antd';
 import { UserOutlined, BookOutlined, CalendarOutlined, TeamOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import courseTeachersService, {
   type CreateCourseTeacherRequest,
   type UpdateCourseTeacherRequest,
@@ -26,13 +27,13 @@ const TeacherAssignmentModal = ({
   teachers,
   academicPeriods,
 }: TeacherAssignmentModalProps) => {
+  const { t } = useTranslation(['head', 'common', 'domain', 'teacher']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       if (assignment) {
-        // Edit mode - only groups can be edited
         form.setFieldsValue({
           courseId: assignment.courseId,
           teacherId: assignment.teacherId,
@@ -40,7 +41,6 @@ const TeacherAssignmentModal = ({
           groups: assignment.groups || [],
         });
       } else {
-        // Create mode
         form.resetFields();
       }
     }
@@ -50,14 +50,12 @@ const TeacherAssignmentModal = ({
     try {
       setLoading(true);
       if (assignment) {
-        // Update existing assignment (only groups)
         const updateData: UpdateCourseTeacherRequest = {
           groups: values.groups && values.groups.length > 0 ? values.groups : undefined,
         };
         await courseTeachersService.update(assignment.id, updateData);
-        message.success('Assignment updated successfully');
+        message.success(t('head:assignment.updateSuccess'));
       } else {
-        // Create new assignment
         const createData: CreateCourseTeacherRequest = {
           courseId: values.courseId,
           teacherId: values.teacherId,
@@ -65,15 +63,12 @@ const TeacherAssignmentModal = ({
           groups: values.groups && values.groups.length > 0 ? values.groups : undefined,
         };
         await courseTeachersService.create(createData);
-        message.success('Teacher assigned successfully');
+        message.success(t('head:assignment.createSuccess'));
       }
       onSuccess();
       onClose();
     } catch (error: any) {
-      message.error(
-        error?.response?.data?.error?.message ||
-          `Failed to ${assignment ? 'update' : 'create'} assignment`
-      );
+      message.error(error?.response?.data?.error?.message || t('head:assignment.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -86,25 +81,25 @@ const TeacherAssignmentModal = ({
       title={
         <span>
           <UserOutlined style={{ marginRight: 8 }} />
-          {assignment ? 'Edit Teacher Assignment' : 'Assign Teacher to Course'}
+          {assignment ? t('head:assignment.editTitle') : t('head:assignment.assignTitle')}
         </span>
       }
       open={open}
       onCancel={onClose}
       onOk={() => form.submit()}
-      okText={assignment ? 'Update' : 'Assign'}
-      cancelText="Cancel"
+      okText={assignment ? t('common:button.update') : t('common:button.add')}
+      cancelText={t('common:button.cancel')}
       confirmLoading={loading}
       width={600}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="courseId"
-          label="Course"
-          rules={[{ required: true, message: 'Please select a course' }]}
+          label={t('head:assignment.course')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
           <Select
-            placeholder="Select course"
+            placeholder={t('head:assignment.course')}
             size="large"
             disabled={!!assignment}
             showSearch
@@ -121,11 +116,11 @@ const TeacherAssignmentModal = ({
 
         <Form.Item
           name="teacherId"
-          label="Teacher"
-          rules={[{ required: true, message: 'Please select a teacher' }]}
+          label={t('head:assignment.teacher')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
           <Select
-            placeholder="Select teacher"
+            placeholder={t('head:assignment.teacher')}
             size="large"
             disabled={!!assignment}
             showSearch
@@ -142,11 +137,11 @@ const TeacherAssignmentModal = ({
 
         <Form.Item
           name="academicPeriodId"
-          label="Academic Period"
-          rules={[{ required: true, message: 'Please select an academic period' }]}
+          label={t('head:assignment.academicPeriod')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
           <Select
-            placeholder="Select academic period"
+            placeholder={t('head:assignment.academicPeriod')}
             size="large"
             disabled={!!assignment}
             suffixIcon={<CalendarOutlined />}
@@ -154,10 +149,10 @@ const TeacherAssignmentModal = ({
             {academicPeriods.map((period) => (
               <Select.Option key={period.id} value={period.id}>
                 <span>
-                  {period.academicYear} - Semester {period.semester}
+                  {period.academicYear} - {t('teacher:dashboard.semester')} {period.semester}
                   {period.isActive && (
                     <Tag color="green" style={{ marginLeft: 8 }}>
-                      Active
+                      {t('domain:status.active')}
                     </Tag>
                   )}
                 </span>
@@ -168,17 +163,14 @@ const TeacherAssignmentModal = ({
 
         <Form.Item
           name="groups"
-          label="Groups (Optional)"
-          tooltip="Select the student groups for this course"
+          label={t('head:assignment.groupsOptional')}
+          tooltip={t('head:assignment.groupsTooltip')}
         >
           <Select
             mode="tags"
-            placeholder="Select or enter groups (e.g., Group A, Group B)"
+            placeholder={t('head:assignment.groupsPlaceholder')}
             size="large"
-            options={groupOptions.map((group) => ({
-              label: group,
-              value: group,
-            }))}
+            options={groupOptions.map((group) => ({ label: group, value: group }))}
             suffixIcon={<TeamOutlined />}
           />
         </Form.Item>

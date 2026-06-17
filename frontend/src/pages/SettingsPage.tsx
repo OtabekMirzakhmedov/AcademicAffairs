@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Card, Tabs, Form, Input, Button, message, Divider } from 'antd';
 import { LockOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/layout/MainLayout';
 import { useAuthStore } from '../store/authStore';
 import authService from '../services/auth.service';
 
 const SettingsPage = () => {
+  const { t } = useTranslation(['auth', 'common', 'domain']);
   const { user } = useAuthStore();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -21,11 +23,11 @@ const SettingsPage = () => {
         oldPassword: values.oldPassword,
         newPassword: values.newPassword,
       });
-      message.success('Password changed successfully!');
+      message.success(t('auth:changePassword.success'));
       passwordForm.resetFields();
     } catch (error: any) {
       message.error(
-        error?.response?.data?.error?.message || 'Failed to change password'
+        error?.response?.data?.error?.message || t('auth:changePassword.failed')
       );
     } finally {
       setLoading(false);
@@ -38,44 +40,44 @@ const SettingsPage = () => {
       label: (
         <span>
           <UserOutlined />
-          Profile Information
+          {t('common:settings.profileTab')}
         </span>
       ),
       children: (
         <Card>
-          <h3>User Information</h3>
+          <h3>{t('common:settings.userInfo')}</h3>
           <Divider />
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Username</div>
+            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:settings.username')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>{user?.login}</div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Full Name</div>
+            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:settings.fullName')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
               {user?.userInfo?.firstName} {user?.userInfo?.lastName}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Email</div>
+            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('auth:account.email')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
-              {user?.userInfo?.email1 || 'Not set'}
+              {user?.userInfo?.email1 || t('common:label.notSet')}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Phone</div>
+            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('auth:account.phone')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
-              {user?.userInfo?.phone1 || 'Not set'}
+              {user?.userInfo?.phone1 || t('common:label.notSet')}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Role</div>
-            <div style={{ fontSize: '16px', fontWeight: 500, textTransform: 'capitalize' }}>
-              {user?.role?.name === 'departmenthead' ? 'Department Head' : user?.role?.name}
+            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:label.role')}</div>
+            <div style={{ fontSize: '16px', fontWeight: 500 }}>
+              {t(`domain:role.${user?.role?.name}`, { defaultValue: user?.role?.name })}
             </div>
           </div>
           {user?.role?.name === 'teacher' && user?.teacherInfo?.department && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Department</div>
+              <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:label.department')}</div>
               <div style={{ fontSize: '16px', fontWeight: 500 }}>
                 {user.teacherInfo.department.name}
               </div>
@@ -89,12 +91,12 @@ const SettingsPage = () => {
       label: (
         <span>
           <LockOutlined />
-          Security
+          {t('common:settings.security')}
         </span>
       ),
       children: (
         <Card>
-          <h3>Change Password</h3>
+          <h3>{t('auth:changePassword.title')}</h3>
           <Divider />
           <Form
             form={passwordForm}
@@ -104,44 +106,44 @@ const SettingsPage = () => {
           >
             <Form.Item
               name="oldPassword"
-              label="Current Password"
+              label={t('auth:changePassword.currentPassword')}
               rules={[
-                { required: true, message: 'Please enter your current password' },
+                { required: true, message: t('auth:changePassword.currentPasswordRequired') },
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Enter current password"
+                placeholder={t('auth:changePassword.currentPasswordPlaceholder')}
               />
             </Form.Item>
 
             <Form.Item
               name="newPassword"
-              label="New Password"
+              label={t('auth:changePassword.newPassword')}
               rules={[
-                { required: true, message: 'Please enter your new password' },
-                { min: 6, message: 'Password must be at least 6 characters' },
+                { required: true, message: t('auth:changePassword.newPasswordRequired') },
+                { min: 6, message: t('auth:changePassword.newPasswordMinLength') },
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Enter new password"
+                placeholder={t('auth:changePassword.newPasswordPlaceholder')}
               />
             </Form.Item>
 
             <Form.Item
               name="confirmPassword"
-              label="Confirm New Password"
+              label={t('auth:changePassword.confirmPassword')}
               dependencies={['newPassword']}
               rules={[
-                { required: true, message: 'Please confirm your new password' },
+                { required: true, message: t('auth:changePassword.confirmPasswordRequired') },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('newPassword') === value) {
                       return Promise.resolve();
                     }
                     return Promise.reject(
-                      new Error('The two passwords do not match')
+                      new Error(t('auth:changePassword.confirmPasswordMismatch'))
                     );
                   },
                 }),
@@ -149,13 +151,13 @@ const SettingsPage = () => {
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Confirm new password"
+                placeholder={t('auth:changePassword.confirmPasswordPlaceholder')}
               />
             </Form.Item>
 
             <Form.Item>
               <Button type="primary" htmlType="submit" loading={loading}>
-                Change Password
+                {t('auth:changePassword.title')}
               </Button>
             </Form.Item>
           </Form>
@@ -170,10 +172,10 @@ const SettingsPage = () => {
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ margin: 0, fontSize: '24px' }}>
             <SettingOutlined style={{ marginRight: 8 }} />
-            Settings
+            {t('common:nav.settings')}
           </h1>
           <p style={{ margin: '4px 0 0', color: '#8c8c8c' }}>
-            Manage your account settings and preferences
+            {t('common:settings.subtitle')}
           </p>
         </div>
 

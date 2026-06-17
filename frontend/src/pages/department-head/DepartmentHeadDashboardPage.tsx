@@ -16,6 +16,7 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import { useAuthStore } from '../../store/authStore';
 import usersService from '../../services/users.service';
@@ -25,6 +26,7 @@ import type { User, Department, AcademicPeriod } from '../../types';
 
 const DepartmentHeadDashboardPage = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation(['head', 'common', 'teacher', 'domain']);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePeriod, setActivePeriod] = useState<AcademicPeriod | null>(null);
@@ -43,14 +45,11 @@ const DepartmentHeadDashboardPage = () => {
       const period = await academicPeriodsService.getActive();
       setActivePeriod(period);
 
-      // Get department where current user is head
       const allDepartments = await departmentsService.getAll();
       const myDepartment = allDepartments.find((dept) => dept.headId === user?.id);
 
       if (myDepartment) {
         setDepartment(myDepartment);
-
-        // Get all users and filter for teachers in this department
         const allUsers = await usersService.getAll();
         const departmentTeachers = allUsers.filter(
           (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === myDepartment.id
@@ -58,7 +57,7 @@ const DepartmentHeadDashboardPage = () => {
         setTeachers(departmentTeachers);
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to load dashboard data');
+      setError(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +67,7 @@ const DepartmentHeadDashboardPage = () => {
     return (
       <MainLayout>
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" tip="Loading dashboard..." />
+          <Spin size="large" tip={t('common:loading')} />
         </div>
       </MainLayout>
     );
@@ -78,7 +77,7 @@ const DepartmentHeadDashboardPage = () => {
     return (
       <MainLayout>
         <div style={{ padding: '24px' }}>
-          <Alert message="Error Loading Data" description={error} type="error" showIcon />
+          <Alert message={t('common:message.errorLoading')} description={error} type="error" showIcon />
         </div>
       </MainLayout>
     );
@@ -89,8 +88,8 @@ const DepartmentHeadDashboardPage = () => {
       <MainLayout>
         <div style={{ padding: '24px' }}>
           <Alert
-            message="No Department Assigned"
-            description="You are not assigned as head of any department."
+            message={t('head:activities.noDepartment')}
+            description={t('head:activities.noDepartmentMsg')}
             type="warning"
             showIcon
           />
@@ -108,28 +107,26 @@ const DepartmentHeadDashboardPage = () => {
   return (
     <MainLayout>
       <div style={{ padding: '24px' }}>
-        {/* Header */}
         <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
           <Row align="middle">
             <Col flex="auto">
               <h1 style={{ margin: 0, color: 'white', fontSize: '28px' }}>
                 <BankOutlined style={{ marginRight: 12 }} />
-                Department Head Dashboard
+                {t('head:dashboard.title')}
               </h1>
               <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '16px' }}>
-                Welcome, {user?.userInfo?.firstName} {user?.userInfo?.lastName} - {department.name}
+                {user?.userInfo?.firstName} {user?.userInfo?.lastName} — {department.name}
               </p>
             </Col>
           </Row>
         </Card>
 
-        {/* Academic Period Info */}
         {activePeriod && (
           <Card
             title={
               <span>
                 <CalendarOutlined style={{ marginRight: 8 }} />
-                Current Academic Period
+                {t('teacher:dashboard.currentPeriod')}
               </span>
             }
             style={{ marginBottom: 24 }}
@@ -138,7 +135,7 @@ const DepartmentHeadDashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Academic Year
+                    {t('teacher:dashboard.academicYear')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
                     {activePeriod.academicYear}
@@ -148,20 +145,20 @@ const DepartmentHeadDashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Semester
+                    {t('teacher:dashboard.semester')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                    {activePeriod.semester === 1 ? 'Fall' : 'Spring'} (Semester {activePeriod.semester})
+                    {t(`domain:semester.${activePeriod.semester}`)} ({t('teacher:dashboard.semester')} {activePeriod.semester})
                   </div>
                 </div>
               </Col>
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Teaching Week
+                    {t('teacher:dashboard.teachingWeek')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                    Week {activePeriod.teachingWeek}
+                    {t('teacher:dashboard.week', { number: activePeriod.teachingWeek })}
                   </div>
                 </div>
               </Col>
@@ -169,22 +166,21 @@ const DepartmentHeadDashboardPage = () => {
           </Card>
         )}
 
-        {/* Department Overview */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Total Teachers"
+                title={t('head:dashboard.totalTeachers')}
                 value={teachers.length}
                 prefix={<TeamOutlined />}
                 valueStyle={{ color: '#1890ff' }}
               />
               <div style={{ marginTop: 12 }}>
                 <Tag color="success" icon={<CheckCircleOutlined />}>
-                  {activeTeachers.length} Active
+                  {activeTeachers.length} {t('head:dashboard.active')}
                 </Tag>
                 <Tag color="default" icon={<ClockCircleOutlined />}>
-                  {inactiveTeachers.length} Inactive
+                  {inactiveTeachers.length} {t('head:dashboard.inactive')}
                 </Tag>
               </div>
             </Card>
@@ -192,7 +188,7 @@ const DepartmentHeadDashboardPage = () => {
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Full-Time Teachers"
+                title={t('head:dashboard.fullTime')}
                 value={fullTimeTeachers.length}
                 prefix={<UserOutlined />}
                 valueStyle={{ color: '#52c41a' }}
@@ -202,7 +198,7 @@ const DepartmentHeadDashboardPage = () => {
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Part-Time Teachers"
+                title={t('head:dashboard.partTime')}
                 value={partTimeTeachers.length}
                 prefix={<UserOutlined />}
                 valueStyle={{ color: '#1890ff' }}
@@ -212,7 +208,7 @@ const DepartmentHeadDashboardPage = () => {
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Contract Teachers"
+                title={t('head:dashboard.contract')}
                 value={contractTeachers.length}
                 prefix={<UserOutlined />}
                 valueStyle={{ color: '#fa8c16' }}
@@ -221,7 +217,6 @@ const DepartmentHeadDashboardPage = () => {
           </Col>
         </Row>
 
-        {/* Department Information */}
         <Card
           title={
             <span>
@@ -235,7 +230,7 @@ const DepartmentHeadDashboardPage = () => {
             <Col xs={24} sm={8}>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: 4 }}>
-                  Department Head
+                  {t('head:dashboard.departmentHead')}
                 </div>
                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
                   {user?.userInfo?.firstName} {user?.userInfo?.lastName}
@@ -246,7 +241,7 @@ const DepartmentHeadDashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: 4 }}>
-                    Phone
+                    {t('head:dashboard.phone')}
                   </div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
                     {department.phone}
@@ -258,7 +253,7 @@ const DepartmentHeadDashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: 4 }}>
-                    Room Number
+                    {t('head:dashboard.roomNumber')}
                   </div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
                     {department.roomNumber}
@@ -269,12 +264,11 @@ const DepartmentHeadDashboardPage = () => {
           </Row>
         </Card>
 
-        {/* Teachers List */}
         <Card
           title={
             <span>
               <TeamOutlined style={{ marginRight: 8 }} />
-              Department Teachers
+              {t('head:dashboard.departmentTeachers')}
             </span>
           }
         >
@@ -289,22 +283,20 @@ const DepartmentHeadDashboardPage = () => {
                           {teacher.userInfo?.firstName} {teacher.userInfo?.lastName}
                         </h4>
                         <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
-                          {teacher.userInfo?.email1 && (
-                            <div>{teacher.userInfo.email1}</div>
-                          )}
+                          {teacher.userInfo?.email1 && <div>{teacher.userInfo.email1}</div>}
                           {teacher.teacherInfo?.employmentType && (
                             <div style={{ marginTop: 4 }}>
                               <Tag color={
                                 teacher.teacherInfo.employmentType === 'full-time' ? 'green' :
                                 teacher.teacherInfo.employmentType === 'part-time' ? 'blue' : 'orange'
                               }>
-                                {teacher.teacherInfo.employmentType.replace('-', ' ').toUpperCase()}
+                                {t(`domain:employment.${teacher.teacherInfo.employmentType}`)}
                               </Tag>
                             </div>
                           )}
                         </div>
                       </div>
-                      <Tag color="success">Active</Tag>
+                      <Tag color="success">{t('head:dashboard.active')}</Tag>
                     </div>
                   </Card>
                 </Col>
@@ -312,7 +304,7 @@ const DepartmentHeadDashboardPage = () => {
             ) : (
               <Col span={24}>
                 <div style={{ textAlign: 'center', padding: '40px 0', color: '#8c8c8c' }}>
-                  No active teachers in this department
+                  {t('head:dashboard.noActiveTeachers')}
                 </div>
               </Col>
             )}

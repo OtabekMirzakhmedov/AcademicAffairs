@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Checkbox, message, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import branding from '../config/branding.json';
 import universityLogo from '../../public/university-logo.png';
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, user } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation('auth');
 
   const getRedirectPath = (user: any) => {
     if (!user) return '/login';
@@ -41,11 +43,11 @@ const LoginPage = () => {
       await login(values.login, values.password, values.remember);
 
       const currentUser = useAuthStore.getState().user;
-      message.success('Login successful!');
+      message.success(t('login.success'));
       navigate(getRedirectPath(currentUser));
     } catch (error: any) {
       message.error(
-          error?.response?.data?.error?.message || 'Login failed. Please check your credentials.'
+          error?.response?.data?.error?.message || t('login.failed')
       );
     } finally {
       setLoading(false);
@@ -84,7 +86,6 @@ const LoginPage = () => {
                         objectFit: 'contain'
                       }}
                       onError={(e) => {
-                        // Fallback to icon if logo doesn't exist
                         e.currentTarget.style.display = 'none';
                         const parent = e.currentTarget.parentElement;
                         if (parent) {
@@ -121,10 +122,10 @@ const LoginPage = () => {
                   className="text-xl font-semibold mb-2"
                   style={{ color: '#262626' }}
               >
-                Academic Affairs Management
+                {t('login.appTitle')}
               </h2>
               <p style={{ color: '#8c8c8c', fontSize: '14px' }}>
-                Sign in to continue
+                {t('login.subtitle')}
               </p>
             </div>
 
@@ -138,31 +139,31 @@ const LoginPage = () => {
                 layout="vertical"
             >
               <Form.Item
-                  label="Username"
+                  label={t('login.username')}
                   name="login"
-                  rules={[{ required: true, message: 'Please enter your username!' }]}
+                  rules={[{ required: true, message: t('login.usernameRequired') }]}
               >
                 <Input
                     prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                    placeholder="Enter your username"
+                    placeholder={t('login.usernamePlaceholder')}
                     autoComplete="username"
                 />
               </Form.Item>
 
               <Form.Item
-                  label="Password"
+                  label={t('login.password')}
                   name="password"
-                  rules={[{ required: true, message: 'Please enter your password!' }]}
+                  rules={[{ required: true, message: t('login.passwordRequired') }]}
               >
                 <Input.Password
                     prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                    placeholder="Enter your password"
+                    placeholder={t('login.passwordPlaceholder')}
                     autoComplete="current-password"
                 />
               </Form.Item>
 
               <Form.Item name="remember" valuePropName="checked">
-                <Checkbox>Remember me</Checkbox>
+                <Checkbox>{t('login.rememberMe')}</Checkbox>
               </Form.Item>
 
               <Form.Item>
@@ -173,19 +174,19 @@ const LoginPage = () => {
                     loading={loading}
                     size="large"
                 >
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? t('login.signingIn') : t('login.signIn')}
                 </Button>
               </Form.Item>
             </Form>
 
             <div className="text-center text-sm" style={{ color: '#8c8c8c' }}>
-              <p>Default credentials: admin / admin123</p>
+              <p>{t('login.defaultCredentials')}</p>
             </div>
           </Card>
 
           {/* Footer */}
           <div className="text-center mt-6 text-sm" style={{ color: '#8c8c8c' }}>
-            <p>&copy; 2024 {branding.universityShortName}. All rights reserved.</p>
+            <p>&copy; 2024 {branding.universityShortName}. {t('login.copyright')}</p>
           </div>
         </div>
       </div>

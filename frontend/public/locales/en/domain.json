@@ -1,0 +1,60 @@
+{
+  "status": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "validated": "Validated",
+    "rejected": "Rejected",
+    "in_progress": "In Progress",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "role": {
+    "admin": "Administrator",
+    "departmenthead": "Department Head",
+    "teacher": "Teacher"
+  },
+  "employment": {
+    "full-time": "Full-Time",
+    "part-time": "Part-Time",
+    "contract": "Contract"
+  },
+  "publicationType": {
+    "conference": "Conference",
+    "national": "National Journal",
+    "scopus": "Scopus"
+  },
+  "degreeLevel": {
+    "BACHELOR": "Bachelor",
+    "MASTER": "Master",
+    "DOCTORATE": "Doctorate",
+    "UNDERGRADUATE": "Undergraduate",
+    "GRADUATE": "Graduate"
+  },
+  "hourType": {
+    "lecture": "Lecture",
+    "practice": "Practice",
+    "lab": "Lab",
+    "seminar": "Seminar",
+    "advising": "Advising"
+  },
+  "courseType": {
+    "required": "Required",
+    "elective": "Elective"
+  },
+  "gender": {
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
+  },
+  "semester": {
+    "1": "Fall",
+    "2": "Spring"
+  },
+  "researchCategory": {
+    "scientific_main": "Scientific (Main)",
+    "scientific_exchange": "Scientific (Exchange)",
+    "educational_additional": "Educational (Additional)",
+    "additional": "Additional",
+    "educational": "Educational"
+  }
+}

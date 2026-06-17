@@ -16,6 +16,7 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import { useAuthStore } from '../../store/authStore';
 import usersService from '../../services/users.service';
@@ -25,6 +26,7 @@ import type { User, Department, AcademicPeriod } from '../../types';
 
 const AdminDashboardPage = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation(['admin', 'common', 'teacher', 'domain']);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePeriod, setActivePeriod] = useState<AcademicPeriod | null>(null);
@@ -50,7 +52,7 @@ const AdminDashboardPage = () => {
       setUsers(usersData);
       setDepartments(departmentsData);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to load dashboard data');
+      setError(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -60,7 +62,7 @@ const AdminDashboardPage = () => {
     return (
       <MainLayout>
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" tip="Loading dashboard..." />
+          <Spin size="large" tip={t('common:loading')} />
         </div>
       </MainLayout>
     );
@@ -70,7 +72,7 @@ const AdminDashboardPage = () => {
     return (
       <MainLayout>
         <div style={{ padding: '24px' }}>
-          <Alert message="Error Loading Data" description={error} type="error" showIcon />
+          <Alert message={t('common:message.errorLoading')} description={error} type="error" showIcon />
         </div>
       </MainLayout>
     );
@@ -85,28 +87,28 @@ const AdminDashboardPage = () => {
   return (
     <MainLayout>
       <div style={{ padding: '24px' }}>
-        {/* Header */}
         <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
           <Row align="middle">
             <Col flex="auto">
               <h1 style={{ margin: 0, color: 'white', fontSize: '28px' }}>
                 <UserOutlined style={{ marginRight: 12 }} />
-                Admin Dashboard
+                {t('admin:dashboard.title')}
               </h1>
               <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '16px' }}>
-                Welcome, {user?.userInfo?.firstName} {user?.userInfo?.lastName} - System Overview
+                {t('admin:dashboard.desc', {
+                  name: `${user?.userInfo?.firstName ?? ''} ${user?.userInfo?.lastName ?? ''}`.trim(),
+                })}
               </p>
             </Col>
           </Row>
         </Card>
 
-        {/* Academic Period Info */}
         {activePeriod && (
           <Card
             title={
               <span>
                 <CalendarOutlined style={{ marginRight: 8 }} />
-                Current Academic Period
+                {t('teacher:dashboard.currentPeriod')}
               </span>
             }
             style={{ marginBottom: 24 }}
@@ -115,7 +117,7 @@ const AdminDashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Academic Year
+                    {t('teacher:dashboard.academicYear')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
                     {activePeriod.academicYear}
@@ -125,20 +127,20 @@ const AdminDashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Semester
+                    {t('teacher:dashboard.semester')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                    {activePeriod.semester === 1 ? 'Fall' : 'Spring'} (Semester {activePeriod.semester})
+                    {t(`domain:semester.${activePeriod.semester}`)} ({t('teacher:dashboard.semester')} {activePeriod.semester})
                   </div>
                 </div>
               </Col>
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Teaching Week
+                    {t('teacher:dashboard.teachingWeek')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                    Week {activePeriod.teachingWeek}
+                    {t('teacher:dashboard.week', { number: activePeriod.teachingWeek })}
                   </div>
                 </div>
               </Col>
@@ -146,22 +148,21 @@ const AdminDashboardPage = () => {
           </Card>
         )}
 
-        {/* System Overview */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Total Users"
+                title={t('admin:nav.users')}
                 value={users.length}
                 prefix={<UserOutlined />}
                 valueStyle={{ color: '#1890ff' }}
               />
               <div style={{ marginTop: 12 }}>
                 <Tag color="success" icon={<CheckCircleOutlined />}>
-                  {activeUsers.length} Active
+                  {activeUsers.length} {t('domain:status.active')}
                 </Tag>
                 <Tag color="default" icon={<ClockCircleOutlined />}>
-                  {inactiveUsers.length} Inactive
+                  {inactiveUsers.length} {t('domain:status.inactive')}
                 </Tag>
               </div>
             </Card>
@@ -169,50 +170,49 @@ const AdminDashboardPage = () => {
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Departments"
+                title={t('admin:nav.departments')}
                 value={departments.length}
                 prefix={<BankOutlined />}
                 valueStyle={{ color: '#52c41a' }}
               />
               <div style={{ marginTop: 12, fontSize: '12px', color: '#8c8c8c' }}>
-                {departments.filter((d) => d.headId).length} with assigned heads
+                {departments.filter((d) => d.headId).length} {t('admin:dashboard.withAssignedHeads')}
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Teachers"
+                title={t('domain:role.teacher')}
                 value={teachers.length}
                 prefix={<TeamOutlined />}
                 valueStyle={{ color: '#722ed1' }}
               />
               <div style={{ marginTop: 12, fontSize: '12px', color: '#8c8c8c' }}>
-                {teachers.filter((t) => t.isActive).length} active teachers
+                {teachers.filter((t) => t.isActive).length} {t('admin:dashboard.activeTeachers')}
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
-                title="Department Heads"
+                title={t('domain:role.departmenthead')}
                 value={departmentHeads.length}
                 prefix={<BankOutlined />}
                 valueStyle={{ color: '#fa8c16' }}
               />
               <div style={{ marginTop: 12, fontSize: '12px', color: '#8c8c8c' }}>
-                Managing {departments.filter((d) => d.headId).length} departments
+                {t('admin:dashboard.managingDepts', { count: departments.filter((d) => d.headId).length })}
               </div>
             </Card>
           </Col>
         </Row>
 
-        {/* Users Breakdown */}
         <Card
           title={
             <span>
               <TeamOutlined style={{ marginRight: 8 }} />
-              Users by Role
+              {t('admin:dashboard.usersByRole')}
             </span>
           }
           style={{ marginBottom: 24 }}
@@ -221,48 +221,47 @@ const AdminDashboardPage = () => {
             <Col xs={24} md={8}>
               <Card type="inner">
                 <Statistic
-                  title="Administrators"
+                  title={t('domain:role.admin')}
                   value={admins.length}
                   valueStyle={{ color: '#f5222d' }}
                 />
                 <div style={{ marginTop: 8 }}>
-                  <Tag color="error">{admins.filter((a) => a.isActive).length} Active</Tag>
+                  <Tag color="error">{admins.filter((a) => a.isActive).length} {t('domain:status.active')}</Tag>
                 </div>
               </Card>
             </Col>
             <Col xs={24} md={8}>
               <Card type="inner">
                 <Statistic
-                  title="Department Heads"
+                  title={t('domain:role.departmenthead')}
                   value={departmentHeads.length}
                   valueStyle={{ color: '#fa8c16' }}
                 />
                 <div style={{ marginTop: 8 }}>
-                  <Tag color="orange">{departmentHeads.filter((d) => d.isActive).length} Active</Tag>
+                  <Tag color="orange">{departmentHeads.filter((d) => d.isActive).length} {t('domain:status.active')}</Tag>
                 </div>
               </Card>
             </Col>
             <Col xs={24} md={8}>
               <Card type="inner">
                 <Statistic
-                  title="Teachers"
+                  title={t('domain:role.teacher')}
                   value={teachers.length}
                   valueStyle={{ color: '#722ed1' }}
                 />
                 <div style={{ marginTop: 8 }}>
-                  <Tag color="purple">{teachers.filter((t) => t.isActive).length} Active</Tag>
+                  <Tag color="purple">{teachers.filter((t) => t.isActive).length} {t('domain:status.active')}</Tag>
                 </div>
               </Card>
             </Col>
           </Row>
         </Card>
 
-        {/* Departments Overview */}
         <Card
           title={
             <span>
               <BankOutlined style={{ marginRight: 8 }} />
-              Departments Overview
+              {t('admin:dashboard.departmentsOverview')}
             </span>
           }
         >
@@ -273,11 +272,13 @@ const AdminDashboardPage = () => {
                   <h4 style={{ margin: 0, marginBottom: 8 }}>{dept.name}</h4>
                   <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
                     <div>
-                      Head: {dept.head ? `${dept.head.userInfo?.firstName} ${dept.head.userInfo?.lastName}` : 'Not Assigned'}
+                      Head: {dept.head
+                        ? `${dept.head.userInfo?.firstName} ${dept.head.userInfo?.lastName}`
+                        : t('admin:departments.notAssigned')}
                     </div>
                     <div style={{ marginTop: 4 }}>
-                      <Tag color="blue">{dept._count?.teachers || 0} Teachers</Tag>
-                      <Tag color="green">{dept._count?.courses || 0} Courses</Tag>
+                      <Tag color="blue">{dept._count?.teachers || 0} {t('admin:dashboard.teachers')}</Tag>
+                      <Tag color="green">{dept._count?.courses || 0} {t('admin:dashboard.courses')}</Tag>
                     </div>
                   </div>
                 </Card>
@@ -286,7 +287,7 @@ const AdminDashboardPage = () => {
           </Row>
           {departments.length > 6 && (
             <div style={{ textAlign: 'center', marginTop: 16, color: '#8c8c8c' }}>
-              And {departments.length - 6} more departments...
+              {t('admin:dashboard.moreDepts', { count: departments.length - 6 })}
             </div>
           )}
         </Card>

@@ -19,6 +19,7 @@ import {
   FileTextOutlined,
   TrophyOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/layout/MainLayout';
 import { useAuthStore } from '../store/authStore';
 import academicPeriodsService from '../services/academic-periods.service';
@@ -28,6 +29,7 @@ import type { AcademicPeriod, TeacherStats, PublicationStatistics } from '../typ
 
 const DashboardPage = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation(['teacher', 'common', 'domain']);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePeriod, setActivePeriod] = useState<AcademicPeriod | null>(null);
@@ -68,7 +70,7 @@ const DashboardPage = () => {
       setTeachingStats(teachingData);
       setPublicationStats(publicationData);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to load dashboard data');
+      setError(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,7 @@ const DashboardPage = () => {
     return (
       <MainLayout>
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" tip="Loading dashboard..." />
+          <Spin size="large" tip={t('common:loading')} />
         </div>
       </MainLayout>
     );
@@ -101,7 +103,7 @@ const DashboardPage = () => {
     return (
       <MainLayout>
         <div style={{ padding: '24px' }}>
-          <Alert message="Error Loading Data" description={error} type="error" showIcon />
+          <Alert message={t('common:message.errorLoading')} description={error} type="error" showIcon />
         </div>
       </MainLayout>
     );
@@ -126,10 +128,12 @@ const DashboardPage = () => {
             <Col flex="auto">
               <h1 style={{ margin: 0, color: 'white', fontSize: '28px' }}>
                 <UserOutlined style={{ marginRight: 12 }} />
-                Welcome, {user?.userInfo?.firstName} {user?.userInfo?.lastName}
+                {t('teacher:dashboard.welcome', {
+                  name: `${user?.userInfo?.firstName ?? ''} ${user?.userInfo?.lastName ?? ''}`.trim(),
+                })}
               </h1>
               <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '16px' }}>
-                Teacher Dashboard - Overview of your academic activities and requirements
+                {t('teacher:dashboard.desc')}
               </p>
             </Col>
           </Row>
@@ -141,7 +145,7 @@ const DashboardPage = () => {
             title={
               <span>
                 <CalendarOutlined style={{ marginRight: 8 }} />
-                Current Academic Period
+                {t('teacher:dashboard.currentPeriod')}
               </span>
             }
             style={{ marginBottom: 24 }}
@@ -150,7 +154,7 @@ const DashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Academic Year
+                    {t('teacher:dashboard.academicYear')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
                     {activePeriod.academicYear}
@@ -160,20 +164,20 @@ const DashboardPage = () => {
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Semester
+                    {t('teacher:dashboard.semester')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                    {activePeriod.semester === 1 ? 'Fall' : 'Spring'} (Semester {activePeriod.semester})
+                    {t(`domain:semester.${activePeriod.semester}`)} ({t('teacher:dashboard.semester')} {activePeriod.semester})
                   </div>
                 </div>
               </Col>
               <Col xs={24} sm={8}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    Teaching Week
+                    {t('teacher:dashboard.teachingWeek')}
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                    Week {activePeriod.teachingWeek}
+                    {t('teacher:dashboard.week', { number: activePeriod.teachingWeek })}
                   </div>
                 </div>
               </Col>
@@ -186,7 +190,7 @@ const DashboardPage = () => {
           title={
             <span>
               <TrophyOutlined style={{ marginRight: 8 }} />
-              My Requirements Summary
+              {t('teacher:dashboard.requirementsSummary')}
             </span>
           }
           style={{ marginBottom: 24 }}
@@ -194,18 +198,18 @@ const DashboardPage = () => {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Statistic
-                title="Mandatory Teaching Hours (Per Period)"
+                title={t('teacher:dashboard.mandatoryHours')}
                 value={user?.teacherInfo?.mandatoryHoursPerPeriod || 0}
-                suffix="hours"
+                suffix={t('common:label.hours')}
                 prefix={<BookOutlined />}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Col>
             <Col xs={24} sm={12}>
               <Statistic
-                title="Mandatory Extracurricular Hours"
+                title={t('teacher:dashboard.mandatoryExtracurricular')}
                 value={user?.teacherInfo?.mandatoryExtracurricularHours || 0}
-                suffix="hours"
+                suffix={t('common:label.hours')}
                 prefix={<ClockCircleOutlined />}
                 valueStyle={{ color: '#722ed1' }}
               />
@@ -215,7 +219,7 @@ const DashboardPage = () => {
           <Row gutter={16}>
             <Col xs={24} sm={8}>
               <Statistic
-                title="Conference Articles Required"
+                title={t('teacher:dashboard.conferenceArticles')}
                 value={user?.teacherInfo?.mandatoryConferenceArticles || 0}
                 prefix={<FileTextOutlined />}
                 valueStyle={{ color: '#52c41a' }}
@@ -223,7 +227,7 @@ const DashboardPage = () => {
             </Col>
             <Col xs={24} sm={8}>
               <Statistic
-                title="National Articles Required"
+                title={t('teacher:dashboard.nationalArticles')}
                 value={user?.teacherInfo?.mandatoryNationalArticles || 0}
                 prefix={<FileTextOutlined />}
                 valueStyle={{ color: '#1890ff' }}
@@ -231,7 +235,7 @@ const DashboardPage = () => {
             </Col>
             <Col xs={24} sm={8}>
               <Statistic
-                title="Scopus Articles Required"
+                title={t('teacher:dashboard.scopusArticles')}
                 value={user?.teacherInfo?.mandatoryScopusArticles || 0}
                 prefix={<FileTextOutlined />}
                 valueStyle={{ color: '#722ed1' }}
@@ -242,7 +246,7 @@ const DashboardPage = () => {
           <Row gutter={16}>
             <Col xs={24}>
               <Statistic
-                title="Documentation Items Required"
+                title={t('teacher:dashboard.documentationRequired')}
                 value={user?.teacherInfo?.mandatoryDocumentation || 0}
                 prefix={<ExperimentOutlined />}
                 valueStyle={{ color: '#fa8c16' }}
@@ -258,14 +262,14 @@ const DashboardPage = () => {
               title={
                 <span>
                   <BookOutlined style={{ marginRight: 8 }} />
-                  Teaching Hours Progress
+                  {t('teacher:dashboard.teachingProgress')}
                 </span>
               }
             >
               <Statistic
-                title="Validated Hours"
+                title={t('teacher:dashboard.validatedHours')}
                 value={teachingStats.validatedHours}
-                suffix={`/ ${teachingStats.mandatoryHours} hours`}
+                suffix={`/ ${teachingStats.mandatoryHours} ${t('common:label.hours')}`}
                 valueStyle={{
                   color: getProgressColor(teachingStats.validatedHours, teachingStats.mandatoryHours),
                 }}
@@ -282,13 +286,13 @@ const DashboardPage = () => {
               <div style={{ marginTop: 16 }}>
                 <Row gutter={16}>
                   <Col span={12}>
-                    <div style={{ fontSize: '12px', color: '#8c8c8c' }}>Submitted</div>
+                    <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{t('teacher:dashboard.submitted')}</div>
                     <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>
                       {teachingStats.submittedHours}h
                     </div>
                   </Col>
                   <Col span={12}>
-                    <div style={{ fontSize: '12px', color: '#8c8c8c' }}>Remaining</div>
+                    <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{t('teacher:dashboard.remaining')}</div>
                     <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#f5222d' }}>
                       {Math.max(0, teachingStats.mandatoryHours - teachingStats.validatedHours)}h
                     </div>
@@ -303,14 +307,14 @@ const DashboardPage = () => {
               title={
                 <span>
                   <ExperimentOutlined style={{ marginRight: 8 }} />
-                  Publications Progress
+                  {t('teacher:dashboard.publicationsProgress')}
                 </span>
               }
             >
               <Statistic
-                title="Validated Articles"
+                title={t('teacher:dashboard.validatedArticles')}
                 value={totalValidatedArticles}
-                suffix={`/ ${totalMandatoryArticles} articles`}
+                suffix={`/ ${totalMandatoryArticles} ${t('teacher:account.articles')}`}
                 valueStyle={{
                   color: getProgressColor(totalValidatedArticles, totalMandatoryArticles),
                 }}
@@ -327,19 +331,19 @@ const DashboardPage = () => {
               <div style={{ marginTop: 16 }}>
                 <Row gutter={8}>
                   <Col span={8}>
-                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>Conference</div>
+                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{t('domain:publicationType.conference')}</div>
                     <Tag color="green">
                       {publicationStats.validatedConferenceArticles}/{publicationStats.mandatoryConferenceArticles}
                     </Tag>
                   </Col>
                   <Col span={8}>
-                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>National</div>
+                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{t('domain:publicationType.national')}</div>
                     <Tag color="blue">
                       {publicationStats.validatedNationalArticles}/{publicationStats.mandatoryNationalArticles}
                     </Tag>
                   </Col>
                   <Col span={8}>
-                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>Scopus</div>
+                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{t('domain:publicationType.scopus')}</div>
                     <Tag color="purple">
                       {publicationStats.validatedScopusArticles}/{publicationStats.mandatoryScopusArticles}
                     </Tag>
@@ -355,8 +359,10 @@ const DashboardPage = () => {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic
-                title="Employment Type"
-                value={user?.teacherInfo?.employmentType?.replace('-', ' ').toUpperCase() || 'Not Set'}
+                title={t('teacher:account.employmentType')}
+                value={user?.teacherInfo?.employmentType
+                  ? t(`domain:employment.${user.teacherInfo.employmentType}`)
+                  : t('common:label.notSet')}
                 valueStyle={{ fontSize: '18px', color: '#1890ff' }}
               />
             </Card>
@@ -364,7 +370,7 @@ const DashboardPage = () => {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic
-                title="Department"
+                title={t('teacher:account.department')}
                 value={user?.teacherInfo?.department?.name || 'N/A'}
                 valueStyle={{ fontSize: '18px', color: '#52c41a' }}
               />
@@ -373,9 +379,9 @@ const DashboardPage = () => {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic
-                title="Total Submitted Hours"
+                title={t('teacher:account.totalSubmittedHours')}
                 value={teachingStats.submittedHours}
-                suffix="hours"
+                suffix={t('common:label.hours')}
                 valueStyle={{ fontSize: '18px', color: '#722ed1' }}
               />
             </Card>
@@ -383,13 +389,13 @@ const DashboardPage = () => {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic
-                title="Total Submitted Articles"
+                title={t('teacher:account.totalSubmittedArticles')}
                 value={
                   publicationStats.submittedConferenceArticles +
                   publicationStats.submittedNationalArticles +
                   publicationStats.submittedScopusArticles
                 }
-                suffix="articles"
+                suffix={t('teacher:account.articles')}
                 valueStyle={{ fontSize: '18px', color: '#fa8c16' }}
               />
             </Card>

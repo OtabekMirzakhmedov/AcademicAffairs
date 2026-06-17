@@ -20,6 +20,7 @@ import {
   StopOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import UserFormModal from '../../components/features/admin/UserFormModal';
 import usersService from '../../services/users.service';
@@ -29,13 +30,13 @@ import type { User, Role, Department } from '../../types';
 import './UsersPage.scss';
 
 const UsersPage = () => {
+  const { t } = useTranslation(['admin', 'common', 'domain']);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchText, setSearchText] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -54,12 +55,8 @@ const UsersPage = () => {
       filtered = filtered.filter(
         (user) =>
           user.login.toLowerCase().includes(searchText.toLowerCase()) ||
-          user.userInfo?.firstName
-            ?.toLowerCase()
-            .includes(searchText.toLowerCase()) ||
-          user.userInfo?.lastName
-            ?.toLowerCase()
-            .includes(searchText.toLowerCase())
+          user.userInfo?.firstName?.toLowerCase().includes(searchText.toLowerCase()) ||
+          user.userInfo?.lastName?.toLowerCase().includes(searchText.toLowerCase())
       );
     }
 
@@ -76,8 +73,8 @@ const UsersPage = () => {
       const data = await usersService.getAll();
       setUsers(data);
       setFilteredUsers(data);
-    } catch (error) {
-      message.error('Failed to fetch users');
+    } catch {
+      message.error(t('admin:users.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -87,8 +84,8 @@ const UsersPage = () => {
     try {
       const response = await api.get('/users/roles');
       setRoles(response.data.data);
-    } catch (error) {
-      message.error('Failed to fetch roles');
+    } catch {
+      message.error(t('admin:users.rolesFetchFailed'));
     }
   };
 
@@ -96,40 +93,23 @@ const UsersPage = () => {
     try {
       const data = await departmentsService.getAll();
       setDepartments(data);
-    } catch (error) {
-      message.error('Failed to fetch departments');
+    } catch {
+      message.error(t('admin:users.departmentsFetchFailed'));
     }
   };
 
   const getRoleColor = (roleName: string) => {
     switch (roleName) {
-      case 'admin':
-        return 'red';
-      case 'departmenthead':
-        return 'blue';
-      case 'teacher':
-        return 'green';
-      default:
-        return 'default';
-    }
-  };
-
-  const getRoleLabel = (roleName: string) => {
-    switch (roleName) {
-      case 'admin':
-        return 'Administrator';
-      case 'departmenthead':
-        return 'Department Head';
-      case 'teacher':
-        return 'Teacher';
-      default:
-        return roleName;
+      case 'admin': return 'red';
+      case 'departmenthead': return 'blue';
+      case 'teacher': return 'green';
+      default: return 'default';
     }
   };
 
   const columns: ColumnsType<User> = [
     {
-      title: 'Username',
+      title: t('admin:users.login'),
       dataIndex: 'login',
       key: 'login',
       sorter: (a, b) => a.login.localeCompare(b.login),
@@ -140,66 +120,64 @@ const UsersPage = () => {
       ),
     },
     {
-      title: 'Full Name',
+      title: t('admin:users.fullName'),
       key: 'fullName',
       render: (_, record) => {
         const { firstName, lastName } = record.userInfo || {};
         return firstName && lastName
           ? `${firstName} ${lastName}`
-          : <span className="text-secondary">Not set</span>;
+          : <span className="text-secondary">{t('common:label.notSet')}</span>;
       },
     },
     {
-      title: 'Email',
+      title: t('admin:users.email'),
       key: 'email',
       render: (_, record) =>
-        record.userInfo?.email1 || (
-          <span className="text-secondary">Not set</span>
-        ),
+        record.userInfo?.email1 || <span className="text-secondary">{t('common:label.notSet')}</span>,
     },
     {
-      title: 'Role',
+      title: t('admin:users.role'),
       dataIndex: ['role', 'name'],
       key: 'role',
       render: (roleName) => (
-        <Tag color={getRoleColor(roleName)}>{getRoleLabel(roleName)}</Tag>
+        <Tag color={getRoleColor(roleName)}>{t(`domain:role.${roleName}`)}</Tag>
       ),
       filters: [
-        { text: 'Administrator', value: 'admin' },
-        { text: 'Department Head', value: 'departmenthead' },
-        { text: 'Teacher', value: 'teacher' },
+        { text: t('domain:role.admin'), value: 'admin' },
+        { text: t('domain:role.departmenthead'), value: 'departmenthead' },
+        { text: t('domain:role.teacher'), value: 'teacher' },
       ],
       onFilter: (value, record) => record.role.name === value,
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       width: 120,
       render: (isActive) =>
         isActive ? (
           <Tag icon={<CheckCircleOutlined />} color="success">
-            Active
+            {t('domain:status.active')}
           </Tag>
         ) : (
           <Tag icon={<StopOutlined />} color="error">
-            Inactive
+            {t('domain:status.inactive')}
           </Tag>
         ),
       filters: [
-        { text: 'Active', value: true },
-        { text: 'Inactive', value: false },
+        { text: t('domain:status.active'), value: true },
+        { text: t('domain:status.inactive'), value: false },
       ],
       onFilter: (value, record) => record.isActive === value,
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Edit User">
+          <Tooltip title={t('admin:users.editTitle')}>
             <Button
               type="text"
               size="small"
@@ -207,7 +185,7 @@ const UsersPage = () => {
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
-          <Tooltip title={record.isActive ? 'Deactivate' : 'Activate'}>
+          <Tooltip title={record.isActive ? t('admin:users.deactivate') : t('admin:users.activate')}>
             <Button
               type="text"
               size="small"
@@ -228,19 +206,19 @@ const UsersPage = () => {
 
   const handleToggleStatus = (id: number, currentStatus: boolean) => {
     Modal.confirm({
-      title: `${currentStatus ? 'Deactivate' : 'Activate'} User`,
-      content: `Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this user?`,
+      title: t('admin:users.toggleStatusTitle', {
+        action: currentStatus ? t('admin:users.deactivate') : t('admin:users.activate'),
+      }),
+      content: currentStatus ? t('admin:users.deactivateConfirm') : t('admin:users.activateConfirm'),
       onOk: async () => {
         try {
           await usersService.toggleStatus(id);
           message.success(
-            `User ${currentStatus ? 'deactivated' : 'activated'} successfully`
+            currentStatus ? t('admin:users.deactivateSuccess') : t('admin:users.activateSuccess')
           );
           fetchUsers();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to update user status'
-          );
+          message.error(error?.response?.data?.error?.message || t('admin:users.statusUpdateFailed'));
         }
       },
     });
@@ -251,24 +229,13 @@ const UsersPage = () => {
     setModalOpen(true);
   };
 
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setEditingUser(null);
-  };
-
-  const handleModalSuccess = () => {
-    fetchUsers();
-  };
-
   return (
     <MainLayout>
       <div className="users-page">
         <div className="page-header">
           <div>
-            <h1 className="page-title">Users Management</h1>
-            <p className="page-subtitle">
-              Manage system users, roles, and permissions
-            </p>
+            <h1 className="page-title">{t('admin:users.title')}</h1>
+            <p className="page-subtitle">{t('admin:users.desc')}</p>
           </div>
           <Button
             type="primary"
@@ -277,14 +244,14 @@ const UsersPage = () => {
             onClick={handleAddNew}
             className="add-btn"
           >
-            Add User
+            {t('admin:users.addUser')}
           </Button>
         </div>
 
         <Card className="users-card">
           <div className="filters-section">
             <Input
-              placeholder="Search by username, name..."
+              placeholder={t('admin:users.search')}
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -292,15 +259,15 @@ const UsersPage = () => {
               allowClear
             />
             <Select
-              placeholder="Filter by role"
+              placeholder={t('admin:users.roleFilter')}
               value={roleFilter}
               onChange={setRoleFilter}
               className="role-filter"
               allowClear
               options={[
-                { label: 'Administrator', value: 'admin' },
-                { label: 'Department Head', value: 'departmenthead' },
-                { label: 'Teacher', value: 'teacher' },
+                { label: t('domain:role.admin'), value: 'admin' },
+                { label: t('domain:role.departmenthead'), value: 'departmenthead' },
+                { label: t('domain:role.teacher'), value: 'teacher' },
               ]}
             />
           </div>
@@ -313,7 +280,7 @@ const UsersPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} users`,
+              showTotal: (total) => t('admin:users.totalUsers', { total }),
             }}
             scroll={{ x: 1000 }}
           />
@@ -321,8 +288,8 @@ const UsersPage = () => {
 
         <UserFormModal
           open={modalOpen}
-          onClose={handleModalClose}
-          onSuccess={handleModalSuccess}
+          onClose={() => { setModalOpen(false); setEditingUser(null); }}
+          onSuccess={fetchUsers}
           user={editingUser}
           roles={roles}
           departments={departments}

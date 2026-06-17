@@ -69,6 +69,7 @@ model UserInfo {
   stirInn                 String?   @map("stir_inn")
   englishLevel            String?   @map("english_level") // A1, A2, B1, B2, C1, C2
   profileImage            String?   @map("profile_image")
+  locale                  String?   @default("uz") // uz, ru, en
   email1                  String?   @map("email_1")
   email2                  String?   @map("email_2")
   phone1                  String?   @map("phone_1")

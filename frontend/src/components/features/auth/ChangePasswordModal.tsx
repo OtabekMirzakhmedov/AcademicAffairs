@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Form, Input, message } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import api from '../../../config/api';
 import { useAuthStore } from '../../../store/authStore';
 
@@ -20,6 +21,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { setUser, user } = useAuthStore();
+  const { t } = useTranslation(['auth', 'common']);
 
   const handleSubmit = async (values: {
     oldPassword: string;
@@ -34,17 +36,16 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         newPassword: values.newPassword,
       });
 
-      // Update user state to reflect password change
       if (user) {
         setUser({ ...user, mustChangePassword: false });
       }
 
       form.resetFields();
-      message.success('Password changed successfully!');
+      message.success(t('auth:changePassword.success'));
       onSuccess();
     } catch (error: any) {
       message.error(
-        error?.response?.data?.error?.message || 'Failed to change password'
+        error?.response?.data?.error?.message || t('auth:changePassword.failed')
       );
     } finally {
       setLoading(false);
@@ -53,20 +54,20 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   return (
     <Modal
-      title="Change Password"
+      title={t('auth:changePassword.title')}
       open={open}
       onCancel={required ? undefined : onCancel}
       onOk={() => form.submit()}
       confirmLoading={loading}
       closable={!required}
       maskClosable={!required}
-      okText="Change Password"
-      cancelText="Cancel"
+      okText={t('auth:changePassword.title')}
+      cancelText={t('common:button.cancel')}
     >
       {required && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
           <p className="text-sm text-yellow-800">
-            You must change your password before continuing.
+            {t('auth:changePassword.mustChange')}
           </p>
         </div>
       )}
@@ -79,48 +80,48 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       >
         <Form.Item
           name="oldPassword"
-          label="Current Password"
+          label={t('auth:changePassword.currentPassword')}
           rules={[
-            { required: true, message: 'Please enter your current password!' },
+            { required: true, message: t('auth:changePassword.currentPasswordRequired') },
           ]}
         >
           <Input.Password
             prefix={<LockOutlined />}
-            placeholder="Enter current password"
+            placeholder={t('auth:changePassword.currentPasswordPlaceholder')}
             autoComplete="current-password"
           />
         </Form.Item>
 
         <Form.Item
           name="newPassword"
-          label="New Password"
+          label={t('auth:changePassword.newPassword')}
           rules={[
-            { required: true, message: 'Please enter your new password!' },
-            { min: 6, message: 'Password must be at least 6 characters long!' },
+            { required: true, message: t('auth:changePassword.newPasswordRequired') },
+            { min: 6, message: t('auth:changePassword.newPasswordMinLength') },
           ]}
           hasFeedback
         >
           <Input.Password
             prefix={<LockOutlined />}
-            placeholder="Enter new password"
+            placeholder={t('auth:changePassword.newPasswordPlaceholder')}
             autoComplete="new-password"
           />
         </Form.Item>
 
         <Form.Item
           name="confirmPassword"
-          label="Confirm New Password"
+          label={t('auth:changePassword.confirmPassword')}
           dependencies={['newPassword']}
           hasFeedback
           rules={[
-            { required: true, message: 'Please confirm your new password!' },
+            { required: true, message: t('auth:changePassword.confirmPasswordRequired') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) {
                   return Promise.resolve();
                 }
                 return Promise.reject(
-                  new Error('The two passwords do not match!')
+                  new Error(t('auth:changePassword.confirmPasswordMismatch'))
                 );
               },
             }),
@@ -128,7 +129,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         >
           <Input.Password
             prefix={<LockOutlined />}
-            placeholder="Confirm new password"
+            placeholder={t('auth:changePassword.confirmPasswordPlaceholder')}
             autoComplete="new-password"
           />
         </Form.Item>

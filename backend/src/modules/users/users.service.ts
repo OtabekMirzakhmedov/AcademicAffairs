@@ -346,7 +346,7 @@ export class UsersService {
     const userInfoFields = [
       'firstName', 'lastName', 'middleName', 'dateOfBirth', 'gender', 'nationality',
       'countryOfBirth', 'regionOfBirth', 'currentAddress', 'permanentAddress',
-      'passportSerial', 'personalId', 'stirInn', 'englishLevel', 'profileImage',
+      'passportSerial', 'personalId', 'stirInn', 'englishLevel', 'profileImage', 'locale',
       'email1', 'email2', 'phone1', 'phone2'
     ];
 

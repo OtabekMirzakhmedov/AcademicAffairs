@@ -25,6 +25,7 @@ import {
   DownloadOutlined,
   PaperClipOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs from 'dayjs';
 import type {
@@ -42,14 +43,8 @@ const statusColors: Record<string, string> = {
   rejected: 'red',
 };
 
-const statusLabels: Record<string, string> = {
-  in_progress: 'In Progress',
-  submitted: 'Submitted',
-  validated: 'Validated',
-  rejected: 'Rejected',
-};
-
 const ScientificResearchTab: React.FC = () => {
+  const { t } = useTranslation(['teacher', 'common', 'domain']);
   const [activities, setActivities] = useState<TeacherResearchActivity[]>([]);
   const [templates, setTemplates] = useState<ResearchActivityTemplate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,7 +72,7 @@ const ScientificResearchTab: React.FC = () => {
       setActivities(acts);
       setTemplates(tmpls);
     } catch {
-      message.error('Failed to load activities');
+      message.error(t('teacher:researchActivities.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -107,7 +102,7 @@ const ScientificResearchTab: React.FC = () => {
 
   const handleAddActivities = async () => {
     if (selectedTemplateIds.length === 0) {
-      message.warning('Please select at least one activity');
+      message.warning(t('teacher:researchActivities.selectRequired'));
       return;
     }
     setAddLoading(true);
@@ -117,14 +112,12 @@ const ScientificResearchTab: React.FC = () => {
           researchActivitiesService.create({ templateId }),
         ),
       );
-      message.success(
-        `${selectedTemplateIds.length} activit${selectedTemplateIds.length > 1 ? 'ies' : 'y'} added`,
-      );
+      message.success(t('teacher:researchActivities.addSuccess', { count: selectedTemplateIds.length }));
       setAddModalOpen(false);
       setSelectedTemplateIds([]);
       loadData();
     } catch (err: any) {
-      message.error(err?.response?.data?.message || 'Failed to add activities');
+      message.error(err?.response?.data?.message || t('teacher:researchActivities.addFailed'));
     } finally {
       setAddLoading(false);
     }
@@ -153,9 +146,9 @@ const ScientificResearchTab: React.FC = () => {
         _filePath: result.filePath,
         _fileName: result.fileName,
       });
-      message.success('File uploaded');
+      message.success(t('teacher:researchActivities.fileUploaded'));
     } catch {
-      message.error('Failed to upload file');
+      message.error(t('teacher:researchActivities.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -173,11 +166,11 @@ const ScientificResearchTab: React.FC = () => {
         filePath: values._filePath || editingActivity.filePath,
         fileName: values._fileName || editingActivity.fileName,
       });
-      message.success('Activity updated');
+      message.success(t('teacher:researchActivities.updateSuccess'));
       setEditModalOpen(false);
       loadData();
     } catch {
-      message.error('Failed to update activity');
+      message.error(t('teacher:researchActivities.updateFailed'));
     } finally {
       setEditLoading(false);
     }
@@ -186,10 +179,10 @@ const ScientificResearchTab: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await researchActivitiesService.remove(id);
-      message.success('Activity removed');
+      message.success(t('teacher:researchActivities.removeSuccess'));
       loadData();
     } catch (err: any) {
-      message.error(err?.response?.data?.message || 'Failed to delete activity');
+      message.error(err?.response?.data?.message || t('teacher:researchActivities.removeFailed'));
     }
   };
 
@@ -202,14 +195,14 @@ const ScientificResearchTab: React.FC = () => {
 
   const columns: ColumnsType<TeacherResearchActivity> = [
     {
-      title: 'Type of requirement',
+      title: t('teacher:researchActivities.requirementType'),
       dataIndex: ['template', 'name'],
       key: 'name',
       width: 280,
       render: (name: string) => <Text>{name}</Text>,
     },
     {
-      title: 'Description',
+      title: t('common:label.description'),
       dataIndex: ['template', 'description'],
       key: 'description',
       width: 200,
@@ -225,7 +218,7 @@ const ScientificResearchTab: React.FC = () => {
         ),
     },
     {
-      title: 'Attached files',
+      title: t('teacher:researchActivities.attachedFiles'),
       key: 'files',
       width: 160,
       render: (_: any, record: TeacherResearchActivity) =>
@@ -249,7 +242,7 @@ const ScientificResearchTab: React.FC = () => {
         ),
     },
     {
-      title: 'Penalty (%)',
+      title: t('teacher:researchActivities.penalty'),
       dataIndex: ['template', 'penalty'],
       key: 'penalty',
       width: 110,
@@ -262,7 +255,7 @@ const ScientificResearchTab: React.FC = () => {
         ),
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       key: 'status',
       width: 180,
       render: (_: any, record: TeacherResearchActivity) => (
@@ -275,17 +268,19 @@ const ScientificResearchTab: React.FC = () => {
       ),
     },
     {
-      title: 'ARD validated status',
+      title: t('teacher:researchActivities.ardStatus'),
       dataIndex: 'status',
       key: 'ardStatus',
       width: 150,
       align: 'center',
       render: (status: string) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
+        <Tag color={statusColors[status]}>
+          {t(`domain:status.${status}`, { defaultValue: status })}
+        </Tag>
       ),
     },
     {
-      title: 'Deadline',
+      title: t('common:label.deadline'),
       dataIndex: 'deadline',
       key: 'deadline',
       width: 120,
@@ -305,7 +300,7 @@ const ScientificResearchTab: React.FC = () => {
     {
       title: (
         <Space>
-          Action
+          {t('teacher:researchActivities.action')}
           <Button
             type="primary"
             size="small"
@@ -331,10 +326,10 @@ const ScientificResearchTab: React.FC = () => {
           />
           {record.status !== 'validated' && (
             <Popconfirm
-              title="Remove this activity?"
+              title={t('teacher:researchActivities.removeConfirm')}
               onConfirm={() => handleDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText={t('common:label.yes')}
+              cancelText={t('common:label.no')}
             >
               <Button
                 shape="circle"
@@ -353,21 +348,21 @@ const ScientificResearchTab: React.FC = () => {
 
   const addModalColumns: ColumnsType<ResearchActivityTemplate> = [
     {
-      title: 'Type of requirement',
+      title: t('teacher:researchActivities.requirementType'),
       dataIndex: 'name',
       key: 'name',
       width: 200,
       render: (name: string) => <Text>{name}</Text>,
     },
     {
-      title: 'Description',
+      title: t('common:label.description'),
       dataIndex: 'description',
       key: 'description',
       render: (desc: string) =>
         desc ? <Text style={{ fontSize: 13 }}>{desc}</Text> : <Text type="secondary">—</Text>,
     },
     {
-      title: 'Penalty',
+      title: t('teacher:researchActivities.penalty'),
       dataIndex: 'penalty',
       key: 'penalty',
       width: 80,
@@ -377,7 +372,7 @@ const ScientificResearchTab: React.FC = () => {
       ),
     },
     {
-      title: 'Max',
+      title: t('teacher:researchActivities.max'),
       dataIndex: 'maxAmount',
       key: 'maxAmount',
       width: 60,
@@ -411,25 +406,24 @@ const ScientificResearchTab: React.FC = () => {
         loading={loading}
         pagination={false}
         size="middle"
-        locale={{ emptyText: 'No activities added yet. Click + to add one.' }}
+        locale={{ emptyText: t('teacher:researchActivities.noActivities') }}
       />
 
-      {/* Add Activity Modal */}
       <Modal
-        title="Scientific activities"
+        title={t('teacher:researchActivities.addModal')}
         open={addModalOpen}
         onCancel={() => {
           setAddModalOpen(false);
           setSelectedTemplateIds([]);
         }}
         onOk={handleAddActivities}
-        okText="Add"
+        okText={t('common:button.add')}
         confirmLoading={addLoading}
         width={780}
         okButtonProps={{ disabled: selectedTemplateIds.length === 0 }}
       >
         {availableTemplates.length === 0 ? (
-          <Text type="secondary">All available activities have been added.</Text>
+          <Text type="secondary">{t('teacher:researchActivities.allAdded')}</Text>
         ) : (
           <Table
             columns={addModalColumns}
@@ -446,19 +440,18 @@ const ScientificResearchTab: React.FC = () => {
         )}
       </Modal>
 
-      {/* Edit Activity Modal */}
       <Modal
-        title={`Edit: ${editingActivity?.template?.name ?? ''}`}
+        title={t('teacher:researchActivities.editTitle', { name: editingActivity?.template?.name ?? '' })}
         open={editModalOpen}
         onCancel={() => setEditModalOpen(false)}
         onOk={handleEditSave}
-        okText="Save"
+        okText={t('common:button.save')}
         confirmLoading={editLoading}
         width={500}
         destroyOnClose
       >
         <Form form={editForm} layout="vertical">
-          <Form.Item label="Completion (%)" name="completionPercentage">
+          <Form.Item label={t('teacher:researchActivities.completionPercent')} name="completionPercentage">
             <Slider
               min={0}
               max={100}
@@ -467,11 +460,11 @@ const ScientificResearchTab: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item label="Deadline" name="deadline">
+          <Form.Item label={t('common:label.deadline')} name="deadline">
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item label="Attached File">
+          <Form.Item label={t('teacher:researchActivities.attachedFile')}>
             <Upload
               fileList={fileList}
               beforeUpload={(file) => {
@@ -486,7 +479,7 @@ const ScientificResearchTab: React.FC = () => {
               accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png"
             >
               <Button icon={<UploadOutlined />} loading={uploading}>
-                {fileList.length > 0 ? 'Replace file' : 'Upload file'}
+                {fileList.length > 0 ? t('teacher:researchActivities.replaceFile') : t('common:button.upload')}
               </Button>
             </Upload>
           </Form.Item>

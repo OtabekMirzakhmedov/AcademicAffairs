@@ -24,6 +24,7 @@ import {
   FieldTimeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import scientificTasksService from '../../services/scientific-tasks.service';
 import type { TeacherScientificReport } from '../../types';
@@ -49,6 +50,7 @@ interface TaskGroup {
 }
 
 const ScientificReportsValidationPage: React.FC = () => {
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const [reports, setReports] = useState<TeacherScientificReport[]>([]);
   const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,6 @@ const ScientificReportsValidationPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Group reports by task whenever reports change
     groupReportsByTask();
   }, [reports]);
 
@@ -71,7 +72,7 @@ const ScientificReportsValidationPage: React.FC = () => {
       const data = await scientificTasksService.getSubmittedReports();
       setReports(data);
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to load reports');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -107,24 +108,14 @@ const ScientificReportsValidationPage: React.FC = () => {
       group.totalTeachers++;
       group.totalEquivalentHours += Number(report.equivalentHours || 0);
 
-      // Count statuses
       switch (report.status) {
-        case 'submitted':
-          group.submittedCount++;
-          break;
-        case 'validated':
-          group.validatedCount++;
-          break;
-        case 'rejected':
-          group.rejectedCount++;
-          break;
-        case 'in_progress':
-          group.inProgressCount++;
-          break;
+        case 'submitted': group.submittedCount++; break;
+        case 'validated': group.validatedCount++; break;
+        case 'rejected': group.rejectedCount++; break;
+        case 'in_progress': group.inProgressCount++; break;
       }
     });
 
-    // Calculate completion rate for each task
     taskMap.forEach(group => {
       group.completionRate = group.totalTeachers > 0
         ? Math.round((group.validatedCount / group.totalTeachers) * 100)
@@ -141,18 +132,20 @@ const ScientificReportsValidationPage: React.FC = () => {
 
   const handleValidate = async (reportId: number) => {
     Modal.confirm({
-      title: 'Validate Report',
-      content: 'Are you sure you want to validate this report?',
+      title: t('head:scientificReports.validateReport'),
+      content: t('head:scientificReports.validateConfirm'),
+      okText: t('common:button.validate'),
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await scientificTasksService.validateReport(reportId);
-          message.success('Report validated successfully');
+          message.success(t('head:scientificReports.validateSuccess'));
           loadReports();
           if (selectedReport?.id === reportId) {
             setDetailModalVisible(false);
           }
         } catch (error: any) {
-          message.error(error.response?.data?.message || 'Failed to validate report');
+          message.error(error.response?.data?.message || t('head:scientificReports.validateFailed'));
         }
       },
     });
@@ -160,20 +153,21 @@ const ScientificReportsValidationPage: React.FC = () => {
 
   const handleReject = async (reportId: number) => {
     Modal.confirm({
-      title: 'Reject Report',
-      content: 'Are you sure you want to reject this report? The teacher will need to revise and resubmit.',
-      okText: 'Reject',
+      title: t('head:scientificReports.rejectReport'),
+      content: `${t('head:scientificReports.rejectConfirm')} ${t('head:scientificReports.rejectDesc')}`,
+      okText: t('common:button.reject'),
       okType: 'danger',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await scientificTasksService.rejectReport(reportId);
-          message.success('Report rejected');
+          message.success(t('head:scientificReports.rejectSuccess'));
           loadReports();
           if (selectedReport?.id === reportId) {
             setDetailModalVisible(false);
           }
         } catch (error: any) {
-          message.error(error.response?.data?.message || 'Failed to reject report');
+          message.error(error.response?.data?.message || t('head:scientificReports.rejectFailed'));
         }
       },
     });
@@ -185,7 +179,6 @@ const ScientificReportsValidationPage: React.FC = () => {
         responseType: 'blob',
       });
 
-      // Create a download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -195,27 +188,29 @@ const ScientificReportsValidationPage: React.FC = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      message.success('File downloaded successfully');
+      message.success(t('head:scientificReports.downloadSuccess'));
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to download file');
+      message.error(error.response?.data?.message || t('head:scientificReports.downloadFailed'));
     }
   };
 
   const getStatusTag = (status: string) => {
-    const statusConfig: Record<string, { color: string; text: string }> = {
-      in_progress: { color: 'blue', text: 'In Progress' },
-      submitted: { color: 'orange', text: 'Submitted' },
-      validated: { color: 'green', text: 'Validated' },
-      rejected: { color: 'red', text: 'Rejected' },
+    const colors: Record<string, string> = {
+      in_progress: 'blue',
+      submitted: 'orange',
+      validated: 'green',
+      rejected: 'red',
     };
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    return (
+      <Tag color={colors[status] || 'default'}>
+        {t(`domain:status.${status}`, { defaultValue: status })}
+      </Tag>
+    );
   };
 
-  // Columns for teacher reports within each task
   const teacherColumns: ColumnsType<TeacherScientificReport> = [
     {
-      title: 'Teacher',
+      title: t('domain:role.teacher'),
       dataIndex: ['teacher', 'userInfo'],
       key: 'teacher',
       render: (userInfo: any) => (
@@ -226,12 +221,12 @@ const ScientificReportsValidationPage: React.FC = () => {
       ),
     },
     {
-      title: 'Department',
+      title: t('common:label.department'),
       dataIndex: ['teacher', 'teacherInfo', 'department', 'name'],
       key: 'department',
     },
     {
-      title: 'Progress',
+      title: t('common:label.progress'),
       dataIndex: 'completionPercentage',
       key: 'progress',
       render: (percentage: number) => (
@@ -239,25 +234,25 @@ const ScientificReportsValidationPage: React.FC = () => {
       ),
     },
     {
-      title: 'Hours',
+      title: t('common:label.hours'),
       dataIndex: 'equivalentHours',
       key: 'equivalentHours',
       render: (hours: number) => `${hours || 0}h`,
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => getStatusTag(status),
     },
     {
-      title: 'Submitted At',
+      title: t('head:scientificReports.submittedAt'),
       dataIndex: 'submittedAt',
       key: 'submittedAt',
       render: (date: string) => (date ? dayjs(date).format('MMM DD, YYYY HH:mm') : '-'),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       render: (_: any, record: TeacherScientificReport) => (
         <Space>
@@ -267,7 +262,7 @@ const ScientificReportsValidationPage: React.FC = () => {
             size="small"
             onClick={() => handleViewDetails(record)}
           >
-            View
+            {t('common:button.view')}
           </Button>
           {record.status === 'submitted' && (
             <>
@@ -277,7 +272,7 @@ const ScientificReportsValidationPage: React.FC = () => {
                 size="small"
                 onClick={() => handleValidate(record.id)}
               >
-                Validate
+                {t('common:button.validate')}
               </Button>
               <Button
                 danger
@@ -285,7 +280,7 @@ const ScientificReportsValidationPage: React.FC = () => {
                 size="small"
                 onClick={() => handleReject(record.id)}
               >
-                Reject
+                {t('common:button.reject')}
               </Button>
             </>
           )}
@@ -294,10 +289,9 @@ const ScientificReportsValidationPage: React.FC = () => {
     },
   ];
 
-  // Columns for flat view (all reports)
   const allReportsColumns: ColumnsType<TeacherScientificReport> = [
     {
-      title: 'Task Name',
+      title: t('head:scientificReports.taskName'),
       dataIndex: ['scientificTask', 'taskName'],
       key: 'taskName',
       render: (text: string) => (
@@ -310,7 +304,6 @@ const ScientificReportsValidationPage: React.FC = () => {
     ...teacherColumns,
   ];
 
-  // Calculate statistics
   const stats = {
     total: reports.length,
     inProgress: reports.filter(r => r.status === 'in_progress').length,
@@ -323,31 +316,31 @@ const ScientificReportsValidationPage: React.FC = () => {
     <MainLayout>
       <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: '24px' }}>
-          <h1>Scientific Activities Management</h1>
-          <p>Review and validate scientific task reports submitted by teachers</p>
+          <h1>{t('head:scientificReports.title')}</h1>
+          <p>{t('head:scientificReports.desc')}</p>
         </div>
 
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
           <Card>
-            <Statistic title="Total Reports" value={stats.total} />
+            <Statistic title={t('head:scientificReports.totalReports')} value={stats.total} />
           </Card>
           <Card>
             <Statistic
-              title="In Progress"
+              title={t('head:scientificReports.inProgress')}
               value={stats.inProgress}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
           <Card>
             <Statistic
-              title="Awaiting Validation"
+              title={t('head:scientificReports.awaitingValidation')}
               value={stats.submitted}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
           <Card>
             <Statistic
-              title="Validated"
+              title={t('domain:status.validated')}
               value={stats.validated}
               valueStyle={{ color: '#52c41a' }}
               prefix={<CheckCircleOutlined />}
@@ -355,7 +348,7 @@ const ScientificReportsValidationPage: React.FC = () => {
           </Card>
           <Card>
             <Statistic
-              title="Rejected"
+              title={t('domain:status.rejected')}
               value={stats.rejected}
               valueStyle={{ color: '#ff4d4f' }}
               prefix={<CloseCircleOutlined />}
@@ -364,7 +357,7 @@ const ScientificReportsValidationPage: React.FC = () => {
         </div>
 
         <Tabs activeKey={viewMode} onChange={(key) => setViewMode(key as 'tasks' | 'all')}>
-          <TabPane tab="By Tasks" key="tasks">
+          <TabPane tab={t('head:scientificReports.byTasks')} key="tasks">
             {loading ? (
               <Card loading={loading} />
             ) : (
@@ -384,19 +377,19 @@ const ScientificReportsValidationPage: React.FC = () => {
                               <Space size="small">
                                 <CalendarOutlined />
                                 <span style={{ fontSize: '12px', color: '#666' }}>
-                                  Deadline: {dayjs(taskGroup.deadline).format('MMM DD, YYYY')}
+                                  {t('head:scientificReports.deadlineLabel')} {dayjs(taskGroup.deadline).format('MMM DD, YYYY')}
                                 </span>
                               </Space>
                               <Space size="small">
                                 <UserOutlined />
                                 <span style={{ fontSize: '12px', color: '#666' }}>
-                                  {taskGroup.totalTeachers} Teachers
+                                  {taskGroup.totalTeachers} {t('head:scientificReports.teachersLabel')}
                                 </span>
                               </Space>
                               <Space size="small">
                                 <FieldTimeOutlined />
                                 <span style={{ fontSize: '12px', color: '#666', fontWeight: 'bold' }}>
-                                  {taskGroup.totalEquivalentHours.toFixed(1)} hours total
+                                  {taskGroup.totalEquivalentHours.toFixed(1)} {t('head:scientificReports.hoursTotal')}
                                 </span>
                               </Space>
                             </Space>
@@ -404,10 +397,10 @@ const ScientificReportsValidationPage: React.FC = () => {
                         </div>
                         <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                           <Space size="middle">
-                            <Tag color="blue">{taskGroup.inProgressCount} In Progress</Tag>
-                            <Tag color="orange">{taskGroup.submittedCount} Submitted</Tag>
-                            <Tag color="green">{taskGroup.validatedCount} Validated</Tag>
-                            <Tag color="red">{taskGroup.rejectedCount} Rejected</Tag>
+                            <Tag color="blue">{taskGroup.inProgressCount} {t('domain:status.in_progress')}</Tag>
+                            <Tag color="orange">{taskGroup.submittedCount} {t('domain:status.submitted')}</Tag>
+                            <Tag color="green">{taskGroup.validatedCount} {t('domain:status.validated')}</Tag>
+                            <Tag color="red">{taskGroup.rejectedCount} {t('domain:status.rejected')}</Tag>
                           </Space>
                           <div style={{ width: '120px' }}>
                             <Progress
@@ -422,7 +415,7 @@ const ScientificReportsValidationPage: React.FC = () => {
                     <div style={{ padding: '16px 0' }}>
                       {taskGroup.taskDescription && (
                         <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-                          <strong>Description:</strong> {taskGroup.taskDescription}
+                          <strong>{t('common:label.description')}:</strong> {taskGroup.taskDescription}
                         </div>
                       )}
                       <Table
@@ -438,7 +431,7 @@ const ScientificReportsValidationPage: React.FC = () => {
               </Collapse>
             )}
           </TabPane>
-          <TabPane tab="All Reports" key="all">
+          <TabPane tab={t('head:scientificReports.allReports')} key="all">
             <Table
               columns={allReportsColumns}
               dataSource={reports}
@@ -449,115 +442,114 @@ const ScientificReportsValidationPage: React.FC = () => {
           </TabPane>
         </Tabs>
 
-      {/* Detail Modal */}
-      <Modal
-        title="Report Details"
-        open={detailModalVisible}
-        onCancel={() => setDetailModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            Close
-          </Button>,
-          ...(selectedReport?.status === 'submitted' ? [
-            <Button
-              key="reject"
-              danger
-              icon={<CloseCircleOutlined />}
-              onClick={() => handleReject(selectedReport.id)}
-            >
-              Reject
+        <Modal
+          title={t('head:scientificReports.reportDetails')}
+          open={detailModalVisible}
+          onCancel={() => setDetailModalVisible(false)}
+          footer={[
+            <Button key="close" onClick={() => setDetailModalVisible(false)}>
+              {t('common:button.close')}
             </Button>,
-            <Button
-              key="validate"
-              type="primary"
-              icon={<CheckCircleOutlined />}
-              onClick={() => handleValidate(selectedReport.id)}
-            >
-              Validate
-            </Button>,
-          ] : []),
-        ]}
-        width={800}
-      >
-        {selectedReport && (
-          <div>
-            <h3>Task Information</h3>
-            <Descriptions column={1} bordered style={{ marginBottom: '24px' }}>
-              <Descriptions.Item label="Task Name">
-                {selectedReport.scientificTask?.taskName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Task Description">
-                {selectedReport.scientificTask?.taskDescription || 'No description'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Deadline">
-                {dayjs(selectedReport.scientificTask?.deadline).format('MMM DD, YYYY')}
-              </Descriptions.Item>
-            </Descriptions>
+            ...(selectedReport?.status === 'submitted' ? [
+              <Button
+                key="reject"
+                danger
+                icon={<CloseCircleOutlined />}
+                onClick={() => handleReject(selectedReport.id)}
+              >
+                {t('common:button.reject')}
+              </Button>,
+              <Button
+                key="validate"
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleValidate(selectedReport.id)}
+              >
+                {t('common:button.validate')}
+              </Button>,
+            ] : []),
+          ]}
+          width={800}
+        >
+          {selectedReport && (
+            <div>
+              <h3>{t('head:scientificReports.taskInfo')}</h3>
+              <Descriptions column={1} bordered style={{ marginBottom: '24px' }}>
+                <Descriptions.Item label={t('head:scientificReports.taskName')}>
+                  {selectedReport.scientificTask?.taskName}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('head:scientificReports.taskDescription')}>
+                  {selectedReport.scientificTask?.taskDescription || t('head:scientificReports.noDescription')}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('common:label.deadline')}>
+                  {dayjs(selectedReport.scientificTask?.deadline).format('MMM DD, YYYY')}
+                </Descriptions.Item>
+              </Descriptions>
 
-            <h3>Teacher Information</h3>
-            <Descriptions column={1} bordered style={{ marginBottom: '24px' }}>
-              <Descriptions.Item label="Name">
-                {selectedReport.teacher?.userInfo?.firstName}{' '}
-                {selectedReport.teacher?.userInfo?.lastName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Department">
-                {selectedReport.teacher?.teacherInfo?.department?.name}
-              </Descriptions.Item>
-            </Descriptions>
+              <h3>{t('head:scientificReports.teacherInfo')}</h3>
+              <Descriptions column={1} bordered style={{ marginBottom: '24px' }}>
+                <Descriptions.Item label={t('head:scientificReports.teacherName')}>
+                  {selectedReport.teacher?.userInfo?.firstName}{' '}
+                  {selectedReport.teacher?.userInfo?.lastName}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('common:label.department')}>
+                  {selectedReport.teacher?.teacherInfo?.department?.name}
+                </Descriptions.Item>
+              </Descriptions>
 
-            <h3>Report Details</h3>
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="Status">
-                {getStatusTag(selectedReport.status)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Completion">
-                <Progress percent={selectedReport.completionPercentage} />
-              </Descriptions.Item>
-              <Descriptions.Item label="Execution Status">
-                <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {selectedReport.executionStatus || 'No status provided'}
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Equivalent Hours">
-                <strong>{selectedReport.equivalentHours || 0}</strong> hours worked on this task
-              </Descriptions.Item>
-              {selectedReport.fileName && (
-                <Descriptions.Item label="Attachment">
-                  <Space>
-                    <Tag color="blue" icon={<FileTextOutlined />}>
-                      {selectedReport.fileName}
-                    </Tag>
-                    <Button
-                      type="primary"
-                      size="small"
-                      icon={<DownloadOutlined />}
-                      onClick={() => selectedReport.fileName && handleDownload(selectedReport.id, selectedReport.fileName)}
-                    >
-                      Download
-                    </Button>
-                  </Space>
+              <h3>{t('head:scientificReports.reportDetails')}</h3>
+              <Descriptions column={1} bordered>
+                <Descriptions.Item label={t('common:label.status')}>
+                  {getStatusTag(selectedReport.status)}
                 </Descriptions.Item>
-              )}
-              <Descriptions.Item label="Submitted At">
-                {selectedReport.submittedAt
-                  ? dayjs(selectedReport.submittedAt).format('MMM DD, YYYY HH:mm')
-                  : '-'}
-              </Descriptions.Item>
-              {selectedReport.validatedAt && (
-                <Descriptions.Item label="Validated At">
-                  {dayjs(selectedReport.validatedAt).format('MMM DD, YYYY HH:mm')}
+                <Descriptions.Item label={t('head:scientificReports.completion')}>
+                  <Progress percent={selectedReport.completionPercentage} />
                 </Descriptions.Item>
-              )}
-              {selectedReport.validator && (
-                <Descriptions.Item label="Validated By">
-                  {selectedReport.validator.userInfo?.firstName}{' '}
-                  {selectedReport.validator.userInfo?.lastName}
+                <Descriptions.Item label={t('head:scientificReports.executionStatus')}>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>
+                    {selectedReport.executionStatus || t('head:scientificReports.noStatus')}
+                  </div>
                 </Descriptions.Item>
-              )}
-            </Descriptions>
-          </div>
-        )}
-      </Modal>
+                <Descriptions.Item label={t('head:scientificReports.equivalentHours')}>
+                  <strong>{selectedReport.equivalentHours || 0}</strong> {t('head:scientificReports.hoursWorked')}
+                </Descriptions.Item>
+                {selectedReport.fileName && (
+                  <Descriptions.Item label={t('head:scientificReports.attachment')}>
+                    <Space>
+                      <Tag color="blue" icon={<FileTextOutlined />}>
+                        {selectedReport.fileName}
+                      </Tag>
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<DownloadOutlined />}
+                        onClick={() => selectedReport.fileName && handleDownload(selectedReport.id, selectedReport.fileName)}
+                      >
+                        {t('common:button.download')}
+                      </Button>
+                    </Space>
+                  </Descriptions.Item>
+                )}
+                <Descriptions.Item label={t('head:scientificReports.submittedAt')}>
+                  {selectedReport.submittedAt
+                    ? dayjs(selectedReport.submittedAt).format('MMM DD, YYYY HH:mm')
+                    : '-'}
+                </Descriptions.Item>
+                {selectedReport.validatedAt && (
+                  <Descriptions.Item label={t('head:scientificReports.validatedAt')}>
+                    {dayjs(selectedReport.validatedAt).format('MMM DD, YYYY HH:mm')}
+                  </Descriptions.Item>
+                )}
+                {selectedReport.validator && (
+                  <Descriptions.Item label={t('head:scientificReports.validatedBy')}>
+                    {selectedReport.validator.userInfo?.firstName}{' '}
+                    {selectedReport.validator.userInfo?.lastName}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </div>
+          )}
+        </Modal>
       </div>
     </MainLayout>
   );

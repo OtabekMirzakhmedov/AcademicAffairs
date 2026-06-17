@@ -1,5 +1,6 @@
 import { Modal, Tabs } from 'antd';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import TeacherRequirementsTab from './TeacherRequirementsTab';
 import TeacherAccountTab from './TeacherAccountTab';
 import type { User } from '../../../types';
@@ -12,34 +13,27 @@ interface TeacherEditModalProps {
 }
 
 const TeacherEditModal = ({ open, onCancel, onSuccess, teacher }: TeacherEditModalProps) => {
+  const { t } = useTranslation(['head', 'auth']);
   const [activeTab, setActiveTab] = useState('requirements');
-
-  const handleSuccess = () => {
-    onSuccess();
-  };
 
   if (!teacher) return null;
 
   const tabItems = [
     {
       key: 'requirements',
-      label: 'Teaching Requirements',
-      children: (
-        <TeacherRequirementsTab teacher={teacher} onSuccess={handleSuccess} />
-      ),
+      label: t('head:requirements.title'),
+      children: <TeacherRequirementsTab teacher={teacher} onSuccess={onSuccess} />,
     },
     {
       key: 'account',
-      label: 'Account Information',
-      children: (
-        <TeacherAccountTab teacher={teacher} onSuccess={handleSuccess} />
-      ),
+      label: t('auth:account.title'),
+      children: <TeacherAccountTab teacher={teacher} onSuccess={onSuccess} />,
     },
   ];
 
   return (
     <Modal
-      title={`Edit Teacher: ${teacher?.userInfo?.firstName} ${teacher?.userInfo?.lastName}`}
+      title={`${teacher?.userInfo?.firstName} ${teacher?.userInfo?.lastName}`}
       open={open}
       onCancel={onCancel}
       footer={null}
@@ -47,11 +41,7 @@ const TeacherEditModal = ({ open, onCancel, onSuccess, teacher }: TeacherEditMod
       destroyOnClose
       style={{ top: 20 }}
     >
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={tabItems}
-      />
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
     </Modal>
   );
 };

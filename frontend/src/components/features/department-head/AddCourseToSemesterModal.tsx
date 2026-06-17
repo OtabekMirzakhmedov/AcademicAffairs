@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Form, Select, Switch, message } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import programsService from '../../../services/programs.service';
 import type { Course } from '../../../types';
 
@@ -21,13 +22,14 @@ const AddCourseToSemesterModal = ({
   semester,
   availableCourses,
 }: AddCourseToSemesterModalProps) => {
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   const getSemesterLabel = (sem: number) => {
     const year = Math.ceil(sem / 2);
     const semInYear = sem % 2 === 1 ? 1 : 2;
-    return `Year ${year} - Semester ${semInYear}`;
+    return t('head:program.semesterLabel', { year, sem: semInYear });
   };
 
   const handleSubmit = async (values: any) => {
@@ -38,12 +40,12 @@ const AddCourseToSemesterModal = ({
         isRequired: values.isRequired !== false,
         recommendedSemester: semester,
       });
-      message.success('Course added to program');
+      message.success(t('head:program.addCourseSuccess'));
       form.resetFields();
       onSuccess();
     } catch (error: any) {
       message.error(
-        error?.response?.data?.message || 'Failed to add course to program'
+        error?.response?.data?.message || t('head:program.addCourseFailed')
       );
     } finally {
       setLoading(false);
@@ -60,14 +62,14 @@ const AddCourseToSemesterModal = ({
       title={
         <span>
           <BookOutlined style={{ marginRight: 8 }} />
-          Add Course to {getSemesterLabel(semester)}
+          {t('head:program.addCourseTitle', { semesterLabel: getSemesterLabel(semester) })}
         </span>
       }
       open={open}
       onCancel={handleClose}
       onOk={() => form.submit()}
-      okText="Add Course"
-      cancelText="Cancel"
+      okText={t('head:activities.addCourse')}
+      cancelText={t('common:button.cancel')}
       confirmLoading={loading}
       width={500}
     >
@@ -79,11 +81,11 @@ const AddCourseToSemesterModal = ({
       >
         <Form.Item
           name="courseId"
-          label="Select Course"
-          rules={[{ required: true, message: 'Please select a course' }]}
+          label={t('common:label.course')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
           <Select
-            placeholder="Search and select a course"
+            placeholder={t('head:program.courseSearchPlaceholder')}
             size="large"
             showSearch
             filterOption={(input, option) =>
@@ -95,20 +97,16 @@ const AddCourseToSemesterModal = ({
             }))}
             notFoundContent={
               availableCourses.length === 0
-                ? 'No available courses. All courses are already in this program.'
-                : 'No matching courses found.'
+                ? t('head:program.allCoursesAdded')
+                : t('head:program.noCourseMatches')
             }
           />
         </Form.Item>
 
-        <Form.Item
-          name="isRequired"
-          label="Course Type"
-          valuePropName="checked"
-        >
+        <Form.Item name="isRequired" label={t('head:program.courseType')} valuePropName="checked">
           <Switch
-            checkedChildren="Required"
-            unCheckedChildren="Elective"
+            checkedChildren={t('domain:courseType.required')}
+            unCheckedChildren={t('domain:courseType.elective')}
             defaultChecked
           />
         </Form.Item>

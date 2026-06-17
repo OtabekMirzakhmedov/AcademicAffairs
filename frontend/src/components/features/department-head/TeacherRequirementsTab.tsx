@@ -1,5 +1,6 @@
 import { Form, Select, InputNumber, message, Divider, Button } from 'antd';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import usersService, { type UpdateTeacherInfoRequest } from '../../../services/users.service';
 import type { User } from '../../../types';
 
@@ -9,6 +10,7 @@ interface TeacherRequirementsTabProps {
 }
 
 const TeacherRequirementsTab = ({ teacher, onSuccess }: TeacherRequirementsTabProps) => {
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +18,6 @@ const TeacherRequirementsTab = ({ teacher, onSuccess }: TeacherRequirementsTabPr
     if (teacher) {
       form.setFieldsValue({
         employmentType: teacher.teacherInfo?.employmentType || undefined,
-        // Use ?? instead of || to handle 0 values correctly
         mandatoryHoursPerPeriod: teacher.teacherInfo?.mandatoryHoursPerPeriod ?? 0,
         mandatoryExtracurricularHours: teacher.teacherInfo?.mandatoryExtracurricularHours ?? 0,
         mandatoryConferenceArticles: teacher.teacherInfo?.mandatoryConferenceArticles ?? 0,
@@ -35,46 +36,25 @@ const TeacherRequirementsTab = ({ teacher, onSuccess }: TeacherRequirementsTabPr
     try {
       setLoading(true);
 
-      // Clean up the values - remove undefined/null and ensure proper types
       const cleanedValues: UpdateTeacherInfoRequest = {};
 
-      if (values.employmentType !== undefined && values.employmentType !== null) {
-        cleanedValues.employmentType = values.employmentType;
-      }
-
-      if (values.mandatoryHoursPerPeriod !== undefined && values.mandatoryHoursPerPeriod !== null) {
-        cleanedValues.mandatoryHoursPerPeriod = Number(values.mandatoryHoursPerPeriod);
-      }
-
-      if (values.mandatoryExtracurricularHours !== undefined && values.mandatoryExtracurricularHours !== null) {
-        cleanedValues.mandatoryExtracurricularHours = Math.floor(Number(values.mandatoryExtracurricularHours));
-      }
-
-      if (values.mandatoryConferenceArticles !== undefined && values.mandatoryConferenceArticles !== null) {
-        cleanedValues.mandatoryConferenceArticles = Math.floor(Number(values.mandatoryConferenceArticles));
-      }
-
-      if (values.mandatoryNationalArticles !== undefined && values.mandatoryNationalArticles !== null) {
-        cleanedValues.mandatoryNationalArticles = Math.floor(Number(values.mandatoryNationalArticles));
-      }
-
-      if (values.mandatoryScopusArticles !== undefined && values.mandatoryScopusArticles !== null) {
-        cleanedValues.mandatoryScopusArticles = Math.floor(Number(values.mandatoryScopusArticles));
-      }
-
-      if (values.mandatoryDocumentation !== undefined && values.mandatoryDocumentation !== null) {
-        cleanedValues.mandatoryDocumentation = Math.floor(Number(values.mandatoryDocumentation));
-      }
+      if (values.employmentType != null) cleanedValues.employmentType = values.employmentType;
+      if (values.mandatoryHoursPerPeriod != null) cleanedValues.mandatoryHoursPerPeriod = Number(values.mandatoryHoursPerPeriod);
+      if (values.mandatoryExtracurricularHours != null) cleanedValues.mandatoryExtracurricularHours = Math.floor(Number(values.mandatoryExtracurricularHours));
+      if (values.mandatoryConferenceArticles != null) cleanedValues.mandatoryConferenceArticles = Math.floor(Number(values.mandatoryConferenceArticles));
+      if (values.mandatoryNationalArticles != null) cleanedValues.mandatoryNationalArticles = Math.floor(Number(values.mandatoryNationalArticles));
+      if (values.mandatoryScopusArticles != null) cleanedValues.mandatoryScopusArticles = Math.floor(Number(values.mandatoryScopusArticles));
+      if (values.mandatoryDocumentation != null) cleanedValues.mandatoryDocumentation = Math.floor(Number(values.mandatoryDocumentation));
 
       await usersService.updateTeacherInfo(teacher.id, cleanedValues);
-      message.success('Teacher requirements updated successfully');
+      message.success(t('head:requirements.updateSuccess'));
       onSuccess();
     } catch (error: any) {
-      const errorMessage =
+      message.error(
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
-        'Failed to update teacher requirements';
-      message.error(errorMessage);
+        t('head:requirements.updateFailed')
+      );
     } finally {
       setLoading(false);
     }
@@ -82,112 +62,80 @@ const TeacherRequirementsTab = ({ teacher, onSuccess }: TeacherRequirementsTabPr
 
   return (
     <div style={{ padding: '24px 0' }}>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        validateTrigger="onBlur"
-      >
-        <Form.Item name="employmentType" label="Employment Type">
-          <Select placeholder="Select employment type" allowClear>
-            <Select.Option value="full-time">Full-Time</Select.Option>
-            <Select.Option value="part-time">Part-Time</Select.Option>
-            <Select.Option value="contract">Contract</Select.Option>
+      <Form form={form} layout="vertical" onFinish={handleSubmit} validateTrigger="onBlur">
+        <Form.Item name="employmentType" label={t('head:requirements.employmentType')}>
+          <Select placeholder={t('head:requirements.employmentType')} allowClear>
+            <Select.Option value="full-time">{t('domain:employment.full-time')}</Select.Option>
+            <Select.Option value="part-time">{t('domain:employment.part-time')}</Select.Option>
+            <Select.Option value="contract">{t('domain:employment.contract')}</Select.Option>
           </Select>
         </Form.Item>
 
-        <Divider orientation="left">Teaching Requirements</Divider>
+        <Divider orientation="left">{t('head:requirements.title')}</Divider>
 
-        <Form.Item
-          name="mandatoryHoursPerPeriod"
-          label="Mandatory Teaching Hours Per Period"
-        >
+        <Form.Item name="mandatoryHoursPerPeriod" label={t('head:requirements.mandatoryHours')}>
           <InputNumber
-            placeholder="Enter mandatory teaching hours"
+            placeholder={t('head:requirements.mandatoryHoursPlaceholder')}
             style={{ width: '100%' }}
             min={0}
             step={1}
-            addonAfter="hours"
+            addonAfter={t('common:label.hours')}
           />
         </Form.Item>
 
         <Form.Item
           name="mandatoryExtracurricularHours"
-          label="Mandatory Extracurricular Hours"
-          tooltip="Required hours for extracurricular activities"
+          label={t('head:requirements.extracurricular')}
+          tooltip={t('head:requirements.extracurricularTooltip')}
         >
           <InputNumber
             placeholder="0"
             style={{ width: '100%' }}
             min={0}
             step={1}
-            addonAfter="hours"
+            addonAfter={t('common:label.hours')}
           />
         </Form.Item>
 
-        <Divider orientation="left">Research Publication Requirements</Divider>
+        <Divider orientation="left">{t('head:requirements.researchPublications')}</Divider>
 
         <Form.Item
           name="mandatoryConferenceArticles"
-          label="Mandatory Conference Articles"
-          tooltip="Required number of conference papers/articles"
+          label={t('head:requirements.conferenceArticles')}
+          tooltip={t('head:requirements.conferenceArticlesTooltip')}
         >
-          <InputNumber
-            placeholder="0"
-            style={{ width: '100%' }}
-            min={0}
-            step={1}
-            addonAfter="articles"
-          />
+          <InputNumber placeholder="0" style={{ width: '100%' }} min={0} step={1} />
         </Form.Item>
 
         <Form.Item
           name="mandatoryNationalArticles"
-          label="Mandatory National Journal Articles"
-          tooltip="Required number of articles in national journals"
+          label={t('head:requirements.nationalArticles')}
+          tooltip={t('head:requirements.nationalArticlesTooltip')}
         >
-          <InputNumber
-            placeholder="0"
-            style={{ width: '100%' }}
-            min={0}
-            step={1}
-            addonAfter="articles"
-          />
+          <InputNumber placeholder="0" style={{ width: '100%' }} min={0} step={1} />
         </Form.Item>
 
         <Form.Item
           name="mandatoryScopusArticles"
-          label="Mandatory Scopus-Indexed Articles"
-          tooltip="Required number of articles in Scopus-indexed journals"
+          label={t('head:requirements.scopusArticles')}
+          tooltip={t('head:requirements.scopusArticlesTooltip')}
         >
-          <InputNumber
-            placeholder="0"
-            style={{ width: '100%' }}
-            min={0}
-            step={1}
-            addonAfter="articles"
-          />
+          <InputNumber placeholder="0" style={{ width: '100%' }} min={0} step={1} />
         </Form.Item>
 
-        <Divider orientation="left">Documentation Requirements</Divider>
+        <Divider orientation="left">{t('head:requirements.documentationSection')}</Divider>
 
         <Form.Item
           name="mandatoryDocumentation"
-          label="Mandatory Documentation"
-          tooltip="Required number of documentation items"
+          label={t('head:requirements.documentation')}
+          tooltip={t('head:requirements.documentationTooltip')}
         >
-          <InputNumber
-            placeholder="0"
-            style={{ width: '100%' }}
-            min={0}
-            step={1}
-            addonAfter="items"
-          />
+          <InputNumber placeholder="0" style={{ width: '100%' }} min={0} step={1} />
         </Form.Item>
 
         <Form.Item style={{ marginTop: 24 }}>
           <Button type="primary" htmlType="submit" loading={loading} block>
-            Save Requirements
+            {t('head:requirements.save')}
           </Button>
         </Form.Item>
       </Form>

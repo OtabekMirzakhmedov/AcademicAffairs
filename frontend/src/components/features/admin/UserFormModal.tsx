@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import usersService, { type CreateUserRequest, type UpdateUserRequest } from '../../../services/users.service';
 import type { User, Role, Department } from '../../../types';
 
@@ -21,6 +22,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
   roles,
   departments,
 }) => {
+  const { t } = useTranslation(['admin', 'common', 'domain']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | undefined>(undefined);
@@ -66,7 +68,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           departmentId: values.departmentId,
         };
         await usersService.update(user.id, updateData);
-        message.success('User updated successfully!');
+        message.success(t('admin:users.updateSuccess'));
       } else {
         // Create new user
         const createData: CreateUserRequest = {
@@ -82,7 +84,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           departmentId: values.departmentId,
         };
         await usersService.create(createData);
-        message.success('User created successfully!');
+        message.success(t('admin:users.createSuccess'));
       }
 
       form.resetFields();
@@ -90,7 +92,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
       onClose();
     } catch (error: any) {
       message.error(
-        error?.response?.data?.error?.message || 'Failed to save user'
+        error?.response?.data?.error?.message || t('admin:users.saveFailed')
       );
     } finally {
       setLoading(false);
@@ -109,13 +111,13 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 
   return (
     <Modal
-      title={user ? 'Edit User' : 'Create New User'}
+      title={user ? t('admin:users.editTitle') : t('admin:users.createTitle')}
       open={open}
       onCancel={onClose}
       onOk={() => form.submit()}
       confirmLoading={loading}
-      okText={user ? 'Update' : 'Create'}
-      cancelText="Cancel"
+      okText={user ? t('common:button.update') : t('common:button.create')}
+      cancelText={t('common:button.cancel')}
       width={600}
     >
       <Form
@@ -124,129 +126,93 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
         onFinish={handleSubmit}
         autoComplete="off"
       >
-        {/* Login */}
         <Form.Item
           name="login"
-          label="Username"
+          label={t('admin:users.login')}
           rules={[
-            { required: true, message: 'Please enter username!' },
-            { min: 3, message: 'Username must be at least 3 characters' },
+            { required: true, message: t('common:label.required') },
+            { min: 3, message: t('admin:users.loginMinLength') },
           ]}
         >
-          <Input
-            prefix={<UserOutlined />}
-            placeholder="Enter username"
-            autoComplete="off"
-          />
+          <Input prefix={<UserOutlined />} placeholder={t('admin:users.loginPlaceholder')} autoComplete="off" />
         </Form.Item>
 
-        {/* Password (only for create) */}
         {!user && (
           <Form.Item
             name="password"
-            label="Password"
+            label={t('admin:users.password')}
             rules={[
-              { required: true, message: 'Please enter password!' },
-              { min: 6, message: 'Password must be at least 6 characters' },
+              { required: true, message: t('common:label.required') },
+              { min: 6, message: t('admin:users.passwordMinLength') },
             ]}
           >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Enter password"
-              autoComplete="new-password"
-            />
+            <Input.Password prefix={<LockOutlined />} placeholder={t('admin:users.passwordPlaceholder')} autoComplete="new-password" />
           </Form.Item>
         )}
 
-        {/* Role */}
         <Form.Item
           name="roleId"
-          label="Role"
-          rules={[{ required: true, message: 'Please select role!' }]}
+          label={t('admin:users.role')}
+          rules={[{ required: true, message: t('admin:users.roleRequired') }]}
         >
           <Select
-            placeholder="Select role"
+            placeholder={t('admin:users.rolePlaceholder')}
             onChange={handleRoleChange}
             options={roles.map((role) => ({
-              label: role.name === 'admin' ? 'Administrator' :
-                     role.name === 'departmenthead' ? 'Department Head' :
-                     role.name === 'teacher' ? 'Teacher' : role.name,
+              label: t(`domain:role.${role.name}`, { defaultValue: role.name }),
               value: role.id,
             }))}
           />
         </Form.Item>
 
-        {/* First Name */}
         <Form.Item
           name="firstName"
-          label="First Name"
-          rules={[{ required: true, message: 'Please enter first name!' }]}
+          label={t('admin:users.firstName')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter first name" />
+          <Input placeholder={t('admin:users.firstNamePlaceholder')} />
         </Form.Item>
 
-        {/* Last Name */}
         <Form.Item
           name="lastName"
-          label="Last Name"
-          rules={[{ required: true, message: 'Please enter last name!' }]}
+          label={t('admin:users.lastName')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter last name" />
+          <Input placeholder={t('admin:users.lastNamePlaceholder')} />
         </Form.Item>
 
-        {/* Email 1 */}
         <Form.Item
           name="email1"
-          label="Primary Email"
-          rules={[{ type: 'email', message: 'Please enter valid email!' }]}
+          label={t('admin:users.primaryEmail')}
+          rules={[{ type: 'email', message: t('admin:users.emailInvalid') }]}
         >
-          <Input
-            prefix={<MailOutlined />}
-            placeholder="Enter primary email"
-            type="email"
-          />
+          <Input prefix={<MailOutlined />} placeholder={t('admin:users.primaryEmailPlaceholder')} type="email" />
         </Form.Item>
 
-        {/* Email 2 */}
         <Form.Item
           name="email2"
-          label="Secondary Email"
-          rules={[{ type: 'email', message: 'Please enter valid email!' }]}
+          label={t('admin:users.secondaryEmail')}
+          rules={[{ type: 'email', message: t('admin:users.emailInvalid') }]}
         >
-          <Input
-            prefix={<MailOutlined />}
-            placeholder="Enter secondary email (optional)"
-            type="email"
-          />
+          <Input prefix={<MailOutlined />} placeholder={t('admin:users.secondaryEmailPlaceholder')} type="email" />
         </Form.Item>
 
-        {/* Phone 1 */}
-        <Form.Item name="phone1" label="Primary Phone">
-          <Input
-            prefix={<PhoneOutlined />}
-            placeholder="Enter primary phone"
-          />
+        <Form.Item name="phone1" label={t('admin:users.primaryPhone')}>
+          <Input prefix={<PhoneOutlined />} placeholder={t('admin:users.primaryPhonePlaceholder')} />
         </Form.Item>
 
-        {/* Phone 2 */}
-        <Form.Item name="phone2" label="Secondary Phone">
-          <Input
-            prefix={<PhoneOutlined />}
-            placeholder="Enter secondary phone (optional)"
-          />
+        <Form.Item name="phone2" label={t('admin:users.secondaryPhone')}>
+          <Input prefix={<PhoneOutlined />} placeholder={t('admin:users.secondaryPhonePlaceholder')} />
         </Form.Item>
 
-        {/* Department (only for teachers) */}
         {selectedRole === 'teacher' && (
           <Form.Item
             name="departmentId"
-            label="Department"
-            rules={[
-              { required: true, message: 'Please select department for teacher!' },
-            ]}
+            label={t('common:label.department')}
+            rules={[{ required: true, message: t('admin:users.departmentRequired') }]}
           >
             <Select
-              placeholder="Select department"
+              placeholder={t('admin:users.departmentPlaceholder')}
               options={departments.map((dept) => ({
                 label: dept.name,
                 value: dept.id,

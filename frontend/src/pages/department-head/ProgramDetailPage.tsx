@@ -22,6 +22,7 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import ProgramFormModal from '../../components/features/department-head/ProgramFormModal';
 import AddCourseToSemesterModal from '../../components/features/department-head/AddCourseToSemesterModal';
@@ -36,6 +37,7 @@ interface SemesterCourse extends ProgramCourse {
 }
 
 const ProgramDetailPage = () => {
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ const ProgramDetailPage = () => {
       const data = await programsService.getOne(Number(id));
       setProgram(data);
     } catch (error) {
-      message.error('Failed to fetch program details');
+      message.error(t('head:program.fetchFailed'));
       navigate('/department/activities');
     } finally {
       setLoading(false);
@@ -74,7 +76,7 @@ const ProgramDetailPage = () => {
       const data = await coursesService.getAll();
       setCourses(data);
     } catch (error) {
-      message.error('Failed to fetch courses');
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
@@ -83,7 +85,7 @@ const ProgramDetailPage = () => {
       const data = await departmentsService.getAll();
       setDepartments(data);
     } catch (error) {
-      message.error('Failed to fetch departments');
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
@@ -95,17 +97,17 @@ const ProgramDetailPage = () => {
   const handleRemoveCourse = (courseId: number) => {
     if (!program) return;
     Modal.confirm({
-      title: 'Remove Course',
-      content: 'Are you sure you want to remove this course from the program?',
-      okText: 'Remove',
+      title: t('head:program.removeCourseTitle'),
+      content: t('head:program.removeCourseConfirm'),
+      okText: t('common:button.remove'),
       okType: 'danger',
       onOk: async () => {
         try {
           await programsService.removeCourse(program.id, courseId);
-          message.success('Course removed from program');
+          message.success(t('head:program.removeCourseSuccess'));
           fetchProgram();
         } catch (error) {
-          message.error('Failed to remove course');
+          message.error(t('head:program.removeCourseFailed'));
         }
       },
     });
@@ -139,7 +141,7 @@ const ProgramDetailPage = () => {
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'Course Name',
+      title: t('head:activities.courseName'),
       key: 'name',
       render: (_, record) => (
         <span>
@@ -149,7 +151,7 @@ const ProgramDetailPage = () => {
       ),
     },
     {
-      title: 'Lecture Hours',
+      title: t('head:course.lectureHours'),
       key: 'lectureHours',
       width: 120,
       align: 'center',
@@ -161,7 +163,7 @@ const ProgramDetailPage = () => {
       ),
     },
     {
-      title: 'Practice Hours',
+      title: t('head:course.practiceHours'),
       key: 'practiceHours',
       width: 120,
       align: 'center',
@@ -173,21 +175,21 @@ const ProgramDetailPage = () => {
       ),
     },
     {
-      title: 'Type',
+      title: t('common:label.type'),
       key: 'isRequired',
       width: 100,
       render: (_, record) => (
         <Tag color={record.isRequired ? 'blue' : 'orange'}>
-          {record.isRequired ? 'Required' : 'Elective'}
+          {record.isRequired ? t('domain:courseType.required') : t('domain:courseType.elective')}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       width: 80,
       render: (_, record) => (
-        <Tooltip title="Remove from program">
+        <Tooltip title={t('head:program.removeTooltip')}>
           <Button
             type="text"
             size="small"
@@ -203,7 +205,7 @@ const ProgramDetailPage = () => {
   const getSemesterLabel = (semester: number) => {
     const year = Math.ceil(semester / 2);
     const semInYear = semester % 2 === 1 ? 1 : 2;
-    return `Year ${year} - Semester ${semInYear}`;
+    return t('head:program.semesterLabel', { year, sem: semInYear });
   };
 
   const collapseItems = Array.from({ length: totalSemesters }, (_, i) => {
@@ -215,7 +217,7 @@ const ProgramDetailPage = () => {
       label: (
         <div className="semester-header">
           <span>{getSemesterLabel(semester)}</span>
-          <Tag color="green">{semesterCourses.length} courses</Tag>
+          <Tag color="green">{t('head:program.coursesInSemester', { count: semesterCourses.length })}</Tag>
         </div>
       ),
       children: (
@@ -230,7 +232,7 @@ const ProgramDetailPage = () => {
             />
           ) : (
             <Empty
-              description="No courses in this semester"
+              description={t('head:program.noCoursesInSemester')}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -240,7 +242,7 @@ const ProgramDetailPage = () => {
             onClick={() => handleAddCourse(semester)}
             style={{ marginTop: 16 }}
           >
-            Add Course to {getSemesterLabel(semester)}
+            {t('head:program.addCourseTitle', { semesterLabel: getSemesterLabel(semester) })}
           </Button>
         </div>
       ),
@@ -269,9 +271,9 @@ const ProgramDetailPage = () => {
     return (
       <MainLayout>
         <Card>
-          <Empty description="Program not found" />
+          <Empty description={t('head:program.notFound')} />
           <Button onClick={() => navigate('/department/activities')}>
-            Back to Department
+            {t('head:program.backToDepartment')}
           </Button>
         </Card>
       </MainLayout>
@@ -293,7 +295,7 @@ const ProgramDetailPage = () => {
           onClick={() => navigate('/department/activities')}
           className="back-button"
         >
-          Back to Department
+          {t('head:program.backToDepartment')}
         </Button>
 
         <Card className="program-header-card">
@@ -306,7 +308,7 @@ const ProgramDetailPage = () => {
                 <h1>{program.name}</h1>
                 <Tag color="blue">{program.code}</Tag>
                 <Tag color={program.isActive ? 'success' : 'default'}>
-                  {program.isActive ? 'Active' : 'Inactive'}
+                  {program.isActive ? t('domain:status.active') : t('domain:status.inactive')}
                 </Tag>
               </div>
               <div className="program-meta">
@@ -323,14 +325,14 @@ const ProgramDetailPage = () => {
             <div className="program-actions">
               <Space>
                 <Button icon={<EditOutlined />} onClick={() => setEditModalOpen(true)}>
-                  Edit Program
+                  {t('head:program.editTitle')}
                 </Button>
               </Space>
             </div>
           </div>
         </Card>
 
-        <Card className="semesters-card" title="Program Curriculum">
+        <Card className="semesters-card" title={t('head:program.curriculum')}>
           <Collapse items={collapseItems} defaultActiveKey={['1']} />
         </Card>
 

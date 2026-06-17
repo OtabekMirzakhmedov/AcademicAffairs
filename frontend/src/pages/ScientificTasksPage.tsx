@@ -24,6 +24,7 @@ import {
   FieldTimeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/layout/MainLayout';
 import scientificTasksService from '../services/scientific-tasks.service';
 import type { TeacherScientificReport } from '../types';
@@ -33,6 +34,7 @@ import api from '../config/api';
 const { TextArea } = Input;
 
 const ScientificTasksPage: React.FC = () => {
+  const { t } = useTranslation(['teacher', 'common', 'domain']);
   const [reports, setReports] = useState<TeacherScientificReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -51,7 +53,7 @@ const ScientificTasksPage: React.FC = () => {
       const data = await scientificTasksService.getMyReports();
       setReports(data);
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to load scientific tasks');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -78,58 +80,40 @@ const ScientificTasksPage: React.FC = () => {
       if (!selectedReport) return;
 
       await scientificTasksService.updateReport(selectedReport.id, values);
-      message.success('Report updated successfully');
+      message.success(t('teacher:scientificTasks.updateSuccess') || 'Report updated successfully');
       setEditModalVisible(false);
       loadReports();
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to update report');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     }
   };
 
   const handleSubmit = async (reportId: number) => {
     try {
       await scientificTasksService.submitReport(reportId);
-      message.success('Report submitted successfully');
+      message.success(t('teacher:scientificTasks.submitSuccess') || 'Report submitted successfully');
       loadReports();
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to submit report');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     }
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!selectedReport) {
-      console.error('No report selected');
-      return;
-    }
-
-    console.log('handleFileUpload called with file:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: file.lastModified,
-    });
+    if (!selectedReport) return;
 
     try {
       setUploading(true);
-      console.log('Calling uploadFile service...');
       const { filePath, fileName } = await scientificTasksService.uploadFile(file);
-      console.log('Upload response:', { filePath, fileName });
 
-      console.log('Updating report with file info...');
-      await scientificTasksService.updateReport(selectedReport.id, {
-        filePath,
-        fileName,
-      });
+      await scientificTasksService.updateReport(selectedReport.id, { filePath, fileName });
 
-      message.success('File uploaded successfully');
+      message.success(t('teacher:scientificTasks.uploadSuccess') || 'File uploaded successfully');
       loadReports();
 
-      // Update the form to refresh the file info
       const updatedReport = await scientificTasksService.getReport(selectedReport.id);
       setSelectedReport(updatedReport);
     } catch (error: any) {
-      console.error('File upload error:', error);
-      message.error(error.response?.data?.message || 'Failed to upload file');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setUploading(false);
     }
@@ -141,7 +125,6 @@ const ScientificTasksPage: React.FC = () => {
         responseType: 'blob',
       });
 
-      // Create a download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -151,30 +134,27 @@ const ScientificTasksPage: React.FC = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      message.success('File downloaded successfully');
+      message.success(t('teacher:scientificTasks.downloadSuccess') || 'File downloaded successfully');
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to download file');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     }
   };
 
   const getStatusTag = (status: string) => {
-    const statusConfig: Record<string, { color: string; text: string }> = {
-      in_progress: { color: 'blue', text: 'In Progress' },
-      submitted: { color: 'orange', text: 'Submitted' },
-      validated: { color: 'green', text: 'Validated' },
-      rejected: { color: 'red', text: 'Rejected' },
+    const colors: Record<string, string> = {
+      in_progress: 'blue',
+      submitted: 'orange',
+      validated: 'green',
+      rejected: 'red',
     };
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    return <Tag color={colors[status] || 'default'}>{t(`domain:status.${status}`)}</Tag>;
   };
 
-  const isOverdue = (deadline: string) => {
-    return dayjs(deadline).isBefore(dayjs());
-  };
+  const isOverdue = (deadline: string) => dayjs(deadline).isBefore(dayjs());
 
   const columns: ColumnsType<TeacherScientificReport> = [
     {
-      title: 'Task Name',
+      title: t('teacher:scientificTasks.taskName'),
       dataIndex: ['scientificTask', 'taskName'],
       key: 'taskName',
       render: (text: string, record: TeacherScientificReport) => (
@@ -187,7 +167,7 @@ const ScientificTasksPage: React.FC = () => {
       ),
     },
     {
-      title: 'Deadline',
+      title: t('teacher:scientificTasks.deadline'),
       dataIndex: ['scientificTask', 'deadline'],
       key: 'deadline',
       render: (deadline: string) => (
@@ -200,7 +180,7 @@ const ScientificTasksPage: React.FC = () => {
       ),
     },
     {
-      title: 'Progress',
+      title: t('common:label.progress'),
       dataIndex: 'completionPercentage',
       key: 'progress',
       render: (percentage: number) => (
@@ -208,7 +188,7 @@ const ScientificTasksPage: React.FC = () => {
       ),
     },
     {
-      title: 'Hours',
+      title: t('teacher:scientificTasks.hours'),
       dataIndex: 'equivalentHours',
       key: 'equivalentHours',
       render: (hours: number) => (
@@ -219,19 +199,19 @@ const ScientificTasksPage: React.FC = () => {
       ),
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => getStatusTag(status),
     },
     {
-      title: 'Submitted At',
+      title: t('teacher:scientificTasks.submittedAt'),
       dataIndex: 'submittedAt',
       key: 'submittedAt',
       render: (date: string) => (date ? dayjs(date).format('MMM DD, YYYY HH:mm') : '-'),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       render: (_: any, record: TeacherScientificReport) => (
         <Space>
@@ -241,7 +221,7 @@ const ScientificTasksPage: React.FC = () => {
             size="small"
             onClick={() => handleEdit(record)}
           >
-            Edit
+            {t('common:button.edit')}
           </Button>
           {record.status === 'in_progress' && (
             <Button
@@ -250,7 +230,7 @@ const ScientificTasksPage: React.FC = () => {
               size="small"
               onClick={() => handleSubmit(record.id)}
             >
-              Submit
+              {t('common:button.submit')}
             </Button>
           )}
         </Space>
@@ -262,8 +242,8 @@ const ScientificTasksPage: React.FC = () => {
     <MainLayout>
       <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: '24px' }}>
-          <h1>My Scientific Tasks</h1>
-          <p>View and manage your assigned scientific research tasks</p>
+          <h1>{t('teacher:scientificTasks.myTasks')}</h1>
+          <p>{t('teacher:scientificTasks.desc')}</p>
         </div>
 
         <Table
@@ -274,9 +254,8 @@ const ScientificTasksPage: React.FC = () => {
           pagination={{ pageSize: 10 }}
         />
 
-        {/* Edit Report Modal */}
         <Modal
-          title="Edit Report"
+          title={t('teacher:scientificTasks.editReport')}
           open={editModalVisible}
           onOk={handleUpdate}
           onCancel={() => setEditModalVisible(false)}
@@ -284,29 +263,27 @@ const ScientificTasksPage: React.FC = () => {
         >
           <Form form={form} layout="vertical">
             <Form.Item
-              label="Execution Status"
+              label={t('teacher:scientificTasks.executionStatus')}
               name="executionStatus"
-              rules={[{ required: false }]}
             >
               <TextArea
                 rows={6}
-                placeholder="Describe what you have done for this task..."
+                placeholder={t('teacher:scientificTasks.executionStatusPlaceholder')}
               />
             </Form.Item>
 
             <Form.Item
-              label="Completion Percentage"
+              label={t('teacher:scientificTasks.completionPercentage')}
               name="completionPercentage"
-              rules={[{ required: true, message: 'Please set completion percentage' }]}
+              rules={[{ required: true, message: t('teacher:scientificTasks.completionRequired') }]}
             >
               <Slider marks={{ 0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%' }} />
             </Form.Item>
 
             <Form.Item
-              label="Equivalent Hours"
+              label={t('teacher:scientificTasks.equivalentHours')}
               name="equivalentHours"
-              tooltip="Number of hours you worked on this task"
-              rules={[{ required: false }]}
+              tooltip={t('teacher:scientificTasks.equivalentHoursTooltip')}
             >
               <InputNumber
                 min={0}
@@ -315,75 +292,74 @@ const ScientificTasksPage: React.FC = () => {
                 precision={2}
                 style={{ width: '200px' }}
                 placeholder="0.00"
-                addonAfter="hours"
+                addonAfter={t('common:label.hours')}
               />
             </Form.Item>
 
-            <Form.Item label="Attachment">
+            <Form.Item label={t('teacher:scientificTasks.attachment')}>
               <Upload
                 beforeUpload={(file) => {
                   handleFileUpload(file);
-                  return false; // Prevent default upload
+                  return false;
                 }}
                 maxCount={1}
               >
                 <Button icon={<UploadOutlined />} loading={uploading}>
-                  Upload File
+                  {t('teacher:scientificTasks.uploadFile')}
                 </Button>
               </Upload>
               {selectedReport?.fileName && (
                 <div style={{ marginTop: '8px' }}>
-                  Current file: <Tag color="blue">{selectedReport.fileName}</Tag>
+                  {t('teacher:scientificTasks.currentFile')} <Tag color="blue">{selectedReport.fileName}</Tag>
                 </div>
               )}
             </Form.Item>
           </Form>
         </Modal>
 
-        {/* Detail Modal */}
         <Modal
-          title="Task Details"
+          title={t('teacher:scientificTasks.taskDetails')}
           open={detailModalVisible}
           onCancel={() => setDetailModalVisible(false)}
           footer={[
             <Button key="close" onClick={() => setDetailModalVisible(false)}>
-              Close
+              {t('common:button.close')}
             </Button>,
           ]}
           width={700}
         >
           {selectedReport && (
             <Descriptions column={1} bordered>
-              <Descriptions.Item label="Task Name">
+              <Descriptions.Item label={t('teacher:scientificTasks.taskName')}>
                 {selectedReport.scientificTask?.taskName}
               </Descriptions.Item>
-              <Descriptions.Item label="Description">
-                {selectedReport.scientificTask?.taskDescription || 'No description'}
+              <Descriptions.Item label={t('common:label.description')}>
+                {selectedReport.scientificTask?.taskDescription || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Deadline">
+              <Descriptions.Item label={t('common:label.deadline')}>
                 {dayjs(selectedReport.scientificTask?.deadline).format('MMM DD, YYYY')}
               </Descriptions.Item>
-              <Descriptions.Item label="Created By">
+              <Descriptions.Item label={t('common:label.createdBy')}>
                 {selectedReport.scientificTask?.creator?.userInfo?.firstName}{' '}
                 {selectedReport.scientificTask?.creator?.userInfo?.lastName}
               </Descriptions.Item>
-              <Descriptions.Item label="Status">
+              <Descriptions.Item label={t('common:label.status')}>
                 {getStatusTag(selectedReport.status)}
               </Descriptions.Item>
-              <Descriptions.Item label="Completion">
+              <Descriptions.Item label={t('common:label.progress')}>
                 <Progress percent={selectedReport.completionPercentage} />
               </Descriptions.Item>
-              <Descriptions.Item label="Execution Status">
-                {selectedReport.executionStatus || 'No status provided'}
+              <Descriptions.Item label={t('teacher:scientificTasks.executionStatus')}>
+                {selectedReport.executionStatus || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Equivalent Hours">
+              <Descriptions.Item label={t('teacher:scientificTasks.equivalentHours')}>
                 <Space>
                   <FieldTimeOutlined />
-                  {selectedReport.equivalentHours || 0} hours
+                  {selectedReport.equivalentHours || 0} {t('common:label.hours')}
                 </Space>
               </Descriptions.Item>
               {selectedReport.fileName && (
-                <Descriptions.Item label="Attachment">
+                <Descriptions.Item label={t('teacher:scientificTasks.attachment')}>
                   <Space>
                     <Tag color="blue" icon={<FileTextOutlined />}>
                       {selectedReport.fileName}
@@ -394,13 +370,13 @@ const ScientificTasksPage: React.FC = () => {
                       icon={<DownloadOutlined />}
                       onClick={() => selectedReport.fileName && handleDownload(selectedReport.id, selectedReport.fileName)}
                     >
-                      Download
+                      {t('teacher:scientificTasks.download')}
                     </Button>
                   </Space>
                 </Descriptions.Item>
               )}
               {selectedReport.validator && (
-                <Descriptions.Item label="Validated By">
+                <Descriptions.Item label={t('teacher:scientificTasks.validatedBy')}>
                   {selectedReport.validator.userInfo?.firstName}{' '}
                   {selectedReport.validator.userInfo?.lastName}
                 </Descriptions.Item>

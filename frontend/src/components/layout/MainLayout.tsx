@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Drawer, Button, Avatar } from 'antd';
+import { Layout, Menu, Drawer, Button, Avatar, Select } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   MenuFoldOutlined,
@@ -17,14 +17,23 @@ import {
   BankOutlined,
   ControlOutlined,
   IdcardOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
+import usersService from '../../services/users.service';
 import branding from '../../config/branding.json';
 import universityLogo from '../../../public/university-logo.png';
 import './MainLayout.scss';
 
 const { Header, Sider, Content } = Layout;
+
+const LANGUAGES = [
+  { value: 'uz', label: "O'zbek" },
+  { value: 'ru', label: 'Русский' },
+  { value: 'en', label: 'English' },
+];
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -36,6 +45,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { t, i18n } = useTranslation(['common', 'teacher', 'head', 'admin']);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -55,6 +65,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     navigate('/login');
   };
 
+  const handleLanguageChange = async (lang: string) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('locale', lang);
+    if (user?.id) {
+      try {
+        await usersService.updateAccount(user.id, { locale: lang });
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.userInfo) parsed.userInfo.locale = lang;
+          localStorage.setItem('user', JSON.stringify(parsed));
+        }
+      } catch {
+        // fire-and-forget; locale already applied locally
+      }
+    }
+  };
+
   const isAdmin = user?.role?.name === 'admin';
   const isDeptHead = user?.role?.name === 'departmenthead';
   const isTeacher = user?.role?.name === 'teacher';
@@ -65,43 +93,43 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {
             key: '/dashboard',
             icon: <DashboardOutlined />,
-            label: 'Dashboard',
+            label: t('nav.dashboard'),
             onClick: () => navigate('/dashboard'),
           },
           {
             key: '/teaching-activities',
             icon: <BookOutlined />,
-            label: 'Teaching Activities',
+            label: t('teacher:teachingActivities.title'),
             onClick: () => navigate('/teaching-activities'),
           },
           {
             key: '/scientific-activities',
             icon: <ExperimentOutlined />,
-            label: 'Publications',
+            label: t('teacher:publications.title'),
             onClick: () => navigate('/scientific-activities'),
           },
           {
             key: '/scientific-tasks',
             icon: <FileTextOutlined />,
-            label: 'Scientific Tasks',
+            label: t('teacher:scientificTasks.title'),
             onClick: () => navigate('/scientific-tasks'),
           },
           {
             key: '/account-info',
             icon: <IdcardOutlined />,
-            label: 'Account Information',
+            label: t('auth:account.title'),
             onClick: () => navigate('/account-info'),
           },
           {
             key: '/research-activities',
             icon: <FileSearchOutlined />,
-            label: 'Research Activities',
+            label: t('teacher:researchActivities.title'),
             onClick: () => navigate('/research-activities'),
           },
           {
             key: '/other-activities',
             icon: <AppstoreOutlined />,
-            label: 'Other Activities',
+            label: t('teacher:otherActivities'),
             onClick: () => navigate('/other-activities'),
             disabled: true,
           },
@@ -112,31 +140,31 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {
             key: '/department/dashboard',
             icon: <DashboardOutlined />,
-            label: 'Dashboard',
+            label: t('nav.dashboard'),
             onClick: () => navigate('/department/dashboard'),
           },
           { type: 'divider' as const },
           {
             key: 'department',
             icon: <BankOutlined />,
-            label: 'Department Management',
+            label: t('head:activities.title'),
             children: [
               {
                 key: '/department/activities',
                 icon: <BookOutlined />,
-                label: 'Teaching Activities',
+                label: t('teacher:teachingActivities.title'),
                 onClick: () => navigate('/department/activities'),
               },
               {
                 key: '/department/teachers',
                 icon: <TeamOutlined />,
-                label: 'Teachers',
+                label: t('head:teachers.title'),
                 onClick: () => navigate('/department/teachers'),
               },
               {
                 key: '/department/scientific-reports',
                 icon: <ExperimentOutlined />,
-                label: 'Scientific Reports',
+                label: t('head:scientificReports.title'),
                 onClick: () => navigate('/department/scientific-reports'),
               },
             ],
@@ -148,37 +176,37 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {
             key: '/admin/dashboard',
             icon: <DashboardOutlined />,
-            label: 'Dashboard',
+            label: t('nav.dashboard'),
             onClick: () => navigate('/admin/dashboard'),
           },
           { type: 'divider' as const },
           {
             key: 'administration',
             icon: <ControlOutlined />,
-            label: 'Administration',
+            label: t('nav.administration'),
             children: [
               {
                 key: '/admin/users',
                 icon: <TeamOutlined />,
-                label: 'Users',
+                label: t('admin:nav.users'),
                 onClick: () => navigate('/admin/users'),
               },
               {
                 key: '/admin/departments',
                 icon: <BankOutlined />,
-                label: 'Departments',
+                label: t('admin:nav.departments'),
                 onClick: () => navigate('/admin/departments'),
               },
               {
                 key: '/admin/scientific-tasks',
                 icon: <ExperimentOutlined />,
-                label: 'Scientific Tasks',
+                label: t('admin:nav.scientificTasks'),
                 onClick: () => navigate('/admin/scientific-tasks'),
               },
               {
                 key: '/admin/research-activities',
                 icon: <FileSearchOutlined />,
-                label: 'Research Activities',
+                label: t('admin:nav.researchActivities'),
                 onClick: () => navigate('/admin/research-activities'),
               },
             ],
@@ -191,13 +219,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: 'Settings',
+      label: t('nav.settings'),
       onClick: () => navigate('/settings'),
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: t('nav.logout'),
       onClick: handleLogout,
       danger: true,
       style: { color: '#ff4d4f' },
@@ -304,10 +332,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               onClick={() => setCollapsed(!collapsed)}
               className="collapse-btn"
             />
-            <span className="header-title">Academic Affairs</span>
+            <span className="header-title">{t('appTitle')}</span>
           </div>
 
           <div className="header-right">
+            <Select
+              value={i18n.language}
+              onChange={handleLanguageChange}
+              options={LANGUAGES}
+              size="small"
+              style={{ width: 110 }}
+              suffixIcon={<GlobalOutlined />}
+            />
             {isAdmin && (
               <Button
                 type="primary"
@@ -315,7 +351,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 onClick={() => navigate('/admin/users')}
                 className="admin-btn"
               >
-                Administration
+                {t('nav.administration')}
               </Button>
             )}
             <div className="user-profile">

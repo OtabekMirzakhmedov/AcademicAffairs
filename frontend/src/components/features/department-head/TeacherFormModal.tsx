@@ -1,5 +1,6 @@
 import { Modal, Form, Input, message } from 'antd';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import usersService, { type CreateTeacherRequest } from '../../../services/users.service';
 
 interface TeacherFormModalProps {
@@ -10,6 +11,7 @@ interface TeacherFormModalProps {
 }
 
 const TeacherFormModal = ({ open, onCancel, onSuccess }: TeacherFormModalProps) => {
+  const { t } = useTranslation(['head', 'common']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -23,15 +25,15 @@ const TeacherFormModal = ({ open, onCancel, onSuccess }: TeacherFormModalProps) 
     try {
       setLoading(true);
       await usersService.createTeacher(values);
-      message.success('Teacher created successfully! Default password: password123');
+      message.success(t('head:teachers.createSuccess'));
       onSuccess();
       onCancel();
     } catch (error: any) {
-      const errorMessage =
+      message.error(
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
-        'Failed to create teacher';
-      message.error(errorMessage);
+        t('head:teachers.createFailed')
+      );
     } finally {
       setLoading(false);
     }
@@ -39,74 +41,64 @@ const TeacherFormModal = ({ open, onCancel, onSuccess }: TeacherFormModalProps) 
 
   return (
     <Modal
-      title="Create Teacher"
+      title={t('head:teachers.createTitle')}
       open={open}
       onCancel={onCancel}
       onOk={() => form.submit()}
       confirmLoading={loading}
+      okText={t('common:button.create')}
+      cancelText={t('common:button.cancel')}
       width={600}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="login"
-          label="Login"
-          rules={[{ required: true, message: 'Please enter login' }]}
+          label={t('head:teachers.login')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter login username" />
+          <Input placeholder={t('head:teachers.loginPlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="firstName"
-          label="First Name"
-          rules={[{ required: true, message: 'Please enter first name' }]}
+          label={t('head:teachers.firstName')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter first name" />
+          <Input placeholder={t('head:teachers.firstNamePlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="lastName"
-          label="Last Name"
-          rules={[{ required: true, message: 'Please enter last name' }]}
+          label={t('head:teachers.lastName')}
+          rules={[{ required: true, message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter last name" />
+          <Input placeholder={t('head:teachers.lastNamePlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="email1"
-          label="Primary Email"
-          rules={[{ type: 'email', message: 'Please enter a valid email' }]}
+          label={t('head:teachers.primaryEmail')}
+          rules={[{ type: 'email', message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter primary email (optional)" />
+          <Input placeholder={t('head:teachers.primaryEmailPlaceholder')} />
         </Form.Item>
 
-        <Form.Item
-          name="email2"
-          label="Secondary Email"
-          rules={[{ type: 'email', message: 'Please enter a valid email' }]}
+        <Form.Item name="email2" label={t('head:teachers.secondaryEmail')}
+          rules={[{ type: 'email', message: t('common:label.required') }]}
         >
-          <Input placeholder="Enter secondary email (optional)" />
+          <Input placeholder={t('head:teachers.secondaryEmailPlaceholder')} />
         </Form.Item>
 
-        <Form.Item
-          name="phone1"
-          label="Primary Phone"
-        >
-          <Input placeholder="Enter primary phone (optional)" />
+        <Form.Item name="phone1" label={t('head:teachers.primaryPhone')}>
+          <Input placeholder={t('head:teachers.primaryPhonePlaceholder')} />
         </Form.Item>
 
-        <Form.Item
-          name="phone2"
-          label="Secondary Phone"
-        >
-          <Input placeholder="Enter secondary phone (optional)" />
+        <Form.Item name="phone2" label={t('head:teachers.secondaryPhone')}>
+          <Input placeholder={t('head:teachers.secondaryPhonePlaceholder')} />
         </Form.Item>
 
         <div style={{ padding: '10px', background: '#f0f2f5', borderRadius: '4px', marginTop: '10px' }}>
-          <strong>Note:</strong> The teacher will be created with default password <code>password123</code>. They can change it anytime from Settings.
+          {t('head:teachers.defaultPasswordNote')}
         </div>
       </Form>
     </Modal>

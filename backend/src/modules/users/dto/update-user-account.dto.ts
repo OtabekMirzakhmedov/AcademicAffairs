@@ -97,6 +97,12 @@ export class UpdateUserAccountDto {
   @IsOptional()
   englishLevel?: string;
 
+  // UI Locale
+  @ApiPropertyOptional({ example: 'uz', description: 'UI language preference', enum: ['uz', 'ru', 'en'] })
+  @IsString()
+  @IsOptional()
+  locale?: string;
+
   // Profile Image
   @ApiPropertyOptional({ example: '/uploads/profiles/avatar.jpg', description: 'Profile image path' })
   @IsString()

@@ -24,6 +24,7 @@ import {
   CloseCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import scientificTasksService from '../../services/scientific-tasks.service';
 import type { ScientificTask, TeacherScientificReport } from '../../types';
@@ -32,6 +33,7 @@ import dayjs from 'dayjs';
 const { TextArea } = Input;
 
 const ScientificTasksManagementPage: React.FC = () => {
+  const { t } = useTranslation(['admin', 'common', 'domain']);
   const [tasks, setTasks] = useState<ScientificTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -52,7 +54,7 @@ const ScientificTasksManagementPage: React.FC = () => {
       const data = await scientificTasksService.getAllTasks();
       setTasks(data);
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to load tasks');
+      message.error(error.response?.data?.message || t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -65,12 +67,13 @@ const ScientificTasksManagementPage: React.FC = () => {
         ...values,
         deadline: values.deadline.toISOString(),
       });
-      message.success('Scientific task created successfully');
+      message.success(t('admin:scientificTasks.createSuccess'));
       setCreateModalVisible(false);
       form.resetFields();
       loadTasks();
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to create task');
+      if (error?.errorFields) return;
+      message.error(error.response?.data?.message || t('admin:scientificTasks.createFailed'));
     }
   };
 
@@ -94,29 +97,30 @@ const ScientificTasksManagementPage: React.FC = () => {
         ...values,
         deadline: values.deadline.toISOString(),
       });
-      message.success('Task updated successfully');
+      message.success(t('admin:scientificTasks.updateSuccess'));
       setEditModalVisible(false);
       editForm.resetFields();
       setSelectedTask(null);
       loadTasks();
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to update task');
+      if (error?.errorFields) return;
+      message.error(error.response?.data?.message || t('admin:scientificTasks.updateFailed'));
     }
   };
 
   const handleDelete = (task: ScientificTask) => {
     Modal.confirm({
-      title: 'Delete Scientific Task',
-      content: `Are you sure you want to delete "${task.taskName}"? This will also delete all associated reports.`,
-      okText: 'Delete',
+      title: t('admin:scientificTasks.deleteTitle'),
+      content: `${t('admin:scientificTasks.deleteConfirm', { taskName: task.taskName })} ${t('admin:scientificTasks.deleteConfirmDesc')}`,
+      okText: t('common:button.delete'),
       okType: 'danger',
       onOk: async () => {
         try {
           await scientificTasksService.deleteTask(task.id);
-          message.success('Task deleted successfully');
+          message.success(t('admin:scientificTasks.deleteSuccess'));
           loadTasks();
         } catch (error: any) {
-          message.error(error.response?.data?.message || 'Failed to delete task');
+          message.error(error.response?.data?.message || t('admin:scientificTasks.deleteFailed'));
         }
       },
     });
@@ -129,93 +133,65 @@ const ScientificTasksManagementPage: React.FC = () => {
       setTaskProgress(progress);
       setProgressModalVisible(true);
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to load progress');
+      message.error(error.response?.data?.message || t('admin:scientificTasks.progressLoadFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusTag = (status: string) => {
-    const statusConfig: Record<string, { color: string; text: string }> = {
-      in_progress: { color: 'blue', text: 'In Progress' },
-      submitted: { color: 'orange', text: 'Submitted' },
-      validated: { color: 'green', text: 'Validated' },
-      rejected: { color: 'red', text: 'Rejected' },
-    };
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
-  };
-
   const columns: ColumnsType<ScientificTask> = [
     {
-      title: 'Task Name',
+      title: t('admin:scientificTasks.taskName'),
       dataIndex: 'taskName',
       key: 'taskName',
     },
     {
-      title: 'Deadline',
+      title: t('common:label.deadline'),
       dataIndex: 'deadline',
       key: 'deadline',
       render: (deadline: string) => dayjs(deadline).format('MMM DD, YYYY'),
     },
     {
-      title: 'Created By',
+      title: t('common:label.createdBy'),
       dataIndex: ['creator', 'userInfo'],
       key: 'creator',
-      render: (userInfo: any) => (
-        userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : '-'
-      ),
+      render: (userInfo: any) => userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : '-',
     },
     {
-      title: 'Department',
+      title: t('common:label.department'),
       dataIndex: ['department', 'name'],
       key: 'department',
-      render: (name: string) => name || <Tag color="purple">All Departments</Tag>,
+      render: (name: string) => name || <Tag color="purple">{t('admin:scientificTasks.allDepartments')}</Tag>,
     },
     {
-      title: 'Total Reports',
+      title: t('admin:scientificTasks.totalReports'),
       dataIndex: ['_count', 'reports'],
       key: 'reportsCount',
       render: (count: number) => count || 0,
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       render: (isActive: boolean) => (
         <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? 'Active' : 'Inactive'}
+          {isActive ? t('domain:status.active') : t('domain:status.inactive')}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       render: (_: any, record: ScientificTask) => (
         <Space>
-          <Button
-            type="default"
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => handleEdit(record)}
-          >
-            Edit
+          <Button type="default" icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)}>
+            {t('common:button.edit')}
           </Button>
-          <Button
-            type="primary"
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => handleViewProgress(record)}
-          >
-            Progress
+          <Button type="primary" icon={<EyeOutlined />} size="small" onClick={() => handleViewProgress(record)}>
+            {t('admin:scientificTasks.taskProgress')}
           </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            size="small"
-            onClick={() => handleDelete(record)}
-          >
-            Delete
+          <Button danger icon={<DeleteOutlined />} size="small" onClick={() => handleDelete(record)}>
+            {t('common:button.delete')}
           </Button>
         </Space>
       ),
@@ -224,44 +200,42 @@ const ScientificTasksManagementPage: React.FC = () => {
 
   const reportColumns: ColumnsType<TeacherScientificReport> = [
     {
-      title: 'Teacher',
+      title: t('domain:role.teacher'),
       dataIndex: ['teacher', 'userInfo'],
       key: 'teacher',
-      render: (userInfo: any) => (
-        userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : '-'
-      ),
+      render: (userInfo: any) => userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : '-',
     },
     {
-      title: 'Department',
+      title: t('common:label.department'),
       dataIndex: ['teacher', 'teacherInfo', 'department', 'name'],
       key: 'department',
     },
     {
-      title: 'Progress',
+      title: t('common:label.progress'),
       dataIndex: 'completionPercentage',
       key: 'progress',
-      render: (percentage: number) => (
-        <Progress percent={percentage} style={{ width: 120 }} />
+      render: (percentage: number) => <Progress percent={percentage} style={{ width: 120 }} />,
+    },
+    {
+      title: t('common:label.status'),
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={{ in_progress: 'blue', submitted: 'orange', validated: 'green', rejected: 'red' }[status] || 'default'}>
+          {t(`domain:status.${status}`)}
+        </Tag>
       ),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => getStatusTag(status),
-    },
-    {
-      title: 'Submitted At',
+      title: t('teacher:scientificTasks.submittedAt'),
       dataIndex: 'submittedAt',
       key: 'submittedAt',
       render: (date: string) => (date ? dayjs(date).format('MMM DD, YYYY') : '-'),
     },
   ];
 
-  // Calculate statistics for the progress modal
   const getProgressStats = () => {
     if (!taskProgress?.reports) return { total: 0, inProgress: 0, submitted: 0, validated: 0, rejected: 0 };
-
     const reports = taskProgress.reports;
     return {
       total: reports.length,
@@ -274,197 +248,128 @@ const ScientificTasksManagementPage: React.FC = () => {
 
   const stats = getProgressStats();
 
+  const taskFormFields = (frm: typeof form) => (
+    <Form form={frm} layout="vertical">
+      <Form.Item
+        label={t('admin:scientificTasks.taskName')}
+        name="taskName"
+        rules={[{ required: true, message: t('admin:scientificTasks.taskNameRequired') }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item label={t('admin:scientificTasks.taskDescription')} name="taskDescription">
+        <TextArea rows={6} placeholder={t('admin:scientificTasks.taskDescriptionPlaceholder')} />
+      </Form.Item>
+      <Form.Item
+        label={t('common:label.deadline')}
+        name="deadline"
+        rules={[{ required: true, message: t('admin:scientificTasks.deadlineRequired') }]}
+      >
+        <DatePicker style={{ width: '100%' }} />
+      </Form.Item>
+    </Form>
+  );
+
   return (
     <MainLayout>
       <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1>Scientific Activities Management</h1>
-            <p>Create and manage scientific research tasks</p>
+            <h1>{t('admin:scientificTasks.title')}</h1>
+            <p>{t('admin:scientificTasks.desc')}</p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={() => setCreateModalVisible(true)}
-          >
-            Create New Task
+          <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => setCreateModalVisible(true)}>
+            {t('admin:scientificTasks.createTask')}
           </Button>
         </div>
 
-      <Table
-        columns={columns}
-        dataSource={tasks}
-        loading={loading}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+        <Table columns={columns} dataSource={tasks} loading={loading} rowKey="id" pagination={{ pageSize: 10 }} />
 
-      {/* Create Task Modal */}
-      <Modal
-        title="Create Scientific Task"
-        open={createModalVisible}
-        onOk={handleCreate}
-        onCancel={() => {
-          setCreateModalVisible(false);
-          form.resetFields();
-        }}
-        width={700}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Task Name"
-            name="taskName"
-            rules={[{ required: true, message: 'Please enter task name' }]}
-          >
-            <Input placeholder="Enter task name" />
-          </Form.Item>
+        <Modal
+          title={t('admin:scientificTasks.createTitle')}
+          open={createModalVisible}
+          onOk={handleCreate}
+          onCancel={() => { setCreateModalVisible(false); form.resetFields(); }}
+          width={700}
+        >
+          {taskFormFields(form)}
+        </Modal>
 
-          <Form.Item
-            label="Task Description"
-            name="taskDescription"
-          >
-            <TextArea
-              rows={6}
-              placeholder="Describe the scientific task..."
-            />
-          </Form.Item>
+        <Modal
+          title={t('admin:scientificTasks.editTitle')}
+          open={editModalVisible}
+          onOk={handleUpdate}
+          onCancel={() => { setEditModalVisible(false); editForm.resetFields(); setSelectedTask(null); }}
+          width={700}
+        >
+          <Form form={editForm} layout="vertical">
+            <Form.Item
+              label={t('admin:scientificTasks.taskName')}
+              name="taskName"
+              rules={[{ required: true, message: t('admin:scientificTasks.taskNameRequired') }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item label={t('admin:scientificTasks.taskDescription')} name="taskDescription">
+              <TextArea rows={6} placeholder={t('admin:scientificTasks.taskDescriptionPlaceholder')} />
+            </Form.Item>
+            <Form.Item
+              label={t('common:label.deadline')}
+              name="deadline"
+              rules={[{ required: true, message: t('admin:scientificTasks.deadlineRequired') }]}
+            >
+              <DatePicker style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item label={t('common:label.status')} name="isActive" valuePropName="checked">
+              <Switch
+                checkedChildren={t('domain:status.active')}
+                unCheckedChildren={t('domain:status.inactive')}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
 
-          <Form.Item
-            label="Deadline"
-            name="deadline"
-            rules={[{ required: true, message: 'Please select deadline' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <Modal
+          title={t('admin:scientificTasks.taskProgress')}
+          open={progressModalVisible}
+          onCancel={() => setProgressModalVisible(false)}
+          footer={[
+            <Button key="close" onClick={() => setProgressModalVisible(false)}>
+              {t('common:button.close')}
+            </Button>,
+          ]}
+          width={1000}
+        >
+          {taskProgress && (
+            <>
+              <Descriptions column={2} bordered style={{ marginBottom: '24px' }}>
+                <Descriptions.Item label={t('admin:scientificTasks.taskName')} span={2}>
+                  {taskProgress.taskName}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('admin:scientificTasks.taskDescription')} span={2}>
+                  {taskProgress.taskDescription || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('common:label.deadline')}>
+                  {dayjs(taskProgress.deadline).format('MMM DD, YYYY')}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('common:label.createdBy')}>
+                  {taskProgress.creator?.userInfo?.firstName} {taskProgress.creator?.userInfo?.lastName}
+                </Descriptions.Item>
+              </Descriptions>
 
-      {/* Edit Task Modal */}
-      <Modal
-        title="Edit Scientific Task"
-        open={editModalVisible}
-        onOk={handleUpdate}
-        onCancel={() => {
-          setEditModalVisible(false);
-          editForm.resetFields();
-          setSelectedTask(null);
-        }}
-        width={700}
-      >
-        <Form form={editForm} layout="vertical">
-          <Form.Item
-            label="Task Name"
-            name="taskName"
-            rules={[{ required: true, message: 'Please enter task name' }]}
-          >
-            <Input placeholder="Enter task name" />
-          </Form.Item>
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                <Card><Statistic title={t('admin:scientificTasks.teacherReports')} value={stats.total} /></Card>
+                <Card><Statistic title={t('domain:status.in_progress')} value={stats.inProgress} valueStyle={{ color: '#1890ff' }} /></Card>
+                <Card><Statistic title={t('domain:status.submitted')} value={stats.submitted} valueStyle={{ color: '#faad14' }} /></Card>
+                <Card><Statistic title={t('domain:status.validated')} value={stats.validated} valueStyle={{ color: '#52c41a' }} prefix={<CheckCircleOutlined />} /></Card>
+                <Card><Statistic title={t('domain:status.rejected')} value={stats.rejected} valueStyle={{ color: '#ff4d4f' }} prefix={<CloseCircleOutlined />} /></Card>
+              </div>
 
-          <Form.Item
-            label="Task Description"
-            name="taskDescription"
-          >
-            <TextArea
-              rows={6}
-              placeholder="Describe the scientific task..."
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Deadline"
-            name="deadline"
-            rules={[{ required: true, message: 'Please select deadline' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item
-            label="Status"
-            name="isActive"
-            valuePropName="checked"
-          >
-            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Progress Modal */}
-      <Modal
-        title="Task Progress"
-        open={progressModalVisible}
-        onCancel={() => setProgressModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setProgressModalVisible(false)}>
-            Close
-          </Button>,
-        ]}
-        width={1000}
-      >
-        {taskProgress && (
-          <>
-            <Descriptions column={2} bordered style={{ marginBottom: '24px' }}>
-              <Descriptions.Item label="Task Name" span={2}>
-                {taskProgress.taskName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Description" span={2}>
-                {taskProgress.taskDescription || 'No description'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Deadline">
-                {dayjs(taskProgress.deadline).format('MMM DD, YYYY')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created By">
-                {taskProgress.creator?.userInfo?.firstName}{' '}
-                {taskProgress.creator?.userInfo?.lastName}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-              <Card>
-                <Statistic title="Total Teachers" value={stats.total} />
-              </Card>
-              <Card>
-                <Statistic
-                  title="In Progress"
-                  value={stats.inProgress}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-              <Card>
-                <Statistic
-                  title="Submitted"
-                  value={stats.submitted}
-                  valueStyle={{ color: '#faad14' }}
-                />
-              </Card>
-              <Card>
-                <Statistic
-                  title="Validated"
-                  value={stats.validated}
-                  valueStyle={{ color: '#52c41a' }}
-                  prefix={<CheckCircleOutlined />}
-                />
-              </Card>
-              <Card>
-                <Statistic
-                  title="Rejected"
-                  value={stats.rejected}
-                  valueStyle={{ color: '#ff4d4f' }}
-                  prefix={<CloseCircleOutlined />}
-                />
-              </Card>
-            </div>
-
-            <h3>Teacher Reports</h3>
-            <Table
-              columns={reportColumns}
-              dataSource={taskProgress.reports}
-              rowKey="id"
-              pagination={{ pageSize: 10 }}
-            />
-          </>
-        )}
-      </Modal>
+              <h3>{t('admin:scientificTasks.teacherReports')}</h3>
+              <Table columns={reportColumns} dataSource={taskProgress.reports} rowKey="id" pagination={{ pageSize: 10 }} />
+            </>
+          )}
+        </Modal>
       </div>
     </MainLayout>
   );

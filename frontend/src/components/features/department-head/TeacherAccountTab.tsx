@@ -15,6 +15,7 @@ import {
   Checkbox,
 } from 'antd';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import usersService, { type UpdateUserAccountRequest } from '../../../services/users.service';
 import type { User } from '../../../types';
 import dayjs from 'dayjs';
@@ -28,6 +29,7 @@ interface TeacherAccountTabProps {
 }
 
 const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
+  const { t } = useTranslation(['auth', 'common', 'domain']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -35,7 +37,6 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
   useEffect(() => {
     if (teacher) {
       form.setFieldsValue({
-        // Personal Information
         firstName: teacher.userInfo?.firstName,
         lastName: teacher.userInfo?.lastName,
         middleName: teacher.userInfo?.middleName,
@@ -52,23 +53,15 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
         englishLevel: teacher.userInfo?.englishLevel,
         phone1: teacher.userInfo?.phone1,
         email1: teacher.userInfo?.email1,
-
-        // Educational Background - Bachelor
         bachelorUniversity: teacher.teacherInfo?.bachelorUniversity,
         bachelorYear: teacher.teacherInfo?.bachelorYear,
         bachelorDirection: teacher.teacherInfo?.bachelorDirection,
         bachelorDiplomaNumber: teacher.teacherInfo?.bachelorDiplomaNumber,
-
-        // Educational Background - Master
         masterUniversity: teacher.teacherInfo?.masterUniversity,
         masterYear: teacher.teacherInfo?.masterYear,
         masterDirection: teacher.teacherInfo?.masterDirection,
         masterDiplomaNumber: teacher.teacherInfo?.masterDiplomaNumber,
-
-        // Research
         researchArea: teacher.teacherInfo?.researchArea,
-
-        // PhD Information
         hasPhdDegree: teacher.teacherInfo?.hasPhdDegree,
         phdYear: teacher.teacherInfo?.phdYear,
         phdSpeciality: teacher.teacherInfo?.phdSpeciality,
@@ -76,8 +69,6 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
         phdDiplomaNumber: teacher.teacherInfo?.phdDiplomaNumber,
         phdCountry: teacher.teacherInfo?.phdCountry,
         phdOrganization: teacher.teacherInfo?.phdOrganization,
-
-        // DSc Information
         hasDscDegree: teacher.teacherInfo?.hasDscDegree,
         dscYear: teacher.teacherInfo?.dscYear,
         dscSpeciality: teacher.teacherInfo?.dscSpeciality,
@@ -85,35 +76,23 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
         dscDiplomaNumber: teacher.teacherInfo?.dscDiplomaNumber,
         dscCountry: teacher.teacherInfo?.dscCountry,
         dscOrganization: teacher.teacherInfo?.dscOrganization,
-
-        // Academic Title
         hasAcademicTitle: teacher.teacherInfo?.hasAcademicTitle,
         academicTitleName: teacher.teacherInfo?.academicTitleName,
         academicTitleSpeciality: teacher.teacherInfo?.academicTitleSpeciality,
         academicTitleYear: teacher.teacherInfo?.academicTitleYear,
         academicTitleAttestat: teacher.teacherInfo?.academicTitleAttestat,
-
-        // Training and Development
         internshipsCount: teacher.teacherInfo?.internshipsCount,
         internshipsInfo: teacher.teacherInfo?.internshipsInfo,
         trainingCount: teacher.teacherInfo?.trainingCount,
         trainingInfo: teacher.teacherInfo?.trainingInfo,
-
-        // Awards and Recognition
         awardsField: teacher.teacherInfo?.awardsField,
         awardsState: teacher.teacherInfo?.awardsState,
-
-        // Supervision
         supervisedPhd: teacher.teacherInfo?.supervisedPhd,
         supervisedDsc: teacher.teacherInfo?.supervisedDsc,
-
-        // Conference and Seminar Participation
         conferencesRepublic: teacher.teacherInfo?.conferencesRepublic,
         conferencesInternational: teacher.teacherInfo?.conferencesInternational,
         seminarsRepublic: teacher.teacherInfo?.seminarsRepublic,
         seminarsInternational: teacher.teacherInfo?.seminarsInternational,
-
-        // Projects
         projectsFundamental: teacher.teacherInfo?.projectsFundamental,
         projectsPractical: teacher.teacherInfo?.projectsPractical,
         projectsYouth: teacher.teacherInfo?.projectsYouth,
@@ -127,22 +106,19 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-
-      // Convert date to ISO string if present
       const payload: UpdateUserAccountRequest = {
         ...values,
         dateOfBirth: values.dateOfBirth ? values.dateOfBirth.toISOString() : undefined,
       };
-
       await usersService.updateAccount(teacher.id, payload);
-      message.success('Account information updated successfully');
+      message.success(t('auth:account.updateSuccess'));
       setIsEditing(false);
       onSuccess();
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
-        'Failed to update account information';
+        t('auth:account.updateFailed');
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -167,278 +143,283 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
     return (
       <div style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-          <Title level={4}>Account Information</Title>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => setIsEditing(true)}
-          >
-            Edit Profile
+          <Title level={4}>{t('auth:account.title')}</Title>
+          <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
+            {t('auth:account.editProfile')}
           </Button>
         </div>
 
-        <Divider orientation="left">Main Information</Divider>
+        <Divider orientation="left">{t('auth:account.mainInfo')}</Divider>
         <Row gutter={24}>
           <Col span={8}>
-            <ViewField label="Name" value={teacher.userInfo?.firstName} />
+            <ViewField label={t('auth:account.firstName')} value={teacher.userInfo?.firstName} />
           </Col>
           <Col span={8}>
-            <ViewField label="Surname" value={teacher.userInfo?.lastName} />
+            <ViewField label={t('auth:account.lastName')} value={teacher.userInfo?.lastName} />
           </Col>
           <Col span={8}>
-            <ViewField label="Middle name" value={teacher.userInfo?.middleName} />
+            <ViewField label={t('auth:account.middleName')} value={teacher.userInfo?.middleName} />
           </Col>
           <Col span={8}>
             <ViewField
-              label="Date of birth"
+              label={t('auth:account.dateOfBirth')}
               value={teacher.userInfo?.dateOfBirth ? dayjs(teacher.userInfo.dateOfBirth).format('YYYY-MM-DD') : '-'}
             />
           </Col>
           <Col span={8}>
-            <ViewField label="Gender" value={teacher.userInfo?.gender} />
+            <ViewField label={t('auth:account.gender')} value={teacher.userInfo?.gender} />
           </Col>
           <Col span={8}>
-            <ViewField label="Nationality" value={teacher.userInfo?.nationality} />
+            <ViewField label={t('auth:account.nationality')} value={teacher.userInfo?.nationality} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Birth Information</Divider>
+        <Divider orientation="left">{t('auth:account.birthInfo')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Country of birth" value={teacher.userInfo?.countryOfBirth} />
+            <ViewField label={t('auth:account.countryOfBirth')} value={teacher.userInfo?.countryOfBirth} />
           </Col>
           <Col span={12}>
-            <ViewField label="Region of birth" value={teacher.userInfo?.regionOfBirth} />
+            <ViewField label={t('auth:account.regionOfBirth')} value={teacher.userInfo?.regionOfBirth} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Address Information</Divider>
+        <Divider orientation="left">{t('auth:account.addressInfo')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Currently registered address" value={teacher.userInfo?.currentAddress} />
+            <ViewField label={t('auth:account.currentAddress')} value={teacher.userInfo?.currentAddress} />
           </Col>
           <Col span={12}>
-            <ViewField label="Permanently registered address" value={teacher.userInfo?.permanentAddress} />
+            <ViewField label={t('auth:account.permanentAddress')} value={teacher.userInfo?.permanentAddress} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Identification</Divider>
+        <Divider orientation="left">{t('auth:account.identification')}</Divider>
         <Row gutter={24}>
           <Col span={8}>
-            <ViewField label="Passport serial number" value={teacher.userInfo?.passportSerial} />
+            <ViewField label={t('auth:account.passportSerial')} value={teacher.userInfo?.passportSerial} />
           </Col>
           <Col span={8}>
-            <ViewField label="Personal identification number (14 digits)" value={teacher.userInfo?.personalId} />
+            <ViewField label={t('auth:account.personalId')} value={teacher.userInfo?.personalId} />
           </Col>
           <Col span={8}>
-            <ViewField label="STIR/INN" value={teacher.userInfo?.stirInn} />
+            <ViewField label={t('auth:account.stirInn')} value={teacher.userInfo?.stirInn} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Contact Information</Divider>
+        <Divider orientation="left">{t('auth:account.contactInfo')}</Divider>
         <Row gutter={24}>
           <Col span={8}>
-            <ViewField label="English level" value={teacher.userInfo?.englishLevel} />
+            <ViewField label={t('auth:account.englishLevel')} value={teacher.userInfo?.englishLevel} />
           </Col>
           <Col span={8}>
-            <ViewField label="Phone number" value={teacher.userInfo?.phone1} />
+            <ViewField label={t('auth:account.phone')} value={teacher.userInfo?.phone1} />
           </Col>
           <Col span={8}>
-            <ViewField label="Email" value={teacher.userInfo?.email1} />
+            <ViewField label={t('auth:account.email')} value={teacher.userInfo?.email1} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Bachelor's Degree</Divider>
+        <Divider orientation="left">{t('auth:account.bachelorDegree')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Name of graduated university (bachelor)" value={teacher.teacherInfo?.bachelorUniversity} />
+            <ViewField label={t('auth:account.bachelorUniversity')} value={teacher.teacherInfo?.bachelorUniversity} />
           </Col>
           <Col span={12}>
-            <ViewField label="Year of graduation (bachelor)" value={teacher.teacherInfo?.bachelorYear} />
+            <ViewField label={t('auth:account.bachelorYear')} value={teacher.teacherInfo?.bachelorYear} />
           </Col>
           <Col span={12}>
-            <ViewField label="Direction (bachelor)" value={teacher.teacherInfo?.bachelorDirection} />
+            <ViewField label={t('auth:account.bachelorDirection')} value={teacher.teacherInfo?.bachelorDirection} />
           </Col>
           <Col span={12}>
-            <ViewField label="Diploma number (bachelor)" value={teacher.teacherInfo?.bachelorDiplomaNumber} />
+            <ViewField label={t('auth:account.bachelorDiplomaNumber')} value={teacher.teacherInfo?.bachelorDiplomaNumber} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Master's Degree</Divider>
+        <Divider orientation="left">{t('auth:account.masterDegree')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Name of graduated university (master)" value={teacher.teacherInfo?.masterUniversity} />
+            <ViewField label={t('auth:account.masterUniversity')} value={teacher.teacherInfo?.masterUniversity} />
           </Col>
           <Col span={12}>
-            <ViewField label="Year of graduation (master)" value={teacher.teacherInfo?.masterYear} />
+            <ViewField label={t('auth:account.masterYear')} value={teacher.teacherInfo?.masterYear} />
           </Col>
           <Col span={12}>
-            <ViewField label="Direction (master)" value={teacher.teacherInfo?.masterDirection} />
+            <ViewField label={t('auth:account.masterDirection')} value={teacher.teacherInfo?.masterDirection} />
           </Col>
           <Col span={12}>
-            <ViewField label="Diploma number (master)" value={teacher.teacherInfo?.masterDiplomaNumber} />
+            <ViewField label={t('auth:account.masterDiplomaNumber')} value={teacher.teacherInfo?.masterDiplomaNumber} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Research</Divider>
+        <Divider orientation="left">{t('auth:account.research')}</Divider>
         <Row gutter={24}>
           <Col span={24}>
-            <ViewField label="Research area" value={teacher.teacherInfo?.researchArea} />
+            <ViewField label={t('auth:account.researchArea')} value={teacher.teacherInfo?.researchArea} />
           </Col>
         </Row>
 
-        <Divider orientation="left">PhD Degree</Divider>
+        <Divider orientation="left">{t('auth:account.phdDegree')}</Divider>
         <Row gutter={24}>
           <Col span={24}>
-            <ViewField label="Do you have an academic degree (PhD)?" value={teacher.teacherInfo?.hasPhdDegree ? 'Yes' : 'No'} />
+            <ViewField
+              label={t('auth:account.hasPhdDegree')}
+              value={teacher.teacherInfo?.hasPhdDegree ? t('common:label.yes') : t('common:label.no')}
+            />
           </Col>
           {teacher.teacherInfo?.hasPhdDegree && (
             <>
               <Col span={12}>
-                <ViewField label="Year of approval for academic degree (PhD)" value={teacher.teacherInfo?.phdYear} />
+                <ViewField label={t('auth:account.phdYear')} value={teacher.teacherInfo?.phdYear} />
               </Col>
               <Col span={12}>
-                <ViewField label="Defenced speciality code and name (PhD)" value={teacher.teacherInfo?.phdSpeciality} />
+                <ViewField label={t('auth:account.phdSpeciality')} value={teacher.teacherInfo?.phdSpeciality} />
               </Col>
               <Col span={24}>
-                <ViewField label="The topic of the dissertation (PhD)" value={teacher.teacherInfo?.phdTopic} />
+                <ViewField label={t('auth:account.phdTopic')} value={teacher.teacherInfo?.phdTopic} />
               </Col>
               <Col span={8}>
-                <ViewField label="Diploma number (PhD)" value={teacher.teacherInfo?.phdDiplomaNumber} />
+                <ViewField label={t('auth:account.phdDiplomaNumber')} value={teacher.teacherInfo?.phdDiplomaNumber} />
               </Col>
               <Col span={8}>
-                <ViewField label="Country (PhD)" value={teacher.teacherInfo?.phdCountry} />
+                <ViewField label={t('auth:account.phdCountry')} value={teacher.teacherInfo?.phdCountry} />
               </Col>
               <Col span={8}>
-                <ViewField label="Organization (PhD)" value={teacher.teacherInfo?.phdOrganization} />
+                <ViewField label={t('auth:account.phdOrganization')} value={teacher.teacherInfo?.phdOrganization} />
               </Col>
             </>
           )}
         </Row>
 
-        <Divider orientation="left">DSc Degree</Divider>
+        <Divider orientation="left">{t('auth:account.dscDegree')}</Divider>
         <Row gutter={24}>
           <Col span={24}>
-            <ViewField label="Do you have an academic degree (DSc)?" value={teacher.teacherInfo?.hasDscDegree ? 'Yes' : 'No'} />
+            <ViewField
+              label={t('auth:account.hasDscDegree')}
+              value={teacher.teacherInfo?.hasDscDegree ? t('common:label.yes') : t('common:label.no')}
+            />
           </Col>
           {teacher.teacherInfo?.hasDscDegree && (
             <>
               <Col span={12}>
-                <ViewField label="Year of approval for academic degree (DSc)" value={teacher.teacherInfo?.dscYear} />
+                <ViewField label={t('auth:account.dscYear')} value={teacher.teacherInfo?.dscYear} />
               </Col>
               <Col span={12}>
-                <ViewField label="Defenced speciality code and name (DSc)" value={teacher.teacherInfo?.dscSpeciality} />
+                <ViewField label={t('auth:account.dscSpeciality')} value={teacher.teacherInfo?.dscSpeciality} />
               </Col>
               <Col span={24}>
-                <ViewField label="The topic of the dissertation (DSc)" value={teacher.teacherInfo?.dscTopic} />
+                <ViewField label={t('auth:account.dscTopic')} value={teacher.teacherInfo?.dscTopic} />
               </Col>
               <Col span={8}>
-                <ViewField label="Diploma number (DSc)" value={teacher.teacherInfo?.dscDiplomaNumber} />
+                <ViewField label={t('auth:account.dscDiplomaNumber')} value={teacher.teacherInfo?.dscDiplomaNumber} />
               </Col>
               <Col span={8}>
-                <ViewField label="Country (DSc)" value={teacher.teacherInfo?.dscCountry} />
+                <ViewField label={t('auth:account.dscCountry')} value={teacher.teacherInfo?.dscCountry} />
               </Col>
               <Col span={8}>
-                <ViewField label="Organization (DSc)" value={teacher.teacherInfo?.dscOrganization} />
+                <ViewField label={t('auth:account.dscOrganization')} value={teacher.teacherInfo?.dscOrganization} />
               </Col>
             </>
           )}
         </Row>
 
-        <Divider orientation="left">Academic Title</Divider>
+        <Divider orientation="left">{t('auth:account.academicTitle')}</Divider>
         <Row gutter={24}>
           <Col span={24}>
-            <ViewField label="Do you have an academic title?" value={teacher.teacherInfo?.hasAcademicTitle ? 'Yes' : 'No'} />
+            <ViewField
+              label={t('auth:account.hasAcademicTitle')}
+              value={teacher.teacherInfo?.hasAcademicTitle ? t('common:label.yes') : t('common:label.no')}
+            />
           </Col>
           {teacher.teacherInfo?.hasAcademicTitle && (
             <>
               <Col span={12}>
-                <ViewField label="Name of academic title" value={teacher.teacherInfo?.academicTitleName} />
+                <ViewField label={t('auth:account.academicTitleName')} value={teacher.teacherInfo?.academicTitleName} />
               </Col>
               <Col span={12}>
-                <ViewField label="Defenced speciality code and name" value={teacher.teacherInfo?.academicTitleSpeciality} />
+                <ViewField label={t('auth:account.academicTitleSpeciality')} value={teacher.teacherInfo?.academicTitleSpeciality} />
               </Col>
               <Col span={12}>
-                <ViewField label="Year of approval for academic title" value={teacher.teacherInfo?.academicTitleYear} />
+                <ViewField label={t('auth:account.academicTitleYear')} value={teacher.teacherInfo?.academicTitleYear} />
               </Col>
               <Col span={12}>
-                <ViewField label="Attestat number" value={teacher.teacherInfo?.academicTitleAttestat} />
+                <ViewField label={t('auth:account.academicTitleAttestat')} value={teacher.teacherInfo?.academicTitleAttestat} />
               </Col>
             </>
           )}
         </Row>
 
-        <Divider orientation="left">Training and Development</Divider>
+        <Divider orientation="left">{t('auth:account.trainingDev')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Number of internships (completed in the last year)" value={teacher.teacherInfo?.internshipsCount} />
+            <ViewField label={t('auth:account.internshipsCount')} value={teacher.teacherInfo?.internshipsCount} />
           </Col>
           <Col span={12}>
-            <ViewField label="Number of places passed the qualification training (completed in the last year)" value={teacher.teacherInfo?.trainingCount} />
+            <ViewField label={t('auth:account.trainingCount')} value={teacher.teacherInfo?.trainingCount} />
           </Col>
           <Col span={12}>
-            <ViewField label="More information about the internship" value={teacher.teacherInfo?.internshipsInfo} />
+            <ViewField label={t('auth:account.internshipsInfo')} value={teacher.teacherInfo?.internshipsInfo} />
           </Col>
           <Col span={12}>
-            <ViewField label="More information about the training" value={teacher.teacherInfo?.trainingInfo} />
+            <ViewField label={t('auth:account.trainingInfo')} value={teacher.teacherInfo?.trainingInfo} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Awards and Recognition</Divider>
+        <Divider orientation="left">{t('auth:account.awardsSection')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Awards on the field (name; time of receipt)" value={teacher.teacherInfo?.awardsField} />
+            <ViewField label={t('auth:account.awardsField')} value={teacher.teacherInfo?.awardsField} />
           </Col>
           <Col span={12}>
-            <ViewField label="State awards (name; time of receipt)" value={teacher.teacherInfo?.awardsState} />
+            <ViewField label={t('auth:account.awardsState')} value={teacher.teacherInfo?.awardsState} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Supervision</Divider>
+        <Divider orientation="left">{t('auth:account.supervision')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Number of supervised students (PhD)" value={teacher.teacherInfo?.supervisedPhd} />
+            <ViewField label={t('auth:account.supervisedPhd')} value={teacher.teacherInfo?.supervisedPhd} />
           </Col>
           <Col span={12}>
-            <ViewField label="Number of supervised students (DSc)" value={teacher.teacherInfo?.supervisedDsc} />
+            <ViewField label={t('auth:account.supervisedDsc')} value={teacher.teacherInfo?.supervisedDsc} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Conferences and Seminars</Divider>
+        <Divider orientation="left">{t('auth:account.conferencesSection')}</Divider>
         <Row gutter={24}>
           <Col span={12}>
-            <ViewField label="Number of conferences attended - In the Republic" value={teacher.teacherInfo?.conferencesRepublic} />
+            <ViewField label={t('auth:account.conferencesRepublic')} value={teacher.teacherInfo?.conferencesRepublic} />
           </Col>
           <Col span={12}>
-            <ViewField label="Number of conferences attended - International" value={teacher.teacherInfo?.conferencesInternational} />
+            <ViewField label={t('auth:account.conferencesInternational')} value={teacher.teacherInfo?.conferencesInternational} />
           </Col>
           <Col span={12}>
-            <ViewField label="Number of seminars attended - In the Republic" value={teacher.teacherInfo?.seminarsRepublic} />
+            <ViewField label={t('auth:account.seminarsRepublic')} value={teacher.teacherInfo?.seminarsRepublic} />
           </Col>
           <Col span={12}>
-            <ViewField label="Number of seminars attended - International" value={teacher.teacherInfo?.seminarsInternational} />
+            <ViewField label={t('auth:account.seminarsInternational')} value={teacher.teacherInfo?.seminarsInternational} />
           </Col>
         </Row>
 
-        <Divider orientation="left">Projects</Divider>
+        <Divider orientation="left">{t('auth:account.projects')}</Divider>
         <Row gutter={24}>
           <Col span={8}>
-            <ViewField label="Fundamental" value={teacher.teacherInfo?.projectsFundamental} />
+            <ViewField label={t('auth:account.projectsFundamental')} value={teacher.teacherInfo?.projectsFundamental} />
           </Col>
           <Col span={8}>
-            <ViewField label="Practical" value={teacher.teacherInfo?.projectsPractical} />
+            <ViewField label={t('auth:account.projectsPractical')} value={teacher.teacherInfo?.projectsPractical} />
           </Col>
           <Col span={8}>
-            <ViewField label="Youth" value={teacher.teacherInfo?.projectsYouth} />
+            <ViewField label={t('auth:account.projectsYouth')} value={teacher.teacherInfo?.projectsYouth} />
           </Col>
           <Col span={8}>
-            <ViewField label="Business agreement" value={teacher.teacherInfo?.projectsBusiness} />
+            <ViewField label={t('auth:account.projectsBusiness')} value={teacher.teacherInfo?.projectsBusiness} />
           </Col>
           <Col span={8}>
-            <ViewField label="Innovation" value={teacher.teacherInfo?.projectsInnovation} />
+            <ViewField label={t('auth:account.projectsInnovation')} value={teacher.teacherInfo?.projectsInnovation} />
           </Col>
           <Col span={8}>
-            <ViewField label="Number of innovative ideas and developments" value={teacher.teacherInfo?.innovativeIdeasCount} />
+            <ViewField label={t('auth:account.innovativeIdeasCount')} value={teacher.teacherInfo?.innovativeIdeasCount} />
           </Col>
         </Row>
       </div>
@@ -448,113 +429,108 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-        <Title level={4}>Edit Account Information</Title>
+        <Title level={4}>{t('auth:account.editTitle')}</Title>
         <Space>
           <Button icon={<CloseOutlined />} onClick={handleCancel}>
-            Cancel
+            {t('common:button.cancel')}
           </Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            onClick={() => form.submit()}
-            loading={loading}
-          >
-            Save Changes
+          <Button type="primary" icon={<SaveOutlined />} onClick={() => form.submit()} loading={loading}>
+            {t('auth:account.saveChanges')}
           </Button>
         </Space>
       </div>
 
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Divider orientation="left">Main Information</Divider>
+        <Divider orientation="left">{t('auth:account.mainInfo')}</Divider>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="firstName" label="Name">
+            <Form.Item name="firstName" label={t('auth:account.firstName')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="lastName" label="Surname">
+            <Form.Item name="lastName" label={t('auth:account.lastName')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="middleName" label="Middle name">
+            <Form.Item name="middleName" label={t('auth:account.middleName')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="dateOfBirth" label="Date of birth">
+            <Form.Item name="dateOfBirth" label={t('auth:account.dateOfBirth')}>
               <DatePicker style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="gender" label="Gender">
-              <Select placeholder="Select gender">
-                <Select.Option value="male">Male</Select.Option>
-                <Select.Option value="female">Female</Select.Option>
-                <Select.Option value="other">Other</Select.Option>
+            <Form.Item name="gender" label={t('auth:account.gender')}>
+              <Select placeholder={t('auth:account.gender')}>
+                <Select.Option value="male">{t('domain:gender.male')}</Select.Option>
+                <Select.Option value="female">{t('domain:gender.female')}</Select.Option>
+                <Select.Option value="other">{t('domain:gender.other')}</Select.Option>
               </Select>
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="nationality" label="Nationality">
+            <Form.Item name="nationality" label={t('auth:account.nationality')}>
               <Input />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Birth Information</Divider>
+        <Divider orientation="left">{t('auth:account.birthInfo')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="countryOfBirth" label="Country of birth">
+            <Form.Item name="countryOfBirth" label={t('auth:account.countryOfBirth')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="regionOfBirth" label="Region of birth">
+            <Form.Item name="regionOfBirth" label={t('auth:account.regionOfBirth')}>
               <Input />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Address Information</Divider>
+        <Divider orientation="left">{t('auth:account.addressInfo')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="currentAddress" label="Currently registered address">
+            <Form.Item name="currentAddress" label={t('auth:account.currentAddress')}>
               <TextArea rows={2} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="permanentAddress" label="Permanently registered address">
+            <Form.Item name="permanentAddress" label={t('auth:account.permanentAddress')}>
               <TextArea rows={2} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Identification</Divider>
+        <Divider orientation="left">{t('auth:account.identification')}</Divider>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="passportSerial" label="Passport serial number">
+            <Form.Item name="passportSerial" label={t('auth:account.passportSerial')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="personalId" label="Personal identification number (14 digits)">
+            <Form.Item name="personalId" label={t('auth:account.personalId')}>
               <Input maxLength={14} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="stirInn" label="STIR/INN">
+            <Form.Item name="stirInn" label={t('auth:account.stirInn')}>
               <Input />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Contact Information</Divider>
+        <Divider orientation="left">{t('auth:account.contactInfo')}</Divider>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="englishLevel" label="English level">
-              <Select placeholder="Select English level">
+            <Form.Item name="englishLevel" label={t('auth:account.englishLevel')}>
+              <Select placeholder={t('auth:account.englishLevel')}>
                 <Select.Option value="A1">A1</Select.Option>
                 <Select.Option value="A2">A2</Select.Option>
                 <Select.Option value="B1">B1</Select.Option>
@@ -565,109 +541,109 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="phone1" label="Phone number">
+            <Form.Item name="phone1" label={t('auth:account.phone')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="email1" label="Email">
+            <Form.Item name="email1" label={t('auth:account.email')}>
               <Input type="email" />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Bachelor's Degree</Divider>
+        <Divider orientation="left">{t('auth:account.bachelorDegree')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="bachelorUniversity" label="Name of graduated university (bachelor)">
+            <Form.Item name="bachelorUniversity" label={t('auth:account.bachelorUniversity')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="bachelorYear" label="Year of graduation (bachelor)">
+            <Form.Item name="bachelorYear" label={t('auth:account.bachelorYear')}>
               <InputNumber style={{ width: '100%' }} min={1900} max={new Date().getFullYear()} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="bachelorDirection" label="Direction (bachelor)">
+            <Form.Item name="bachelorDirection" label={t('auth:account.bachelorDirection')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="bachelorDiplomaNumber" label="Diploma number (bachelor)">
+            <Form.Item name="bachelorDiplomaNumber" label={t('auth:account.bachelorDiplomaNumber')}>
               <Input />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Master's Degree</Divider>
+        <Divider orientation="left">{t('auth:account.masterDegree')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="masterUniversity" label="Name of graduated university (master)">
+            <Form.Item name="masterUniversity" label={t('auth:account.masterUniversity')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="masterYear" label="Year of graduation (master)">
+            <Form.Item name="masterYear" label={t('auth:account.masterYear')}>
               <InputNumber style={{ width: '100%' }} min={1900} max={new Date().getFullYear()} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="masterDirection" label="Direction (master)">
+            <Form.Item name="masterDirection" label={t('auth:account.masterDirection')}>
               <Input />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="masterDiplomaNumber" label="Diploma number (master)">
+            <Form.Item name="masterDiplomaNumber" label={t('auth:account.masterDiplomaNumber')}>
               <Input />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Research</Divider>
+        <Divider orientation="left">{t('auth:account.research')}</Divider>
         <Row gutter={16}>
           <Col span={24}>
-            <Form.Item name="researchArea" label="Research area">
+            <Form.Item name="researchArea" label={t('auth:account.researchArea')}>
               <TextArea rows={3} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">PhD Degree</Divider>
+        <Divider orientation="left">{t('auth:account.phdDegree')}</Divider>
         <Form.Item name="hasPhdDegree" valuePropName="checked">
-          <Checkbox>Do you have an academic degree (PhD)?</Checkbox>
+          <Checkbox>{t('auth:account.hasPhdDegree')}</Checkbox>
         </Form.Item>
         <Form.Item noStyle shouldUpdate={(prev, cur) => prev.hasPhdDegree !== cur.hasPhdDegree}>
           {({ getFieldValue }) =>
             getFieldValue('hasPhdDegree') ? (
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="phdYear" label="Year of approval for academic degree (PhD)">
+                  <Form.Item name="phdYear" label={t('auth:account.phdYear')}>
                     <InputNumber style={{ width: '100%' }} min={1900} max={new Date().getFullYear()} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="phdSpeciality" label="Defenced speciality code and name (PhD)">
+                  <Form.Item name="phdSpeciality" label={t('auth:account.phdSpeciality')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
-                  <Form.Item name="phdTopic" label="The topic of the dissertation (PhD)">
+                  <Form.Item name="phdTopic" label={t('auth:account.phdTopic')}>
                     <TextArea rows={3} />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="phdDiplomaNumber" label="Diploma number (PhD)">
+                  <Form.Item name="phdDiplomaNumber" label={t('auth:account.phdDiplomaNumber')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="phdCountry" label="Country (PhD)">
+                  <Form.Item name="phdCountry" label={t('auth:account.phdCountry')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="phdOrganization" label="Organization (PhD)">
+                  <Form.Item name="phdOrganization" label={t('auth:account.phdOrganization')}>
                     <Input />
                   </Form.Item>
                 </Col>
@@ -676,41 +652,41 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
           }
         </Form.Item>
 
-        <Divider orientation="left">DSc Degree</Divider>
+        <Divider orientation="left">{t('auth:account.dscDegree')}</Divider>
         <Form.Item name="hasDscDegree" valuePropName="checked">
-          <Checkbox>Do you have an academic degree (DSc)?</Checkbox>
+          <Checkbox>{t('auth:account.hasDscDegree')}</Checkbox>
         </Form.Item>
         <Form.Item noStyle shouldUpdate={(prev, cur) => prev.hasDscDegree !== cur.hasDscDegree}>
           {({ getFieldValue }) =>
             getFieldValue('hasDscDegree') ? (
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="dscYear" label="Year of approval for academic degree (DSc)">
+                  <Form.Item name="dscYear" label={t('auth:account.dscYear')}>
                     <InputNumber style={{ width: '100%' }} min={1900} max={new Date().getFullYear()} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="dscSpeciality" label="Defenced speciality code and name (DSc)">
+                  <Form.Item name="dscSpeciality" label={t('auth:account.dscSpeciality')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
-                  <Form.Item name="dscTopic" label="The topic of the dissertation (DSc)">
+                  <Form.Item name="dscTopic" label={t('auth:account.dscTopic')}>
                     <TextArea rows={3} />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="dscDiplomaNumber" label="Diploma number (DSc)">
+                  <Form.Item name="dscDiplomaNumber" label={t('auth:account.dscDiplomaNumber')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="dscCountry" label="Country (DSc)">
+                  <Form.Item name="dscCountry" label={t('auth:account.dscCountry')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item name="dscOrganization" label="Organization (DSc)">
+                  <Form.Item name="dscOrganization" label={t('auth:account.dscOrganization')}>
                     <Input />
                   </Form.Item>
                 </Col>
@@ -719,31 +695,31 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
           }
         </Form.Item>
 
-        <Divider orientation="left">Academic Title</Divider>
+        <Divider orientation="left">{t('auth:account.academicTitle')}</Divider>
         <Form.Item name="hasAcademicTitle" valuePropName="checked">
-          <Checkbox>Do you have an academic title?</Checkbox>
+          <Checkbox>{t('auth:account.hasAcademicTitle')}</Checkbox>
         </Form.Item>
         <Form.Item noStyle shouldUpdate={(prev, cur) => prev.hasAcademicTitle !== cur.hasAcademicTitle}>
           {({ getFieldValue }) =>
             getFieldValue('hasAcademicTitle') ? (
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="academicTitleName" label="Name of academic title">
+                  <Form.Item name="academicTitleName" label={t('auth:account.academicTitleName')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="academicTitleSpeciality" label="Defenced speciality code and name">
+                  <Form.Item name="academicTitleSpeciality" label={t('auth:account.academicTitleSpeciality')}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="academicTitleYear" label="Year of approval for academic title">
+                  <Form.Item name="academicTitleYear" label={t('auth:account.academicTitleYear')}>
                     <InputNumber style={{ width: '100%' }} min={1900} max={new Date().getFullYear()} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="academicTitleAttestat" label="Attestat number">
+                  <Form.Item name="academicTitleAttestat" label={t('auth:account.academicTitleAttestat')}>
                     <Input />
                   </Form.Item>
                 </Col>
@@ -752,111 +728,111 @@ const TeacherAccountTab = ({ teacher, onSuccess }: TeacherAccountTabProps) => {
           }
         </Form.Item>
 
-        <Divider orientation="left">Training and Development</Divider>
+        <Divider orientation="left">{t('auth:account.trainingDev')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="internshipsCount" label="Number of internships (completed in the last year)">
+            <Form.Item name="internshipsCount" label={t('auth:account.internshipsCount')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="trainingCount" label="Number of places passed the qualification training (completed in the last year)">
+            <Form.Item name="trainingCount" label={t('auth:account.trainingCount')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="internshipsInfo" label="More information about the internship">
+            <Form.Item name="internshipsInfo" label={t('auth:account.internshipsInfo')}>
               <TextArea rows={3} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="trainingInfo" label="More information about the training">
-              <TextArea rows={3} />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Divider orientation="left">Awards and Recognition</Divider>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="awardsField" label="Awards on the field (name; time of receipt)">
-              <TextArea rows={3} />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="awardsState" label="State awards (name; time of receipt)">
+            <Form.Item name="trainingInfo" label={t('auth:account.trainingInfo')}>
               <TextArea rows={3} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Supervision</Divider>
+        <Divider orientation="left">{t('auth:account.awardsSection')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="supervisedPhd" label="Number of supervised students (PhD)">
+            <Form.Item name="awardsField" label={t('auth:account.awardsField')}>
+              <TextArea rows={3} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="awardsState" label={t('auth:account.awardsState')}>
+              <TextArea rows={3} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Divider orientation="left">{t('auth:account.supervision')}</Divider>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="supervisedPhd" label={t('auth:account.supervisedPhd')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="supervisedDsc" label="Number of supervised students (DSc)">
+            <Form.Item name="supervisedDsc" label={t('auth:account.supervisedDsc')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Conferences and Seminars</Divider>
+        <Divider orientation="left">{t('auth:account.conferencesSection')}</Divider>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="conferencesRepublic" label="Number of conferences attended - In the Republic">
+            <Form.Item name="conferencesRepublic" label={t('auth:account.conferencesRepublic')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="conferencesInternational" label="Number of conferences attended - International">
+            <Form.Item name="conferencesInternational" label={t('auth:account.conferencesInternational')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="seminarsRepublic" label="Number of seminars attended - In the Republic">
+            <Form.Item name="seminarsRepublic" label={t('auth:account.seminarsRepublic')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="seminarsInternational" label="Number of seminars attended - International">
+            <Form.Item name="seminarsInternational" label={t('auth:account.seminarsInternational')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Projects</Divider>
+        <Divider orientation="left">{t('auth:account.projects')}</Divider>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="projectsFundamental" label="Fundamental">
+            <Form.Item name="projectsFundamental" label={t('auth:account.projectsFundamental')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="projectsPractical" label="Practical">
+            <Form.Item name="projectsPractical" label={t('auth:account.projectsPractical')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="projectsYouth" label="Youth">
+            <Form.Item name="projectsYouth" label={t('auth:account.projectsYouth')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="projectsBusiness" label="Business agreement">
+            <Form.Item name="projectsBusiness" label={t('auth:account.projectsBusiness')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="projectsInnovation" label="Innovation">
+            <Form.Item name="projectsInnovation" label={t('auth:account.projectsInnovation')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="innovativeIdeasCount" label="Number of innovative ideas and developments">
+            <Form.Item name="innovativeIdeasCount" label={t('auth:account.innovativeIdeasCount')}>
               <InputNumber style={{ width: '100%' }} min={0} />
             </Form.Item>
           </Col>

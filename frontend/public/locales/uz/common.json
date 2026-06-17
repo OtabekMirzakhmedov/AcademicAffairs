@@ -1,0 +1,75 @@
+{
+  "loading": "Yuklanmoqda...",
+  "appTitle": "Akademik Ishlar",
+  "button": {
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "add": "Qo'shish",
+    "create": "Yaratish",
+    "update": "Yangilash",
+    "submit": "Topshirish",
+    "validate": "Tasdiqlash",
+    "reject": "Rad etish",
+    "search": "Qidirish",
+    "close": "Yopish",
+    "download": "Yuklab olish",
+    "upload": "Yuklash",
+    "confirm": "Tasdiqlash",
+    "back": "Ortga",
+    "resubmit": "Qayta topshirish",
+    "view": "Ko'rish",
+    "remove": "O'chirish"
+  },
+  "label": {
+    "name": "Nomi",
+    "description": "Tavsif",
+    "status": "Holat",
+    "actions": "Amallar",
+    "total": "Jami",
+    "deadline": "Muddat",
+    "department": "Kafedra",
+    "createdBy": "Yaratuvchi",
+    "hours": "soat",
+    "progress": "Jarayon",
+    "noData": "Ma'lumot yo'q",
+    "notSet": "Belgilanmagan",
+    "noGroups": "Guruhlar yo'q",
+    "yes": "Ha",
+    "no": "Yo'q",
+    "required": "Majburiy",
+    "course": "Fan",
+    "teacher": "O'qituvchi",
+    "academicPeriod": "Akademik davr",
+    "groups": "Guruhlar",
+    "type": "Turi",
+    "role": "Lavozim",
+    "category": "Kategoriya",
+    "created": "Yaratilgan"
+  },
+  "settings": {
+    "subtitle": "Hisob sozlamalari va afzalliklaringizni boshqaring",
+    "profileTab": "Profil ma'lumotlari",
+    "userInfo": "Foydalanuvchi ma'lumotlari",
+    "username": "Foydalanuvchi nomi",
+    "fullName": "To'liq ism",
+    "security": "Xavfsizlik"
+  },
+  "nav": {
+    "settings": "Sozlamalar",
+    "logout": "Chiqish",
+    "dashboard": "Bosh sahifa",
+    "administration": "Boshqaruv"
+  },
+  "message": {
+    "errorLoading": "Ma'lumot yuklashda xatolik",
+    "failedToLoad": "Ma'lumot yuklanmadi"
+  },
+  "language": {
+    "label": "Til",
+    "uz": "O'zbek",
+    "ru": "Русский",
+    "en": "English"
+  }
+}

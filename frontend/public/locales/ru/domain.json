@@ -1,0 +1,60 @@
+{
+  "status": {
+    "draft": "Черновик",
+    "submitted": "Отправлено",
+    "validated": "Подтверждено",
+    "rejected": "Отклонено",
+    "in_progress": "В процессе",
+    "active": "Активный",
+    "inactive": "Неактивный"
+  },
+  "role": {
+    "admin": "Администратор",
+    "departmenthead": "Заведующий кафедрой",
+    "teacher": "Преподаватель"
+  },
+  "employment": {
+    "full-time": "Полная ставка",
+    "part-time": "Неполная ставка",
+    "contract": "Контракт"
+  },
+  "publicationType": {
+    "conference": "Конференция",
+    "national": "Национальный журнал",
+    "scopus": "Scopus"
+  },
+  "degreeLevel": {
+    "BACHELOR": "Бакалавр",
+    "MASTER": "Магистр",
+    "DOCTORATE": "Докторантура",
+    "UNDERGRADUATE": "Подготовительный",
+    "GRADUATE": "Магистратура"
+  },
+  "hourType": {
+    "lecture": "Лекция",
+    "practice": "Практика",
+    "lab": "Лаборатория",
+    "seminar": "Семинар",
+    "advising": "Консультация"
+  },
+  "courseType": {
+    "required": "Обязательный",
+    "elective": "По выбору"
+  },
+  "gender": {
+    "male": "Мужской",
+    "female": "Женский",
+    "other": "Другой"
+  },
+  "semester": {
+    "1": "Осень",
+    "2": "Весна"
+  },
+  "researchCategory": {
+    "scientific_main": "Научная (основная)",
+    "scientific_exchange": "Научная (обмен)",
+    "educational_additional": "Образовательная (дополнительная)",
+    "additional": "Дополнительная",
+    "educational": "Образовательная"
+  }
+}

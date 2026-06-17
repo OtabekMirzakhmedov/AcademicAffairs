@@ -19,6 +19,7 @@ import {
   PhoneOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../../components/layout/MainLayout';
 import TeacherFormModal from '../../components/features/department-head/TeacherFormModal';
 import TeacherEditModal from '../../components/features/department-head/TeacherEditModal';
@@ -29,12 +30,11 @@ import { useAuthStore } from '../../store/authStore';
 
 const TeachersManagementPage = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation(['head', 'common', 'domain']);
   const [loading, setLoading] = useState(false);
 
-  // Department state
   const [department, setDepartment] = useState<Department | null>(null);
 
-  // Teachers state
   const [teachers, setTeachers] = useState<User[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<User[]>([]);
   const [searchText, setSearchText] = useState('');
@@ -59,17 +59,15 @@ const TeachersManagementPage = () => {
   const fetchDepartment = async () => {
     try {
       if (!user?.id) return;
-      // Department heads need to find their department by headId
       const allDepartments = await departmentsService.getAll();
       const myDepartment = allDepartments.find((dept) => dept.headId === user.id);
-
       if (myDepartment) {
         setDepartment(myDepartment);
       } else {
-        message.warning('You are not assigned as head of any department');
+        message.warning(t('head:activities.noDepartmentMsg'));
       }
-    } catch (error) {
-      message.error('Failed to fetch department');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     }
   };
 
@@ -77,14 +75,13 @@ const TeachersManagementPage = () => {
     try {
       setLoading(true);
       const allUsers = await usersService.getAll();
-      // Show only department teachers
       const departmentTeachers = allUsers.filter(
         (u) => u.role.name === 'teacher' && u.teacherInfo?.departmentId === department?.id
       );
       setTeachers(departmentTeachers);
       setFilteredTeachers(departmentTeachers);
-    } catch (error) {
-      message.error('Failed to fetch teachers');
+    } catch {
+      message.error(t('common:message.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -101,38 +98,20 @@ const TeachersManagementPage = () => {
     setFilteredTeachers(filtered);
   };
 
-  const handleAddTeacher = () => {
-    setTeacherModalOpen(true);
-  };
-
-  const handleTeacherModalSuccess = () => {
-    fetchTeachers();
-  };
-
-  const handleEditTeacher = (teacher: User) => {
-    setEditingTeacher(teacher);
-    setTeacherEditModalOpen(true);
-  };
-
-  const handleTeacherEditModalSuccess = () => {
-    fetchTeachers();
-  };
-
   const handleDeleteTeacher = (id: number) => {
     Modal.confirm({
-      title: 'Delete Teacher',
-      content: 'Are you sure you want to delete this teacher? This will deactivate their account.',
-      okText: 'Delete',
+      title: t('head:teachers.deleteTitle'),
+      content: t('head:teachers.deleteConfirm'),
+      okText: t('common:button.delete'),
       okType: 'danger',
+      cancelText: t('common:button.cancel'),
       onOk: async () => {
         try {
           await usersService.delete(id);
-          message.success('Teacher deleted successfully');
+          message.success(t('head:teachers.deleteSuccess'));
           fetchTeachers();
         } catch (error: any) {
-          message.error(
-            error?.response?.data?.error?.message || 'Failed to delete teacher'
-          );
+          message.error(error?.response?.data?.error?.message || t('head:teachers.deleteFailed'));
         }
       },
     });
@@ -140,7 +119,7 @@ const TeachersManagementPage = () => {
 
   const teachersColumns: ColumnsType<User> = [
     {
-      title: 'Teacher Name',
+      title: t('head:teachers.teacherName'),
       key: 'name',
       render: (_, record) => (
         <span>
@@ -154,12 +133,12 @@ const TeachersManagementPage = () => {
         ),
     },
     {
-      title: 'Username',
+      title: t('head:teachers.username'),
       dataIndex: 'login',
       key: 'login',
     },
     {
-      title: 'Email',
+      title: t('head:teachers.primaryEmail'),
       key: 'email',
       render: (_, record) => (
         <span>
@@ -173,7 +152,7 @@ const TeachersManagementPage = () => {
       ),
     },
     {
-      title: 'Phone',
+      title: t('head:dashboard.phone'),
       key: 'phone',
       render: (_, record) => (
         <span>
@@ -187,7 +166,7 @@ const TeachersManagementPage = () => {
       ),
     },
     {
-      title: 'Employment Type',
+      title: t('head:requirements.employmentType'),
       key: 'employmentType',
       render: (_, record) => {
         const type = record.teacherInfo?.employmentType;
@@ -198,15 +177,15 @@ const TeachersManagementPage = () => {
         };
         return type ? (
           <Tag color={colors[type] || 'default'}>
-            {type.replace('-', ' ').toUpperCase()}
+            {t(`domain:employment.${type}`, { defaultValue: type })}
           </Tag>
         ) : (
-          <Tag>Not Set</Tag>
+          <Tag>{t('common:label.notSet')}</Tag>
         );
       },
     },
     {
-      title: 'Teaching Hours',
+      title: t('head:teachers.teachingHours'),
       key: 'mandatoryHours',
       render: (_, record) => (
         <span>
@@ -217,7 +196,7 @@ const TeachersManagementPage = () => {
       ),
     },
     {
-      title: 'Extracurricular',
+      title: t('head:teachers.extracurricular'),
       key: 'extracurricular',
       render: (_, record) => (
         <span>
@@ -228,7 +207,7 @@ const TeachersManagementPage = () => {
       ),
     },
     {
-      title: 'Articles Required',
+      title: t('head:teachers.articlesRequired'),
       key: 'articles',
       render: (_, record) => {
         const conference = record.teacherInfo?.mandatoryConferenceArticles || 0;
@@ -243,34 +222,32 @@ const TeachersManagementPage = () => {
       },
     },
     {
-      title: 'Documentation',
+      title: t('head:teachers.documentation'),
       key: 'documentation',
       render: (_, record) => (
-        <span>
-          {record.teacherInfo?.mandatoryDocumentation || '-'}
-        </span>
+        <span>{record.teacherInfo?.mandatoryDocumentation || '-'}</span>
       ),
     },
     {
-      title: 'Status',
+      title: t('common:label.status'),
       key: 'status',
       render: (_, record) => (
         <Tag color={record.isActive ? 'success' : 'error'}>
-          {record.isActive ? 'Active' : 'Inactive'}
+          {record.isActive ? t('domain:status.active') : t('domain:status.inactive')}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
+      title: t('common:label.actions'),
       key: 'actions',
       render: (_, record) => (
         <Space>
           <Button
             type="link"
             icon={<EditOutlined />}
-            onClick={() => handleEditTeacher(record)}
+            onClick={() => { setEditingTeacher(record); setTeacherEditModalOpen(true); }}
           >
-            Edit
+            {t('common:button.edit')}
           </Button>
           <Button
             type="link"
@@ -278,7 +255,7 @@ const TeachersManagementPage = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteTeacher(record.id)}
           >
-            Delete
+            {t('common:button.delete')}
           </Button>
         </Space>
       ),
@@ -293,10 +270,10 @@ const TeachersManagementPage = () => {
             <div>
               <h2 style={{ margin: 0 }}>
                 <UserOutlined style={{ marginRight: 8 }} />
-                Teachers Management
+                {t('head:teachers.title')}
               </h2>
               <p style={{ margin: '4px 0 0', fontSize: '14px', fontWeight: 'normal', color: '#8c8c8c' }}>
-                Manage teachers in {department?.name || 'your department'}
+                {t('head:teachers.desc', { departmentName: department?.name || '' })}
               </p>
             </div>
           }
@@ -304,16 +281,16 @@ const TeachersManagementPage = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleAddTeacher}
+              onClick={() => setTeacherModalOpen(true)}
               size="large"
             >
-              Add Teacher
+              {t('head:teachers.addTeacher')}
             </Button>
           }
         >
           <div style={{ marginBottom: 16 }}>
             <Input
-              placeholder="Search teachers by name, username, or email..."
+              placeholder={t('head:teachers.search')}
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -330,24 +307,22 @@ const TeachersManagementPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} teachers`,
+              showTotal: (total) => t('head:teachers.totalTeachers', { total }),
             }}
             scroll={{ x: 1400 }}
           />
         </Card>
 
-        {/* Teacher Add Modal */}
         <TeacherFormModal
           open={teacherModalOpen}
           onCancel={() => setTeacherModalOpen(false)}
           onSuccess={() => {
             setTeacherModalOpen(false);
-            handleTeacherModalSuccess();
+            fetchTeachers();
           }}
           departmentId={department?.id}
         />
 
-        {/* Teacher Edit Modal */}
         <TeacherEditModal
           open={teacherEditModalOpen}
           teacher={editingTeacher}
@@ -358,7 +333,7 @@ const TeachersManagementPage = () => {
           onSuccess={() => {
             setTeacherEditModalOpen(false);
             setEditingTeacher(null);
-            handleTeacherEditModalSuccess();
+            fetchTeachers();
           }}
         />
       </div>
