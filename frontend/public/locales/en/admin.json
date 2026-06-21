@@ -139,6 +139,24 @@
     "users": "Users",
     "departments": "Departments",
     "scientificTasks": "Scientific Tasks",
-    "researchActivities": "Research Activities"
+    "researchActivities": "Research Activities",
+    "auditLogs": "Audit Log"
+  },
+  "auditLogs": {
+    "title": "Audit Log",
+    "desc": "Full history of admin and department head actions across the system",
+    "when": "Date / Time",
+    "actor": "Actor",
+    "action": "Action",
+    "entity": "Entity",
+    "reason": "Reason",
+    "before": "Before",
+    "after": "After",
+    "filterAction": "Filter by action",
+    "filterEntity": "Filter by entity type",
+    "filterActor": "Filter by actor",
+    "clearFilters": "Clear filters",
+    "totalItems": "Total {{total}} entries",
+    "detailTitle": "Audit Entry Details"
   }
 }

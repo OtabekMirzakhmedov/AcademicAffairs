@@ -1,18 +1,25 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 
 @Injectable()
 export class DepartmentsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(DepartmentsService.name);
 
-  async create(createDepartmentDto: CreateDepartmentDto) {
-    // Validate head if provided
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
+
+  async create(createDepartmentDto: CreateDepartmentDto, actor: AuditActor) {
     if (createDepartmentDto.headId) {
       const head = await this.prisma.user.findUnique({
         where: { id: createDepartmentDto.headId },
@@ -51,6 +58,11 @@ export class DepartmentsService {
         },
       },
     });
+
+    await this.audit.log(actor, 'create', 'Department', department.id, {
+      after: { id: department.id, name: department.name, headId: department.headId },
+    });
+    this.logger.log({ event: 'department.created', departmentId: department.id, actorId: actor.id });
 
     return department;
   }
@@ -111,10 +123,9 @@ export class DepartmentsService {
     return department;
   }
 
-  async update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
-    await this.findOne(id);
+  async update(id: number, updateDepartmentDto: UpdateDepartmentDto, actor: AuditActor) {
+    const existing = await this.findOne(id);
 
-    // Validate head if provided
     if (updateDepartmentDto.headId) {
       const head = await this.prisma.user.findUnique({
         where: { id: updateDepartmentDto.headId },
@@ -155,20 +166,28 @@ export class DepartmentsService {
       },
     });
 
+    const headChanged =
+      updateDepartmentDto.headId !== undefined &&
+      updateDepartmentDto.headId !== existing.headId;
+
+    const action = headChanged ? 'assign' : 'update';
+    await this.audit.log(actor, action, 'Department', id, {
+      before: { id, name: existing.name, headId: existing.headId },
+      after: { id, name: department.name, headId: department.headId },
+    });
+
     return department;
   }
 
-  async remove(id: number) {
+  async remove(id: number, actor: AuditActor) {
     const department = await this.findOne(id);
 
-    // Check if department has teachers
     if (department._count.teachers > 0) {
       throw new BadRequestException(
         'Cannot delete department with active teachers',
       );
     }
 
-    // Check if department has courses
     if (department._count.courses > 0) {
       throw new BadRequestException(
         'Cannot delete department with active courses',
@@ -178,6 +197,11 @@ export class DepartmentsService {
     await this.prisma.department.delete({
       where: { id },
     });
+
+    await this.audit.log(actor, 'delete', 'Department', id, {
+      before: { id, name: department.name },
+    });
+    this.logger.log({ event: 'department.deleted', departmentId: id, actorId: actor.id });
 
     return { message: 'Department deleted successfully' };
   }

@@ -1,10 +1,13 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreateScientificTaskDto } from './dto/create-scientific-task.dto';
 import { UpdateScientificTaskDto } from './dto/update-scientific-task.dto';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -12,14 +15,14 @@ import { UpdateReportDto } from './dto/update-report.dto';
 
 @Injectable()
 export class ScientificTasksService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ScientificTasksService.name);
 
-  /**
-   * Create a scientific task
-   * Admin creates for all teachers, Dept Head creates for their department only
-   */
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
+
   async createTask(userId: number, dto: CreateScientificTaskDto) {
-    // Get user with role and department info
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -35,7 +38,6 @@ export class ScientificTasksService {
 
     const roleName = user.role.name.toLowerCase();
 
-    // Only admin and dept heads can create tasks
     if (roleName !== 'admin' && roleName !== 'departmenthead') {
       throw new ForbiddenException('Only admins and department heads can create scientific tasks');
     }
@@ -44,13 +46,11 @@ export class ScientificTasksService {
     let targetTeachers: number[] = [];
 
     if (roleName === 'admin') {
-      // Admin creates task for ALL teachers
       const teachers = await this.prisma.teacherInfo.findMany({
         select: { userId: true },
       });
       targetTeachers = teachers.map((t) => t.userId);
     } else if (roleName === 'departmenthead') {
-      // Dept head creates task for their department only
       const deptHead = user.headedDepartments[0];
       if (!deptHead) {
         throw new ForbiddenException('Department head assignment not found');
@@ -64,7 +64,6 @@ export class ScientificTasksService {
       targetTeachers = teachers.map((t) => t.userId);
     }
 
-    // Create the task
     const task = await this.prisma.scientificTask.create({
       data: {
         taskName: dto.taskName,
@@ -90,7 +89,6 @@ export class ScientificTasksService {
       },
     });
 
-    // Auto-create report records for all target teachers
     if (targetTeachers.length > 0) {
       await this.prisma.teacherScientificReport.createMany({
         data: targetTeachers.map((teacherId) => ({
@@ -104,9 +102,6 @@ export class ScientificTasksService {
     return task;
   }
 
-  /**
-   * Get all tasks visible to the user
-   */
   async findAllTasks(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -126,7 +121,6 @@ export class ScientificTasksService {
     let where: any = { isActive: true };
 
     if (roleName === 'teacher') {
-      // Teachers see tasks assigned to them (their reports exist)
       const reports = await this.prisma.teacherScientificReport.findMany({
         where: { teacherId: userId },
         select: { scientificTaskId: true },
@@ -134,19 +128,17 @@ export class ScientificTasksService {
       const taskIds = reports.map((r) => r.scientificTaskId);
       where = { id: { in: taskIds }, isActive: true };
     } else if (roleName === 'departmenthead') {
-      // Dept heads see tasks for their department
       const deptHead = user.headedDepartments[0];
       if (deptHead) {
         where = {
           OR: [
             { departmentId: deptHead.id },
-            { departmentId: null }, // Admin-created tasks visible to all
+            { departmentId: null },
           ],
           isActive: true,
         };
       }
     }
-    // Admin sees all tasks (no additional filters)
 
     return this.prisma.scientificTask.findMany({
       where,
@@ -174,9 +166,6 @@ export class ScientificTasksService {
     });
   }
 
-  /**
-   * Get a single task by ID
-   */
   async findOneTask(taskId: number, userId: number) {
     const task = await this.prisma.scientificTask.findUnique({
       where: { id: taskId },
@@ -201,15 +190,11 @@ export class ScientificTasksService {
       throw new NotFoundException('Task not found');
     }
 
-    // Check if user has access to this task
     await this.checkTaskAccess(userId, taskId);
 
     return task;
   }
 
-  /**
-   * Update a scientific task
-   */
   async updateTask(taskId: number, userId: number, dto: UpdateScientificTaskDto) {
     const task = await this.prisma.scientificTask.findUnique({
       where: { id: taskId },
@@ -219,7 +204,6 @@ export class ScientificTasksService {
       throw new NotFoundException('Task not found');
     }
 
-    // Only creator can update
     if (task.createdBy !== userId) {
       throw new ForbiddenException('Only the task creator can update it');
     }
@@ -245,9 +229,6 @@ export class ScientificTasksService {
     });
   }
 
-  /**
-   * Delete a scientific task
-   */
   async deleteTask(taskId: number, userId: number) {
     const task = await this.prisma.scientificTask.findUnique({
       where: { id: taskId },
@@ -257,20 +238,15 @@ export class ScientificTasksService {
       throw new NotFoundException('Task not found');
     }
 
-    // Only creator can delete
     if (task.createdBy !== userId) {
       throw new ForbiddenException('Only the task creator can delete it');
     }
 
-    // Delete task - associated reports will be cascade deleted
     await this.prisma.scientificTask.delete({
       where: { id: taskId },
     });
   }
 
-  /**
-   * Get teacher's own reports
-   */
   async getMyReports(userId: number) {
     return this.prisma.teacherScientificReport.findMany({
       where: { teacherId: userId },
@@ -310,9 +286,6 @@ export class ScientificTasksService {
     });
   }
 
-  /**
-   * Get a single report
-   */
   async getReport(reportId: number, userId: number) {
     const report = await this.prisma.teacherScientificReport.findUnique({
       where: { id: reportId },
@@ -349,7 +322,6 @@ export class ScientificTasksService {
       throw new NotFoundException('Report not found');
     }
 
-    // Check access
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { role: true, headedDepartments: true },
@@ -364,9 +336,6 @@ export class ScientificTasksService {
     return report;
   }
 
-  /**
-   * Update a report (teacher can update even after submission)
-   */
   async updateReport(reportId: number, userId: number, dto: UpdateReportDto) {
     const report = await this.prisma.teacherScientificReport.findUnique({
       where: { id: reportId },
@@ -376,7 +345,6 @@ export class ScientificTasksService {
       throw new NotFoundException('Report not found');
     }
 
-    // Only the teacher who owns the report can update it
     if (report.teacherId !== userId) {
       throw new ForbiddenException('You can only update your own reports');
     }
@@ -393,10 +361,7 @@ export class ScientificTasksService {
     });
   }
 
-  /**
-   * Submit a report
-   */
-  async submitReport(reportId: number, userId: number) {
+  async submitReport(reportId: number, actor: AuditActor) {
     const report = await this.prisma.teacherScientificReport.findUnique({
       where: { id: reportId },
     });
@@ -405,11 +370,13 @@ export class ScientificTasksService {
       throw new NotFoundException('Report not found');
     }
 
-    if (report.teacherId !== userId) {
+    if (report.teacherId !== actor.id) {
       throw new ForbiddenException('You can only submit your own reports');
     }
 
-    return this.prisma.teacherScientificReport.update({
+    const before = { id: report.id, status: report.status };
+
+    const result = await this.prisma.teacherScientificReport.update({
       where: { id: reportId },
       data: {
         status: 'submitted',
@@ -419,13 +386,16 @@ export class ScientificTasksService {
         scientificTask: true,
       },
     });
+
+    await this.audit.log(actor, 'submit', 'TeacherScientificReport', reportId, {
+      before,
+      after: { id: reportId, status: 'submitted' },
+    });
+    this.logger.log({ event: 'scientific_report.submitted', reportId, teacherId: actor.id });
+
+    return result;
   }
 
-  /**
-   * Get all submitted reports (for dept heads and admins)
-   * Department heads can see all reports (including in_progress) from their department
-   * Admins can see all reports
-   */
   async getSubmittedReports(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -449,7 +419,6 @@ export class ScientificTasksService {
     let where: any = {};
 
     if (roleName === 'departmenthead') {
-      // Dept head sees ALL reports from teachers in their department
       const deptHead = user.headedDepartments[0];
       if (deptHead) {
         const teacherIds = await this.prisma.teacherInfo.findMany({
@@ -458,11 +427,9 @@ export class ScientificTasksService {
         });
         where.teacherId = { in: teacherIds.map((t) => t.userId) };
       } else {
-        // If no department assigned, return empty
         where.teacherId = { in: [] };
       }
     }
-    // Admin sees all reports
 
     return this.prisma.teacherScientificReport.findMany({
       where,
@@ -508,10 +475,7 @@ export class ScientificTasksService {
     });
   }
 
-  /**
-   * Validate a report
-   */
-  async validateReport(reportId: number, userId: number) {
+  async validateReport(reportId: number, actor: AuditActor) {
     const report = await this.prisma.teacherScientificReport.findUnique({
       where: { id: reportId },
       include: {
@@ -531,9 +495,8 @@ export class ScientificTasksService {
       throw new BadRequestException('Only submitted reports can be validated');
     }
 
-    // Check if user is admin or dept head of the teacher
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: actor.id },
       include: { role: true, headedDepartments: true },
     });
 
@@ -548,12 +511,14 @@ export class ScientificTasksService {
       throw new ForbiddenException('Only admins and department heads can validate reports');
     }
 
-    return this.prisma.teacherScientificReport.update({
+    const before = { id: report.id, status: report.status };
+
+    const result = await this.prisma.teacherScientificReport.update({
       where: { id: reportId },
       data: {
         status: 'validated',
         validatedAt: new Date(),
-        validatedBy: userId,
+        validatedBy: actor.id,
       },
       include: {
         scientificTask: true,
@@ -571,12 +536,17 @@ export class ScientificTasksService {
         },
       },
     });
+
+    await this.audit.log(actor, 'validate', 'TeacherScientificReport', reportId, {
+      before,
+      after: { id: reportId, status: 'validated', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'scientific_report.validated', reportId, validatorId: actor.id, teacherId: report.teacherId });
+
+    return result;
   }
 
-  /**
-   * Reject a report
-   */
-  async rejectReport(reportId: number, userId: number) {
+  async rejectReport(reportId: number, actor: AuditActor) {
     const report = await this.prisma.teacherScientificReport.findUnique({
       where: { id: reportId },
       include: {
@@ -596,9 +566,8 @@ export class ScientificTasksService {
       throw new BadRequestException('Only submitted reports can be rejected');
     }
 
-    // Check if user is admin or dept head of the teacher
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: actor.id },
       include: { role: true, headedDepartments: true },
     });
 
@@ -613,12 +582,14 @@ export class ScientificTasksService {
       throw new ForbiddenException('Only admins and department heads can reject reports');
     }
 
-    return this.prisma.teacherScientificReport.update({
+    const before = { id: report.id, status: report.status };
+
+    const result = await this.prisma.teacherScientificReport.update({
       where: { id: reportId },
       data: {
         status: 'rejected',
         validatedAt: new Date(),
-        validatedBy: userId,
+        validatedBy: actor.id,
       },
       include: {
         scientificTask: true,
@@ -636,13 +607,17 @@ export class ScientificTasksService {
         },
       },
     });
+
+    await this.audit.log(actor, 'reject', 'TeacherScientificReport', reportId, {
+      before,
+      after: { id: reportId, status: 'rejected', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'scientific_report.rejected', reportId, validatorId: actor.id, teacherId: report.teacherId });
+
+    return result;
   }
 
-  /**
-   * Get progress overview for a specific task
-   */
   async getTaskProgress(taskId: number, userId: number) {
-    // Check if user has access to this task
     await this.checkTaskAccess(userId, taskId);
 
     const task = await this.prisma.scientificTask.findUnique({
@@ -714,9 +689,6 @@ export class ScientificTasksService {
     return task;
   }
 
-  /**
-   * Helper: Check if user has access to a task
-   */
   private async checkTaskAccess(userId: number, taskId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -734,7 +706,7 @@ export class ScientificTasksService {
     const roleName = user.role.name.toLowerCase();
 
     if (roleName === 'admin') {
-      return; // Admin has access to all tasks
+      return;
     }
 
     const task = await this.prisma.scientificTask.findUnique({
@@ -751,7 +723,6 @@ export class ScientificTasksService {
         throw new ForbiddenException('You do not have access to this task');
       }
     } else if (roleName === 'teacher') {
-      // Check if teacher has a report for this task
       const report = await this.prisma.teacherScientificReport.findFirst({
         where: {
           scientificTaskId: taskId,

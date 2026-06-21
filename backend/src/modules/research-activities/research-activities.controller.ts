@@ -239,10 +239,8 @@ export class ResearchActivitiesController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const activity = await this.researchActivitiesService.submitActivity(
-      id,
-      user.id,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const activity = await this.researchActivitiesService.submitActivity(id, actor);
     return {
       success: true,
       data: activity,
@@ -262,10 +260,8 @@ export class ResearchActivitiesController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const activity = await this.researchActivitiesService.validateActivity(
-      id,
-      user.id,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const activity = await this.researchActivitiesService.validateActivity(id, actor);
     return {
       success: true,
       data: activity,
@@ -285,10 +281,8 @@ export class ResearchActivitiesController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const activity = await this.researchActivitiesService.rejectActivity(
-      id,
-      user.id,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const activity = await this.researchActivitiesService.rejectActivity(id, actor);
     return {
       success: true,
       data: activity,

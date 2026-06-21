@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@ne
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
+import { RejectPublicationDto } from './dto/reject-publication.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -115,11 +116,66 @@ export class PublicationsController {
   @ApiResponse({ status: 403, description: 'Not publication owner' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
   async submit(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    const publication = await this.publicationsService.submit(id, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const publication = await this.publicationsService.submit(id, actor);
     return {
       success: true,
       data: publication,
       message: 'Publication submitted successfully',
+    };
+  }
+
+  @Get('submitted/all')
+  @Roles('departmenthead', 'admin')
+  @ApiOperation({ summary: 'Get submitted publications', description: 'Get all submitted publications pending validation (department head sees own dept only)' })
+  @ApiResponse({ status: 200, description: 'Returns submitted publications' })
+  async getAllSubmitted(@CurrentUser() user: any) {
+    const publications = await this.publicationsService.getAllSubmitted(user.id);
+    return {
+      success: true,
+      data: publications,
+    };
+  }
+
+  @Post(':id/validate')
+  @Roles('departmenthead', 'admin')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validate publication', description: 'Validate a submitted publication (department head or admin)' })
+  @ApiParam({ name: 'id', description: 'Publication ID' })
+  @ApiResponse({ status: 200, description: 'Publication validated successfully' })
+  @ApiResponse({ status: 400, description: 'Publication not in submitted status' })
+  @ApiResponse({ status: 403, description: 'Not in your department' })
+  @ApiResponse({ status: 404, description: 'Publication not found' })
+  async validate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const publication = await this.publicationsService.validate(id, actor);
+    return {
+      success: true,
+      data: publication,
+      message: 'Publication validated successfully',
+    };
+  }
+
+  @Post(':id/reject')
+  @Roles('departmenthead', 'admin')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reject publication', description: 'Reject a submitted publication (department head or admin)' })
+  @ApiParam({ name: 'id', description: 'Publication ID' })
+  @ApiResponse({ status: 200, description: 'Publication rejected' })
+  @ApiResponse({ status: 400, description: 'Publication not in submitted status' })
+  @ApiResponse({ status: 403, description: 'Not in your department' })
+  @ApiResponse({ status: 404, description: 'Publication not found' })
+  async reject(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RejectPublicationDto,
+    @CurrentUser() user: any,
+  ) {
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const publication = await this.publicationsService.reject(id, actor, dto.reason);
+    return {
+      success: true,
+      data: publication,
+      message: 'Publication rejected',
     };
   }
 

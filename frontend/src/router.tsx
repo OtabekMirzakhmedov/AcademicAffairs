@@ -13,9 +13,11 @@ import UsersPage from './pages/admin/UsersPage';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
 import ScientificTasksManagementPage from './pages/admin/ScientificTasksManagementPage';
 import ResearchActivitiesManagementPage from './pages/admin/ResearchActivitiesManagementPage';
+import AuditLogsPage from './pages/admin/AuditLogsPage';
 import DepartmentActivitiesPage from './pages/department-head/DepartmentActivitiesPage';
 import ProgramDetailPage from './pages/department-head/ProgramDetailPage';
 import ScientificReportsValidationPage from './pages/department-head/ScientificReportsValidationPage';
+import PublicationsValidationPage from './pages/department-head/PublicationsValidationPage';
 import TeachersManagementPage from './pages/department-head/TeachersManagementPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import RoleBasedRedirect from './components/common/RoleBasedRedirect';
@@ -146,6 +148,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/admin/audit-logs',
+    element: (
+      <ProtectedRoute>
+        <AuditLogsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/department/activities',
     element: (
       <ProtectedRoute>
@@ -166,6 +176,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ScientificReportsValidationPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/department/publications',
+    element: (
+      <ProtectedRoute>
+        <PublicationsValidationPage />
       </ProtectedRoute>
     ),
   },

@@ -229,5 +229,32 @@
     "curriculum": "Program Curriculum",
     "coursesInSemester": "{{count}} courses",
     "fetchFailed": "Failed to fetch program details"
+  },
+  "publications": {
+    "navTitle": "Publications Validation",
+    "pageTitle": "Publications Validation",
+    "pageDesc": "Review and validate publication submissions from your department teachers",
+    "totalPending": "Awaiting Validation",
+    "search": "Search by title, author, teacher or venue...",
+    "filterByType": "Filter by type",
+    "totalItems": "Total {{total}} publications",
+    "title": "Title",
+    "authors": "Authors",
+    "venue": "Venue / Journal",
+    "publicationDate": "Publication Date",
+    "submittedAt": "Submitted",
+    "keywords": "Keywords",
+    "abstract": "Abstract",
+    "url": "URL",
+    "detailTitle": "Publication Details",
+    "validateTitle": "Validate Publication",
+    "validateConfirm": "Validate the publication \"{{title}}\" submitted by {{name}}?",
+    "validateSuccess": "Publication validated successfully",
+    "validateFailed": "Failed to validate publication",
+    "rejectTitle": "Reject Publication",
+    "rejectConfirm": "Reject the publication \"{{title}}\" submitted by {{name}}?",
+    "rejectReasonPlaceholder": "Reason for rejection (optional) — the teacher will see this",
+    "rejectSuccess": "Publication rejected",
+    "rejectFailed": "Failed to reject publication"
   }
 }

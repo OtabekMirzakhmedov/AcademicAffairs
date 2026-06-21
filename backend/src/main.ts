@@ -5,13 +5,32 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
 import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyMultipart from '@fastify/multipart';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const fastifyAdapter = new FastifyAdapter();
+  const isProd = process.env.NODE_ENV === 'production';
+  const logLevel = process.env.LOG_LEVEL ?? (isProd ? 'info' : 'debug');
+
+  const fastifyAdapter = new FastifyAdapter({
+    logger: {
+      level: logLevel,
+      redact: [
+        'req.headers.authorization',
+        '*.password',
+        '*.currentPassword',
+        '*.newPassword',
+        '*.refreshToken',
+        '*.accessToken',
+      ],
+      ...(isProd
+        ? {}
+        : { transport: { target: 'pino-pretty', options: { colorize: true } } }),
+    },
+  });
 
   // Security headers. CSP is disabled because Swagger UI at /api/docs
   // depends on inline scripts/styles; the other defaults (X-Frame-Options,
@@ -42,8 +61,10 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyAdapter,
+    { bufferLogs: true },
   );
 
+  app.useLogger(app.get(Logger));
   app.setGlobalPrefix('api');
 
   // Global validation pipe
@@ -82,6 +103,7 @@ async function bootstrap() {
     .addTag('scientific-tasks', 'Scientific task management endpoints')
     .addTag('publications', 'Publication management endpoints')
     .addTag('research-activities', 'Research activity endpoints')
+    .addTag('audit-logs', 'Audit log endpoints (admin only)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -55,6 +55,21 @@ class PublicationsService {
     return response.data.data;
   }
 
+  async getAllSubmitted(): Promise<TeacherPublication[]> {
+    const response = await api.get<ApiResponse<TeacherPublication[]>>('/publications/submitted/all');
+    return response.data.data;
+  }
+
+  async validate(id: number): Promise<TeacherPublication> {
+    const response = await api.post<ApiResponse<TeacherPublication>>(`/publications/${id}/validate`);
+    return response.data.data;
+  }
+
+  async reject(id: number, reason?: string): Promise<TeacherPublication> {
+    const response = await api.post<ApiResponse<TeacherPublication>>(`/publications/${id}/reject`, { reason });
+    return response.data.data;
+  }
+
   async delete(id: number): Promise<void> {
     await api.delete(`/publications/${id}`);
   }

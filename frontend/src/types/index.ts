@@ -353,6 +353,8 @@ export interface TeacherPublication {
   status: 'draft' | 'submitted' | 'validated' | 'rejected';
   submittedAt?: string;
   validatedAt?: string;
+  validatedBy?: number;
+  validator?: User;
   rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
@@ -371,6 +373,41 @@ export interface PublicationStatistics {
 }
 
 // Research Activity Types
+// Audit Log Types
+export interface AuditLog {
+  id: number;
+  actorId: number;
+  actorLogin: string;
+  actorRole: string;
+  action: string;
+  entityType: string;
+  entityId: number;
+  before?: Record<string, any>;
+  after?: Record<string, any>;
+  reason?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+export interface AuditLogPage {
+  items: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AuditQuery {
+  entityType?: string;
+  entityId?: number;
+  actorId?: number;
+  action?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+}
+
 export interface ResearchActivityTemplate {
   id: number;
   name: string;

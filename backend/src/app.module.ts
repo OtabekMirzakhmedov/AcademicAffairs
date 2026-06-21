@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TeachingActivitiesModule } from './modules/teaching-activities/teaching-activities.module';
 import { UsersModule } from './modules/users/users.module';
@@ -20,7 +22,11 @@ import { ResearchActivitiesModule } from './modules/research-activities/research
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    LoggerModule.forRoot({
+      useExisting: true,
+    }),
     PrismaModule,
+    AuditModule,
     AuthModule,
     TeachingActivitiesModule,
     UsersModule,

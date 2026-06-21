@@ -145,10 +145,8 @@ export class ScientificTasksController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const report = await this.scientificTasksService.submitReport(
-      id,
-      user.id,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const report = await this.scientificTasksService.submitReport(id, actor);
     return {
       success: true,
       data: report,
@@ -167,10 +165,8 @@ export class ScientificTasksController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const report = await this.scientificTasksService.validateReport(
-      id,
-      user.id,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const report = await this.scientificTasksService.validateReport(id, actor);
     return {
       success: true,
       data: report,
@@ -189,7 +185,8 @@ export class ScientificTasksController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const report = await this.scientificTasksService.rejectReport(id, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const report = await this.scientificTasksService.rejectReport(id, actor);
     return {
       success: true,
       data: report,

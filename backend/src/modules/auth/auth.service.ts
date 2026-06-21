@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
@@ -8,16 +9,20 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private audit: AuditService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -151,6 +156,7 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { role: true },
     });
 
     if (!user) {
@@ -177,6 +183,14 @@ export class AuthService {
         refreshTokenVersion: { increment: 1 },
       },
     });
+
+    await this.audit.log(
+      { id: userId, login: user.login, role: user.role.name },
+      'password_change',
+      'User',
+      userId,
+    );
+    this.logger.log({ event: 'auth.password_changed', userId });
 
     return { message: 'Password changed successfully' };
   }

@@ -157,7 +157,8 @@ export class TeachingActivitiesController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const activity = await this.teachingActivitiesService.submit(id, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const activity = await this.teachingActivitiesService.submit(id, actor);
     return {
       success: true,
       data: activity,
@@ -189,7 +190,8 @@ export class TeachingActivitiesController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const activity = await this.teachingActivitiesService.validate(id, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const activity = await this.teachingActivitiesService.validate(id, actor);
     return {
       success: true,
       data: activity,
@@ -209,7 +211,8 @@ export class TeachingActivitiesController {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const activity = await this.teachingActivitiesService.reject(id, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const activity = await this.teachingActivitiesService.reject(id, actor);
     return {
       success: true,
       data: activity,

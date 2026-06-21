@@ -1,20 +1,27 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreateTeachingActivityDto } from './dto/create-teaching-activity.dto';
 import { UpdateTeachingActivityDto } from './dto/update-teaching-activity.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class TeachingActivitiesService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(TeachingActivitiesService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
 
   async create(teacherId: number, dto: CreateTeachingActivityDto) {
-    // Calculate total hours
     const totalHours =
       (dto.lectureHours || 0) +
       (dto.practiceHours || 0) +
@@ -136,7 +143,6 @@ export class TeachingActivitiesService {
       throw new BadRequestException('Validated or rejected activities cannot be edited');
     }
 
-    // Recalculate total hours if any hour fields are updated
     const totalHours =
       (dto.lectureHours !== undefined
         ? dto.lectureHours
@@ -157,7 +163,6 @@ export class TeachingActivitiesService {
       totalHours: new Decimal(totalHours),
     };
 
-    // Convert number fields to Decimal
     if (dto.lectureHours !== undefined)
       updateData.lectureHours = new Decimal(dto.lectureHours);
     if (dto.practiceHours !== undefined)
@@ -197,14 +202,16 @@ export class TeachingActivitiesService {
     return { message: 'Activity deleted successfully' };
   }
 
-  async submit(id: number, teacherId: number) {
-    const activity = await this.findOne(id, teacherId);
+  async submit(id: number, actor: AuditActor) {
+    const activity = await this.findOne(id, actor.id);
 
     if (activity.status === 'validated') {
       throw new BadRequestException('Validated activities cannot be resubmitted');
     }
 
-    return this.prisma.teachingActivity.update({
+    const before = { id: activity.id, status: activity.status };
+
+    const result = await this.prisma.teachingActivity.update({
       where: { id },
       data: {
         status: 'submitted',
@@ -214,6 +221,14 @@ export class TeachingActivitiesService {
         course: true,
       },
     });
+
+    await this.audit.log(actor, 'submit', 'TeachingActivity', id, {
+      before,
+      after: { id, status: 'submitted' },
+    });
+    this.logger.log({ event: 'teaching_activity.submitted', activityId: id, teacherId: actor.id });
+
+    return result;
   }
 
   async getStatistics(teacherId: number, academicPeriodId?: number) {
@@ -225,12 +240,10 @@ export class TeachingActivitiesService {
       where.academicPeriodId = academicPeriodId;
     }
 
-    // Get teacher info for mandatory hours
     const teacherInfo = await this.prisma.teacherInfo.findUnique({
       where: { userId: teacherId },
     });
 
-    // Get submitted hours
     const submittedActivities = await this.prisma.teachingActivity.aggregate({
       where: {
         ...where,
@@ -241,7 +254,6 @@ export class TeachingActivitiesService {
       },
     });
 
-    // Get validated hours
     const validatedActivities = await this.prisma.teachingActivity.aggregate({
       where: {
         ...where,
@@ -340,7 +352,7 @@ export class TeachingActivitiesService {
     });
   }
 
-  async validate(id: number, userId: number) {
+  async validate(id: number, actor: AuditActor) {
     const activity = await this.prisma.teachingActivity.findUnique({
       where: { id },
     });
@@ -353,14 +365,16 @@ export class TeachingActivitiesService {
       throw new BadRequestException('Only submitted activities can be validated');
     }
 
-    await this.assertValidatorScope(userId, activity.teacherId);
+    await this.assertValidatorScope(actor.id, activity.teacherId);
 
-    return this.prisma.teachingActivity.update({
+    const before = { id: activity.id, status: activity.status };
+
+    const result = await this.prisma.teachingActivity.update({
       where: { id },
       data: {
         status: 'validated',
         validatedAt: new Date(),
-        validatedBy: userId,
+        validatedBy: actor.id,
       },
       include: {
         course: true,
@@ -371,9 +385,17 @@ export class TeachingActivitiesService {
         },
       },
     });
+
+    await this.audit.log(actor, 'validate', 'TeachingActivity', id, {
+      before,
+      after: { id, status: 'validated', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'teaching_activity.validated', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+
+    return result;
   }
 
-  async reject(id: number, userId: number) {
+  async reject(id: number, actor: AuditActor) {
     const activity = await this.prisma.teachingActivity.findUnique({
       where: { id },
     });
@@ -386,14 +408,16 @@ export class TeachingActivitiesService {
       throw new BadRequestException('Only submitted activities can be rejected');
     }
 
-    await this.assertValidatorScope(userId, activity.teacherId);
+    await this.assertValidatorScope(actor.id, activity.teacherId);
 
-    return this.prisma.teachingActivity.update({
+    const before = { id: activity.id, status: activity.status };
+
+    const result = await this.prisma.teachingActivity.update({
       where: { id },
       data: {
         status: 'rejected',
         validatedAt: new Date(),
-        validatedBy: userId,
+        validatedBy: actor.id,
       },
       include: {
         course: true,
@@ -404,5 +428,13 @@ export class TeachingActivitiesService {
         },
       },
     });
+
+    await this.audit.log(actor, 'reject', 'TeachingActivity', id, {
+      before,
+      after: { id, status: 'rejected', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'teaching_activity.rejected', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+
+    return result;
   }
 }

@@ -139,6 +139,24 @@
     "users": "Foydalanuvchilar",
     "departments": "Kafedralar",
     "scientificTasks": "Ilmiy vazifalar",
-    "researchActivities": "Ilmiy-tadqiqot faoliyati"
+    "researchActivities": "Ilmiy-tadqiqot faoliyati",
+    "auditLogs": "Audit jurnal"
+  },
+  "auditLogs": {
+    "title": "Audit jurnal",
+    "desc": "Tizimda admin va kafedra mudirlarining barcha amallarining to'liq tarixi",
+    "when": "Sana / Vaqt",
+    "actor": "Amal qiluvchi",
+    "action": "Amal",
+    "entity": "Ob'ekt",
+    "reason": "Sabab",
+    "before": "Oldin",
+    "after": "Keyin",
+    "filterAction": "Amal bo'yicha filtrlash",
+    "filterEntity": "Ob'ekt turi bo'yicha filtrlash",
+    "filterActor": "Foydalanuvchi bo'yicha filtrlash",
+    "clearFilters": "Filtrlarni tozalash",
+    "totalItems": "Jami {{total}} ta yozuv",
+    "detailTitle": "Audit yozuvi tafsilotlari"
   }
 }

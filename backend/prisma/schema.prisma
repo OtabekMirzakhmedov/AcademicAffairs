@@ -45,8 +45,10 @@ model User {
   scientificReports        TeacherScientificReport[]   @relation("TeacherScientificReports")
   validatedScientificReports TeacherScientificReport[] @relation("ScientificReportValidator")
   publications             TeacherPublication[]
+  validatedPublications    TeacherPublication[]      @relation("PublicationValidator")
   researchActivities       TeacherResearchActivity[] @relation("TeacherResearchActivities")
   validatedResearchActivities TeacherResearchActivity[] @relation("ResearchActivityValidator")
+  auditLogs                AuditLog[]
 
   @@map("users")
 }
@@ -401,6 +403,27 @@ model TeacherResearchActivity {
   @@map("teacher_research_activities")
 }
 
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int?     @map("actor_id")
+  actorLogin String   @map("actor_login")
+  actorRole  String   @map("actor_role")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   Int      @map("entity_id")
+  before     Json?
+  after      Json?
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
 model TeacherPublication {
   id                Int       @id @default(autoincrement())
   teacherId         Int       @map("teacher_id")
@@ -418,11 +441,13 @@ model TeacherPublication {
   status            String    @default("draft") // draft, submitted, validated, rejected
   submittedAt       DateTime? @map("submitted_at")
   validatedAt       DateTime? @map("validated_at")
+  validatedBy       Int?      @map("validated_by")
   rejectionReason   String?   @map("rejection_reason")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   teacher           User      @relation(fields: [teacherId], references: [id])
+  validator         User?     @relation("PublicationValidator", fields: [validatedBy], references: [id])
 
   @@index([teacherId])
   @@index([publicationType])

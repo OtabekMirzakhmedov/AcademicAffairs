@@ -1,17 +1,25 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreateResearchActivityDto } from './dto/create-research-activity.dto';
 import { UpdateResearchActivityDto } from './dto/update-research-activity.dto';
 import { CreateTemplateDto } from './dto/create-template.dto';
 
 @Injectable()
 export class ResearchActivitiesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ResearchActivitiesService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   // ==================== TEMPLATES ====================
 
@@ -92,7 +100,6 @@ export class ResearchActivitiesService {
   }
 
   async addActivity(userId: number, dto: CreateResearchActivityDto) {
-    // Check template exists
     const template = await this.prisma.researchActivityTemplate.findUnique({
       where: { id: dto.templateId },
     });
@@ -100,7 +107,6 @@ export class ResearchActivitiesService {
       throw new NotFoundException('Activity template not found');
     }
 
-    // Prevent duplicate
     const existing = await this.prisma.teacherResearchActivity.findUnique({
       where: {
         teacher_template_unique: {
@@ -170,23 +176,33 @@ export class ResearchActivitiesService {
     await this.prisma.teacherResearchActivity.delete({ where: { id } });
   }
 
-  async submitActivity(id: number, userId: number) {
+  async submitActivity(id: number, actor: AuditActor) {
     const activity = await this.prisma.teacherResearchActivity.findUnique({
       where: { id },
     });
     if (!activity) throw new NotFoundException('Activity not found');
-    if (activity.teacherId !== userId) {
+    if (activity.teacherId !== actor.id) {
       throw new ForbiddenException('You can only submit your own activities');
     }
     if (activity.status !== 'in_progress' && activity.status !== 'rejected') {
       throw new ForbiddenException('Activity is not in a submittable state');
     }
 
-    return this.prisma.teacherResearchActivity.update({
+    const before = { id: activity.id, status: activity.status };
+
+    const result = await this.prisma.teacherResearchActivity.update({
       where: { id },
       data: { status: 'submitted', submittedAt: new Date() },
       include: { template: true },
     });
+
+    await this.audit.log(actor, 'submit', 'TeacherResearchActivity', id, {
+      before,
+      after: { id, status: 'submitted' },
+    });
+    this.logger.log({ event: 'research_activity.submitted', activityId: id, teacherId: actor.id });
+
+    return result;
   }
 
   private async assertValidatorScope(
@@ -223,7 +239,7 @@ export class ResearchActivitiesService {
     );
   }
 
-  async validateActivity(id: number, validatorId: number) {
+  async validateActivity(id: number, actor: AuditActor) {
     const activity = await this.prisma.teacherResearchActivity.findUnique({
       where: { id },
     });
@@ -232,20 +248,30 @@ export class ResearchActivitiesService {
       throw new ForbiddenException('Activity is not submitted for validation');
     }
 
-    await this.assertValidatorScope(validatorId, activity.teacherId);
+    await this.assertValidatorScope(actor.id, activity.teacherId);
 
-    return this.prisma.teacherResearchActivity.update({
+    const before = { id: activity.id, status: activity.status };
+
+    const result = await this.prisma.teacherResearchActivity.update({
       where: { id },
       data: {
         status: 'validated',
         validatedAt: new Date(),
-        validatedBy: validatorId,
+        validatedBy: actor.id,
       },
       include: { template: true },
     });
+
+    await this.audit.log(actor, 'validate', 'TeacherResearchActivity', id, {
+      before,
+      after: { id, status: 'validated', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'research_activity.validated', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+
+    return result;
   }
 
-  async rejectActivity(id: number, validatorId: number) {
+  async rejectActivity(id: number, actor: AuditActor) {
     const activity = await this.prisma.teacherResearchActivity.findUnique({
       where: { id },
     });
@@ -254,15 +280,25 @@ export class ResearchActivitiesService {
       throw new ForbiddenException('Activity is not submitted');
     }
 
-    await this.assertValidatorScope(validatorId, activity.teacherId);
+    await this.assertValidatorScope(actor.id, activity.teacherId);
 
-    return this.prisma.teacherResearchActivity.update({
+    const before = { id: activity.id, status: activity.status };
+
+    const result = await this.prisma.teacherResearchActivity.update({
       where: { id },
       data: {
         status: 'rejected',
-        validatedBy: validatorId,
+        validatedBy: actor.id,
       },
       include: { template: true },
     });
+
+    await this.audit.log(actor, 'reject', 'TeacherResearchActivity', id, {
+      before,
+      after: { id, status: 'rejected', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'research_activity.rejected', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+
+    return result;
   }
 }

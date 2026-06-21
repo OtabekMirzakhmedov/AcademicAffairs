@@ -229,5 +229,32 @@
     "curriculum": "Dastur o'quv rejasi",
     "coursesInSemester": "{{count}} ta fan",
     "fetchFailed": "Dastur ma'lumotlarini yuklab bo'lmadi"
+  },
+  "publications": {
+    "navTitle": "Nashrlarni tasdiqlash",
+    "pageTitle": "Nashrlarni tasdiqlash",
+    "pageDesc": "Kafedra o'qituvchilarining nashr topshirishlarini ko'rib chiqing va tasdiqlang",
+    "totalPending": "Tasdiqlanishini kutmoqda",
+    "search": "Sarlavha, muallif, o'qituvchi yoki nashriyot bo'yicha qidiring...",
+    "filterByType": "Tur bo'yicha filtrlash",
+    "totalItems": "Jami {{total}} ta nashr",
+    "title": "Sarlavha",
+    "authors": "Mualliflar",
+    "venue": "Nashriyot / Jurnal",
+    "publicationDate": "Nashr sanasi",
+    "submittedAt": "Topshirilgan",
+    "keywords": "Kalit so'zlar",
+    "abstract": "Annotatsiya",
+    "url": "Havola",
+    "detailTitle": "Nashr tafsilotlari",
+    "validateTitle": "Nashrni tasdiqlash",
+    "validateConfirm": "{{name}} tomonidan topshirilgan \"{{title}}\" nashrini tasdiqlaysizmi?",
+    "validateSuccess": "Nashr muvaffaqiyatli tasdiqlandi",
+    "validateFailed": "Nashrni tasdiqlab bo'lmadi",
+    "rejectTitle": "Nashrni rad etish",
+    "rejectConfirm": "{{name}} tomonidan topshirilgan \"{{title}}\" nashrini rad etasizmi?",
+    "rejectReasonPlaceholder": "Rad etish sababi (ixtiyoriy) — o'qituvchi ko'radi",
+    "rejectSuccess": "Nashr rad etildi",
+    "rejectFailed": "Nashrni rad etib bo'lmadi"
   }
 }

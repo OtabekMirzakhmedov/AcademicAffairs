@@ -1,11 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
 
 @Injectable()
 export class PublicationsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PublicationsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
 
   async create(teacherId: number, createPublicationDto: CreatePublicationDto) {
     return this.prisma.teacherPublication.create({
@@ -46,13 +53,11 @@ export class PublicationsService {
   }
 
   async update(id: number, teacherId: number, updatePublicationDto: UpdatePublicationDto) {
-    // Verify ownership
     const publication = await this.findOne(id);
     if (publication.teacherId !== teacherId) {
       throw new ForbiddenException('You can only update your own publications');
     }
 
-    // Only allow updates if status is draft or rejected
     if (publication.status !== 'draft' && publication.status !== 'rejected') {
       throw new ForbiddenException('Cannot update submitted or validated publications');
     }
@@ -68,9 +73,9 @@ export class PublicationsService {
     });
   }
 
-  async submit(id: number, teacherId: number) {
+  async submit(id: number, actor: AuditActor) {
     const publication = await this.findOne(id);
-    if (publication.teacherId !== teacherId) {
+    if (publication.teacherId !== actor.id) {
       throw new ForbiddenException('You can only submit your own publications');
     }
 
@@ -78,13 +83,23 @@ export class PublicationsService {
       throw new ForbiddenException('Publication already submitted');
     }
 
-    return this.prisma.teacherPublication.update({
+    const before = { id: publication.id, status: publication.status };
+
+    const result = await this.prisma.teacherPublication.update({
       where: { id },
       data: {
         status: 'submitted',
         submittedAt: new Date(),
       },
     });
+
+    await this.audit.log(actor, 'submit', 'TeacherPublication', id, {
+      before,
+      after: { id, status: 'submitted' },
+    });
+    this.logger.log({ event: 'publication.submitted', publicationId: id, teacherId: actor.id });
+
+    return result;
   }
 
   async remove(id: number, teacherId: number) {
@@ -93,7 +108,6 @@ export class PublicationsService {
       throw new ForbiddenException('You can only delete your own publications');
     }
 
-    // Only allow deletes if status is draft or rejected
     if (publication.status !== 'draft' && publication.status !== 'rejected') {
       throw new ForbiddenException('Cannot delete submitted or validated publications');
     }
@@ -103,6 +117,120 @@ export class PublicationsService {
     });
 
     return { message: 'Publication deleted successfully' };
+  }
+
+  private async assertValidatorScope(validatorId: number, publicationTeacherId: number) {
+    const [user, teacherInfo] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: validatorId },
+        include: { role: true, headedDepartments: true },
+      }),
+      this.prisma.teacherInfo.findUnique({
+        where: { userId: publicationTeacherId },
+        select: { departmentId: true },
+      }),
+    ]);
+
+    const roleName = user?.role.name.toLowerCase();
+
+    if (roleName === 'admin') return;
+
+    if (roleName === 'departmenthead') {
+      const headedDeptId = user?.headedDepartments[0]?.id;
+      if (!headedDeptId || headedDeptId !== teacherInfo?.departmentId) {
+        throw new ForbiddenException('You can only act on publications from your department');
+      }
+      return;
+    }
+
+    throw new ForbiddenException('Only admins and department heads can perform this action');
+  }
+
+  async getAllSubmitted(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true, headedDepartments: true },
+    });
+
+    const roleName = user?.role.name.toLowerCase();
+    const where: any = { status: 'submitted' };
+
+    if (roleName === 'departmenthead') {
+      const headedDeptId = user?.headedDepartments[0]?.id;
+      if (!headedDeptId) return [];
+      where.teacher = { teacherInfo: { departmentId: headedDeptId } };
+    } else if (roleName !== 'admin') {
+      throw new ForbiddenException('Only admins and department heads can view submitted publications');
+    }
+
+    return this.prisma.teacherPublication.findMany({
+      where,
+      include: {
+        teacher: { include: { userInfo: true } },
+      },
+      orderBy: { submittedAt: 'desc' },
+    });
+  }
+
+  async validate(id: number, actor: AuditActor) {
+    const publication = await this.findOne(id);
+
+    if (publication.status !== 'submitted') {
+      throw new BadRequestException('Only submitted publications can be validated');
+    }
+
+    await this.assertValidatorScope(actor.id, publication.teacherId);
+
+    const before = { id: publication.id, status: publication.status };
+
+    const result = await this.prisma.teacherPublication.update({
+      where: { id },
+      data: {
+        status: 'validated',
+        validatedAt: new Date(),
+        validatedBy: actor.id,
+        rejectionReason: null,
+      },
+    });
+
+    await this.audit.log(actor, 'validate', 'TeacherPublication', id, {
+      before,
+      after: { id, status: 'validated', validatedBy: actor.id },
+    });
+    this.logger.log({ event: 'publication.validated', publicationId: id, validatorId: actor.id, teacherId: publication.teacherId });
+
+    return result;
+  }
+
+  async reject(id: number, actor: AuditActor, reason?: string) {
+    const publication = await this.findOne(id);
+
+    if (publication.status !== 'submitted') {
+      throw new BadRequestException('Only submitted publications can be rejected');
+    }
+
+    await this.assertValidatorScope(actor.id, publication.teacherId);
+
+    const before = { id: publication.id, status: publication.status };
+
+    const result = await this.prisma.teacherPublication.update({
+      where: { id },
+      data: {
+        status: 'rejected',
+        validatedAt: new Date(),
+        validatedBy: actor.id,
+        rejectionReason: reason ?? null,
+      },
+    });
+
+    await this.audit.log(actor, 'reject', 'TeacherPublication', id, {
+      before,
+      after: { id, status: 'rejected', validatedBy: actor.id },
+      reason,
+    });
+    this.logger.log({ event: 'publication.rejected', publicationId: id, validatorId: actor.id, teacherId: publication.teacherId });
+
+    return result;
   }
 
   async getStatistics(teacherId: number) {

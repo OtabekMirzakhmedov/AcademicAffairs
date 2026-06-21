@@ -38,10 +38,8 @@ export class CourseTeachersController {
     @Body() createDto: CreateCourseTeacherDto,
     @CurrentUser() user: any,
   ) {
-    const assignment = await this.courseTeachersService.create(
-      createDto,
-      user.id,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const assignment = await this.courseTeachersService.create(createDto, actor);
     return {
       success: true,
       data: assignment,
@@ -134,11 +132,8 @@ export class CourseTeachersController {
   @ApiResponse({ status: 403, description: 'Access denied' })
   @ApiResponse({ status: 404, description: 'Assignment not found' })
   async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    const result = await this.courseTeachersService.remove(
-      id,
-      user.id,
-      user.role.name,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const result = await this.courseTeachersService.remove(id, actor, user.role.name);
     return {
       success: true,
       data: result,

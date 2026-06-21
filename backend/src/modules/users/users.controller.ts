@@ -52,11 +52,12 @@ export class UsersController {
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'User with this login already exists' })
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: any) {
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const result = await this.usersService.create(createUserDto, actor);
     return {
       success: true,
-      data: user,
+      data: result,
       message: 'User created successfully',
     };
   }
@@ -71,7 +72,8 @@ export class UsersController {
     @Body() createTeacherDto: CreateTeacherDto,
     @CurrentUser() user: any,
   ) {
-    const teacher = await this.usersService.createTeacher(createTeacherDto, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const teacher = await this.usersService.createTeacher(createTeacherDto, actor);
     return {
       success: true,
       data: teacher,
@@ -115,7 +117,6 @@ export class UsersController {
     @Body() updateAccountDto: UpdateUserAccountDto,
     @CurrentUser() user: any,
   ) {
-    // Teachers can only update their own account
     if (user.role === 'teacher' && user.id !== id) {
       throw new Error('You can only update your own account');
     }
@@ -162,11 +163,13 @@ export class UsersController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: any,
   ) {
-    const user = await this.usersService.update(id, updateUserDto);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const result = await this.usersService.update(id, updateUserDto, actor);
     return {
       success: true,
-      data: user,
+      data: result,
       message: 'User updated successfully',
     };
   }
@@ -177,11 +180,12 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User status toggled' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async toggleStatus(@Param('id', ParseIntPipe) id: number) {
-    const user = await this.usersService.toggleStatus(id);
+  async toggleStatus(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const result = await this.usersService.toggleStatus(id, actor);
     return {
       success: true,
-      data: user,
+      data: result,
       message: 'User status updated successfully',
     };
   }
@@ -198,7 +202,8 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
   ) {
-    const result = await this.usersService.remove(id, user.id);
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const result = await this.usersService.remove(id, actor);
     return {
       success: true,
       data: result,

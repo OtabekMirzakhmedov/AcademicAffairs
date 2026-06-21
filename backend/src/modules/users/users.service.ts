@@ -1,11 +1,14 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,10 +18,14 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(UsersService.name);
 
-  async create(createUserDto: CreateUserDto) {
-    // Check if user already exists
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
+
+  async create(createUserDto: CreateUserDto, actor: AuditActor) {
     const existingUser = await this.prisma.user.findUnique({
       where: { login: createUserDto.login },
     });
@@ -27,10 +34,8 @@ export class UsersService {
       throw new ConflictException('User with this login already exists');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    // Create user with user info
     const user = await this.prisma.user.create({
       data: {
         login: createUserDto.login,
@@ -54,11 +59,7 @@ export class UsersService {
       },
     });
 
-    // If teacher role and department provided, create teacher info
-    if (
-      user.role.name === 'teacher' &&
-      createUserDto.departmentId
-    ) {
+    if (user.role.name === 'teacher' && createUserDto.departmentId) {
       await this.prisma.teacherInfo.create({
         data: {
           userId: user.id,
@@ -67,22 +68,24 @@ export class UsersService {
       });
     }
 
-    // Remove password from response
+    await this.audit.log(actor, 'create', 'User', user.id, {
+      after: { id: user.id, login: user.login, role: user.role.name },
+    });
+    this.logger.log({ event: 'user.created', userId: user.id, login: user.login, actorId: actor.id });
+
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
-  async createTeacher(createTeacherDto: CreateTeacherDto, departmentHeadId: number) {
-    // Verify department head and get their department
+  async createTeacher(createTeacherDto: CreateTeacherDto, actor: AuditActor) {
     const department = await this.prisma.department.findFirst({
-      where: { headId: departmentHeadId },
+      where: { headId: actor.id },
     });
 
     if (!department) {
       throw new ForbiddenException('You are not a department head');
     }
 
-    // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { login: createTeacherDto.login },
     });
@@ -91,7 +94,6 @@ export class UsersService {
       throw new ConflictException('User with this login already exists');
     }
 
-    // Get teacher role
     const teacherRole = await this.prisma.role.findUnique({
       where: { name: 'teacher' },
     });
@@ -100,10 +102,8 @@ export class UsersService {
       throw new BadRequestException('Teacher role not found');
     }
 
-    // Hash default password
     const hashedPassword = await bcrypt.hash('password123', 10);
 
-    // Create user with user info and teacher info
     const user = await this.prisma.user.create({
       data: {
         login: createTeacherDto.login,
@@ -137,7 +137,11 @@ export class UsersService {
       },
     });
 
-    // Remove password from response
+    await this.audit.log(actor, 'create', 'User', user.id, {
+      after: { id: user.id, login: user.login, role: 'teacher', departmentId: department.id },
+    });
+    this.logger.log({ event: 'user.created', userId: user.id, login: user.login, actorId: actor.id });
+
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -158,7 +162,6 @@ export class UsersService {
       },
     });
 
-    // Remove passwords from response
     return users.map(({ password: _, ...user }) => user);
   }
 
@@ -184,11 +187,9 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    // Check if user exists
+  async update(id: number, updateUserDto: UpdateUserDto, actor: AuditActor) {
     const existingUser = await this.findOne(id);
 
-    // If login is being updated, check for conflicts
     if (updateUserDto.login && updateUserDto.login !== existingUser.login) {
       const loginExists = await this.prisma.user.findUnique({
         where: { login: updateUserDto.login },
@@ -199,7 +200,6 @@ export class UsersService {
       }
     }
 
-    // Update user
     const user = await this.prisma.user.update({
       where: { id },
       data: {
@@ -227,7 +227,6 @@ export class UsersService {
       },
     });
 
-    // Update teacher info if needed
     if (updateUserDto.departmentId && user.role.name === 'teacher') {
       const teacherInfo = await this.prisma.teacherInfo.findUnique({
         where: { userId: id },
@@ -250,6 +249,14 @@ export class UsersService {
       }
     }
 
+    const sensitiveChange = updateUserDto.roleId !== undefined || updateUserDto.login !== undefined;
+    if (sensitiveChange) {
+      await this.audit.log(actor, 'update', 'User', id, {
+        before: { id, login: existingUser.login, roleId: existingUser.roleId },
+        after: { id, login: user.login, roleId: user.roleId },
+      });
+    }
+
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -259,7 +266,6 @@ export class UsersService {
     updateTeacherInfoDto: UpdateTeacherInfoDto,
     departmentHeadId: number,
   ) {
-    // Verify department head and get their department
     const department = await this.prisma.department.findFirst({
       where: { headId: departmentHeadId },
     });
@@ -268,7 +274,6 @@ export class UsersService {
       throw new ForbiddenException('You are not a department head');
     }
 
-    // Verify teacher exists and belongs to the department
     const teacher = await this.prisma.user.findUnique({
       where: { id: teacherId },
       include: {
@@ -287,7 +292,6 @@ export class UsersService {
       );
     }
 
-    // Update teacher info
     const updatedTeacherInfo = await this.prisma.teacherInfo.update({
       where: { userId: teacherId },
       data: {
@@ -301,7 +305,6 @@ export class UsersService {
       },
     });
 
-    // Return full user with updated teacher info
     const updatedUser = await this.prisma.user.findUnique({
       where: { id: teacherId },
       include: {
@@ -324,7 +327,6 @@ export class UsersService {
   }
 
   async updateUserAccount(userId: number, updateAccountDto: UpdateUserAccountDto) {
-    // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -338,11 +340,9 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Separate UserInfo fields from TeacherInfo fields
     const userInfoData: any = {};
     const teacherInfoData: any = {};
 
-    // UserInfo fields
     const userInfoFields = [
       'firstName', 'lastName', 'middleName', 'dateOfBirth', 'gender', 'nationality',
       'countryOfBirth', 'regionOfBirth', 'currentAddress', 'permanentAddress',
@@ -350,7 +350,6 @@ export class UsersService {
       'email1', 'email2', 'phone1', 'phone2'
     ];
 
-    // TeacherInfo fields
     const teacherInfoFields = [
       'bachelorUniversity', 'bachelorYear', 'bachelorDirection', 'bachelorDiplomaNumber',
       'masterUniversity', 'masterYear', 'masterDirection', 'masterDiplomaNumber',
@@ -365,14 +364,12 @@ export class UsersService {
       'projectsInnovation', 'innovativeIdeasCount'
     ];
 
-    // Populate userInfoData
     userInfoFields.forEach((field) => {
       if (updateAccountDto[field] !== undefined) {
         userInfoData[field] = updateAccountDto[field];
       }
     });
 
-    // Populate teacherInfoData (only for teachers)
     if (user.role.name === 'teacher') {
       teacherInfoFields.forEach((field) => {
         if (updateAccountDto[field] !== undefined) {
@@ -381,7 +378,6 @@ export class UsersService {
       });
     }
 
-    // Update UserInfo if there are fields to update
     if (Object.keys(userInfoData).length > 0) {
       await this.prisma.userInfo.update({
         where: { userId },
@@ -389,7 +385,6 @@ export class UsersService {
       });
     }
 
-    // Update TeacherInfo if it's a teacher and there are fields to update
     if (user.role.name === 'teacher' && Object.keys(teacherInfoData).length > 0) {
       if (user.teacherInfo) {
         await this.prisma.teacherInfo.update({
@@ -399,7 +394,6 @@ export class UsersService {
       }
     }
 
-    // Return updated user
     const updatedUser = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -421,7 +415,7 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async toggleStatus(id: number) {
+  async toggleStatus(id: number, actor: AuditActor) {
     const user = await this.findOne(id);
 
     const updatedUser = await this.prisma.user.update({
@@ -435,17 +429,22 @@ export class UsersService {
       },
     });
 
+    const action = updatedUser.isActive ? 'activate' : 'deactivate';
+    await this.audit.log(actor, action, 'User', id, {
+      before: { id, isActive: user.isActive },
+      after: { id, isActive: updatedUser.isActive },
+    });
+    this.logger.log({ event: `user.${action}d`, userId: id, actorId: actor.id });
+
     const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 
-  async remove(id: number, currentUserId: number) {
-    // Get the user to be deleted
+  async remove(id: number, actor: AuditActor) {
     const userToDelete = await this.findOne(id);
 
-    // Get current user to check permissions
     const currentUser = await this.prisma.user.findUnique({
-      where: { id: currentUserId },
+      where: { id: actor.id },
       include: {
         role: true,
       },
@@ -455,25 +454,21 @@ export class UsersService {
       throw new NotFoundException('Current user not found');
     }
 
-    // If department head, verify they can only delete teachers from their department
     if (currentUser.role.name === 'departmenthead') {
-      // Get department head's department
       const department = await this.prisma.department.findFirst({
-        where: { headId: currentUserId },
+        where: { headId: actor.id },
       });
 
       if (!department) {
         throw new ForbiddenException('You are not a department head');
       }
 
-      // Check if user being deleted is a teacher
       if (userToDelete.role.name !== 'teacher') {
         throw new ForbiddenException(
           'Department heads can only delete teachers',
         );
       }
 
-      // Check if teacher belongs to their department
       if (userToDelete.teacherInfo?.departmentId !== department.id) {
         throw new ForbiddenException(
           'You can only delete teachers from your department',
@@ -481,36 +476,34 @@ export class UsersService {
       }
     }
 
-    // Hard delete - remove all related records first
-    // Delete teaching activities
+    const before = { id, login: userToDelete.login, role: userToDelete.role.name };
+
     await this.prisma.teachingActivity.deleteMany({
       where: { teacherId: id },
     });
 
-    // Delete course teacher assignments
     await this.prisma.courseTeacher.deleteMany({
       where: { teacherId: id },
     });
 
-    // Delete teacher scientific reports
     await this.prisma.teacherScientificReport.deleteMany({
       where: { teacherId: id },
     });
 
-    // Delete teacher info if exists
     await this.prisma.teacherInfo.deleteMany({
       where: { userId: id },
     });
 
-    // Delete user info if exists
     await this.prisma.userInfo.deleteMany({
       where: { userId: id },
     });
 
-    // Finally, delete the user
     await this.prisma.user.delete({
       where: { id },
     });
+
+    await this.audit.log(actor, 'delete', 'User', id, { before });
+    this.logger.log({ event: 'user.deleted', userId: id, login: before.login, actorId: actor.id });
 
     return { message: 'User deleted successfully' };
   }

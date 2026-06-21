@@ -18,6 +18,7 @@ import {
   ControlOutlined,
   IdcardOutlined,
   GlobalOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -167,6 +168,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 label: t('head:scientificReports.title'),
                 onClick: () => navigate('/department/scientific-reports'),
               },
+              {
+                key: '/department/publications',
+                icon: <FileTextOutlined />,
+                label: t('head:publications.navTitle'),
+                onClick: () => navigate('/department/publications'),
+              },
             ],
           },
         ]
@@ -208,6 +215,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 icon: <FileSearchOutlined />,
                 label: t('admin:nav.researchActivities'),
                 onClick: () => navigate('/admin/research-activities'),
+              },
+              {
+                key: '/admin/audit-logs',
+                icon: <HistoryOutlined />,
+                label: t('admin:nav.auditLogs'),
+                onClick: () => navigate('/admin/audit-logs'),
               },
             ],
           },

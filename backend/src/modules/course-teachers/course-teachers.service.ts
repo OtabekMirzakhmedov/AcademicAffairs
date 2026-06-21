@@ -1,19 +1,26 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActor } from '../audit/interfaces/audit-actor.interface';
 import { CreateCourseTeacherDto } from './dto/create-course-teacher.dto';
 import { UpdateCourseTeacherDto } from './dto/update-course-teacher.dto';
 
 @Injectable()
 export class CourseTeachersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(CourseTeachersService.name);
 
-  async create(createDto: CreateCourseTeacherDto, userId: number) {
-    // Verify course exists and user is department head
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
+
+  async create(createDto: CreateCourseTeacherDto, actor: AuditActor) {
     const course = await this.prisma.course.findUnique({
       where: { id: createDto.courseId },
       include: { department: true },
@@ -23,13 +30,12 @@ export class CourseTeachersService {
       throw new NotFoundException('Course not found');
     }
 
-    if (course.department.headId !== userId) {
+    if (course.department.headId !== actor.id) {
       throw new ForbiddenException(
         'You can only assign teachers to courses in your department',
       );
     }
 
-    // Verify teacher exists
     const teacher = await this.prisma.user.findUnique({
       where: { id: createDto.teacherId },
       include: {
@@ -42,7 +48,6 @@ export class CourseTeachersService {
       throw new NotFoundException('Teacher not found');
     }
 
-    // Verify academic period exists
     const academicPeriod = await this.prisma.academicPeriod.findUnique({
       where: { id: createDto.academicPeriodId },
     });
@@ -51,7 +56,6 @@ export class CourseTeachersService {
       throw new NotFoundException('Academic period not found');
     }
 
-    // Check if assignment already exists
     const existingAssignment = await this.prisma.courseTeacher.findFirst({
       where: {
         courseId: createDto.courseId,
@@ -66,7 +70,7 @@ export class CourseTeachersService {
       );
     }
 
-    return await this.prisma.courseTeacher.create({
+    const assignment = await this.prisma.courseTeacher.create({
       data: {
         courseId: createDto.courseId,
         teacherId: createDto.teacherId,
@@ -88,10 +92,21 @@ export class CourseTeachersService {
         academicPeriod: true,
       },
     });
+
+    await this.audit.log(actor, 'assign', 'CourseTeacher', assignment.id, {
+      after: {
+        id: assignment.id,
+        courseId: createDto.courseId,
+        teacherId: createDto.teacherId,
+        academicPeriodId: createDto.academicPeriodId,
+      },
+    });
+    this.logger.log({ event: 'course_teacher.assigned', assignmentId: assignment.id, courseId: createDto.courseId, teacherId: createDto.teacherId, actorId: actor.id });
+
+    return assignment;
   }
 
   async findAll(userId: number, userRole: string, courseId?: number) {
-    // Admin can see all assignments
     if (userRole === 'admin') {
       return await this.prisma.courseTeacher.findMany({
         where: courseId ? { courseId } : undefined,
@@ -113,7 +128,6 @@ export class CourseTeachersService {
       });
     }
 
-    // Department head sees assignments for their department's courses
     if (userRole === 'departmenthead') {
       const department = await this.prisma.department.findFirst({
         where: { headId: userId },
@@ -148,7 +162,6 @@ export class CourseTeachersService {
       });
     }
 
-    // Teachers see only their own assignments
     return await this.prisma.courseTeacher.findMany({
       where: {
         teacherId: userId,
@@ -195,12 +208,10 @@ export class CourseTeachersService {
       throw new NotFoundException('Assignment not found');
     }
 
-    // Admin can see any assignment
     if (userRole === 'admin') {
       return assignment;
     }
 
-    // Department head can see assignments in their department
     if (userRole === 'departmenthead') {
       if (assignment.course.department.headId !== userId) {
         throw new ForbiddenException(
@@ -210,7 +221,6 @@ export class CourseTeachersService {
       return assignment;
     }
 
-    // Teachers can only see their own assignments
     if (assignment.teacherId !== userId) {
       throw new ForbiddenException('You can only view your own assignments');
     }
@@ -239,12 +249,10 @@ export class CourseTeachersService {
       throw new NotFoundException('Assignment not found');
     }
 
-    // Only admin or department head can update
     if (userRole !== 'admin' && userRole !== 'departmenthead') {
       throw new ForbiddenException('Only department heads can update assignments');
     }
 
-    // Department head can only update assignments in their department
     if (
       userRole === 'departmenthead' &&
       assignment.course.department.headId !== userId
@@ -276,7 +284,7 @@ export class CourseTeachersService {
     });
   }
 
-  async remove(id: number, userId: number, userRole: string) {
+  async remove(id: number, actor: AuditActor, userRole: string) {
     const assignment = await this.prisma.courseTeacher.findUnique({
       where: { id },
       include: {
@@ -297,31 +305,40 @@ export class CourseTeachersService {
       throw new NotFoundException('Assignment not found');
     }
 
-    // Only admin or department head can delete
     if (userRole !== 'admin' && userRole !== 'departmenthead') {
       throw new ForbiddenException('Only department heads can delete assignments');
     }
 
-    // Department head can only delete assignments in their department
     if (
       userRole === 'departmenthead' &&
-      assignment.course.department.headId !== userId
+      assignment.course.department.headId !== actor.id
     ) {
       throw new ForbiddenException(
         'You can only delete assignments in your department',
       );
     }
 
-    // Prevent deletion if there are teaching activities
     if (assignment._count.teachingActivities > 0) {
       throw new ForbiddenException(
         'Cannot delete assignment with existing teaching activities',
       );
     }
 
-    return await this.prisma.courseTeacher.delete({
+    const before = {
+      id,
+      courseId: assignment.courseId,
+      teacherId: assignment.teacherId,
+      academicPeriodId: assignment.academicPeriodId,
+    };
+
+    await this.prisma.courseTeacher.delete({
       where: { id },
     });
+
+    await this.audit.log(actor, 'unassign', 'CourseTeacher', id, { before });
+    this.logger.log({ event: 'course_teacher.unassigned', assignmentId: id, actorId: actor.id });
+
+    return { message: 'Assignment removed successfully' };
   }
 
   async getTeacherAssignments(teacherId: number) {

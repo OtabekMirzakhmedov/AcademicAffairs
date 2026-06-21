@@ -18,6 +18,7 @@ import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('departments')
 @ApiBearerAuth('JWT-auth')
@@ -31,10 +32,9 @@ export class DepartmentsController {
   @ApiOperation({ summary: 'Create department', description: 'Create a new department (admin only)' })
   @ApiResponse({ status: 201, description: 'Department created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async create(@Body() createDepartmentDto: CreateDepartmentDto) {
-    const department = await this.departmentsService.create(
-      createDepartmentDto,
-    );
+  async create(@Body() createDepartmentDto: CreateDepartmentDto, @CurrentUser() user: any) {
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const department = await this.departmentsService.create(createDepartmentDto, actor);
     return {
       success: true,
       data: department,
@@ -76,11 +76,10 @@ export class DepartmentsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDepartmentDto: UpdateDepartmentDto,
+    @CurrentUser() user: any,
   ) {
-    const department = await this.departmentsService.update(
-      id,
-      updateDepartmentDto,
-    );
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const department = await this.departmentsService.update(id, updateDepartmentDto, actor);
     return {
       success: true,
       data: department,
@@ -94,8 +93,9 @@ export class DepartmentsController {
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiResponse({ status: 200, description: 'Department deleted' })
   @ApiResponse({ status: 404, description: 'Department not found' })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    const result = await this.departmentsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    const actor = { id: user.id, login: user.login, role: user.role.name };
+    const result = await this.departmentsService.remove(id, actor);
     return {
       success: true,
       data: result,
