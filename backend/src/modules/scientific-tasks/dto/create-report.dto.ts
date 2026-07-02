@@ -1,4 +1,11 @@
-import { IsString, IsInt, IsOptional, Min, Max, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsNumber,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateReportDto {
@@ -6,19 +13,31 @@ export class CreateReportDto {
   @IsInt()
   scientificTaskId: number;
 
-  @ApiPropertyOptional({ example: 'In progress, completed initial research', description: 'Execution status description' })
+  @ApiPropertyOptional({
+    example: 'In progress, completed initial research',
+    description: 'Execution status description',
+  })
   @IsString()
   @IsOptional()
   executionStatus?: string;
 
-  @ApiPropertyOptional({ example: 50, description: 'Completion percentage (0-100)', minimum: 0, maximum: 100 })
+  @ApiPropertyOptional({
+    example: 50,
+    description: 'Completion percentage (0-100)',
+    minimum: 0,
+    maximum: 100,
+  })
   @IsInt()
   @Min(0)
   @Max(100)
   @IsOptional()
   completionPercentage?: number;
 
-  @ApiPropertyOptional({ example: 10.5, description: 'Equivalent hours worked on task', minimum: 0 })
+  @ApiPropertyOptional({
+    example: 10.5,
+    description: 'Equivalent hours worked on task',
+    minimum: 0,
+  })
   @IsNumber()
   @Min(0)
   @IsOptional()

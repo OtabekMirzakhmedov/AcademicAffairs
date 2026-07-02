@@ -65,7 +65,9 @@ export class ResearchActivitiesService {
       where: { id },
       data: {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(dto.maxAmount !== undefined ? { maxAmount: dto.maxAmount } : {}),
         ...(dto.penalty !== undefined ? { penalty: dto.penalty } : {}),
         ...(dto.category !== undefined ? { category: dto.category } : {}),
@@ -200,7 +202,11 @@ export class ResearchActivitiesService {
       before,
       after: { id, status: 'submitted' },
     });
-    this.logger.log({ event: 'research_activity.submitted', activityId: id, teacherId: actor.id });
+    this.logger.log({
+      event: 'research_activity.submitted',
+      activityId: id,
+      teacherId: actor.id,
+    });
 
     return result;
   }
@@ -266,7 +272,12 @@ export class ResearchActivitiesService {
       before,
       after: { id, status: 'validated', validatedBy: actor.id },
     });
-    this.logger.log({ event: 'research_activity.validated', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+    this.logger.log({
+      event: 'research_activity.validated',
+      activityId: id,
+      validatorId: actor.id,
+      teacherId: activity.teacherId,
+    });
 
     return result;
   }
@@ -297,7 +308,12 @@ export class ResearchActivitiesService {
       before,
       after: { id, status: 'rejected', validatedBy: actor.id },
     });
-    this.logger.log({ event: 'research_activity.rejected', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+    this.logger.log({
+      event: 'research_activity.rejected',
+      activityId: id,
+      validatorId: actor.id,
+      teacherId: activity.teacherId,
+    });
 
     return result;
   }

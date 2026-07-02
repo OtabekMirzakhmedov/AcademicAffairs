@@ -14,6 +14,10 @@ import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateTeacherInfoDto } from './dto/update-teacher-info.dto';
 import { UpdateUserAccountDto } from './dto/update-user-account.dto';
+import {
+  ACCOUNT_SUMMARY_LABELS,
+  resolveAccountSummaryLang,
+} from './reports/account-summary.labels';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -71,7 +75,12 @@ export class UsersService {
     await this.audit.log(actor, 'create', 'User', user.id, {
       after: { id: user.id, login: user.login, role: user.role.name },
     });
-    this.logger.log({ event: 'user.created', userId: user.id, login: user.login, actorId: actor.id });
+    this.logger.log({
+      event: 'user.created',
+      userId: user.id,
+      login: user.login,
+      actorId: actor.id,
+    });
 
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
@@ -138,9 +147,19 @@ export class UsersService {
     });
 
     await this.audit.log(actor, 'create', 'User', user.id, {
-      after: { id: user.id, login: user.login, role: 'teacher', departmentId: department.id },
+      after: {
+        id: user.id,
+        login: user.login,
+        role: 'teacher',
+        departmentId: department.id,
+      },
     });
-    this.logger.log({ event: 'user.created', userId: user.id, login: user.login, actorId: actor.id });
+    this.logger.log({
+      event: 'user.created',
+      userId: user.id,
+      login: user.login,
+      actorId: actor.id,
+    });
 
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
@@ -185,6 +204,57 @@ export class UsersService {
 
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  /**
+   * Builds the render context (labels + data) for the condensed account
+   * summary PDF. Cell/field mapping lives here (not in reports-pdf) per
+   * this repo's report convention: the domain module owns the data.
+   */
+  async buildAccountSummary(userId: number, lang?: string) {
+    const user = await this.findOne(userId);
+    const labels = ACCOUNT_SUMMARY_LABELS[resolveAccountSummaryLang(lang)];
+
+    const fullName = [user.userInfo?.firstName, user.userInfo?.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
+    return {
+      labels,
+      generatedAt: new Date().toISOString().slice(0, 10),
+      fullName: fullName || user.login,
+      login: user.login,
+      roleName:
+        labels.roleNames[
+          user.role.name as 'admin' | 'departmenthead' | 'teacher'
+        ],
+      departmentName: user.teacherInfo?.department?.name,
+      bachelor: user.teacherInfo?.bachelorUniversity
+        ? {
+            university: user.teacherInfo.bachelorUniversity,
+            year: user.teacherInfo.bachelorYear,
+          }
+        : null,
+      master: user.teacherInfo?.masterUniversity
+        ? {
+            university: user.teacherInfo.masterUniversity,
+            year: user.teacherInfo.masterYear,
+          }
+        : null,
+      phd: user.teacherInfo?.hasPhdDegree
+        ? {
+            year: user.teacherInfo.phdYear,
+            speciality: user.teacherInfo.phdSpeciality,
+          }
+        : null,
+      academicTitle: user.teacherInfo?.hasAcademicTitle
+        ? {
+            name: user.teacherInfo.academicTitleName,
+            year: user.teacherInfo.academicTitleYear,
+          }
+        : null,
+    };
   }
 
   async update(id: number, updateUserDto: UpdateUserDto, actor: AuditActor) {
@@ -249,7 +319,8 @@ export class UsersService {
       }
     }
 
-    const sensitiveChange = updateUserDto.roleId !== undefined || updateUserDto.login !== undefined;
+    const sensitiveChange =
+      updateUserDto.roleId !== undefined || updateUserDto.login !== undefined;
     if (sensitiveChange) {
       await this.audit.log(actor, 'update', 'User', id, {
         before: { id, login: existingUser.login, roleId: existingUser.roleId },
@@ -297,9 +368,12 @@ export class UsersService {
       data: {
         employmentType: updateTeacherInfoDto.employmentType,
         mandatoryHoursPerPeriod: updateTeacherInfoDto.mandatoryHoursPerPeriod,
-        mandatoryExtracurricularHours: updateTeacherInfoDto.mandatoryExtracurricularHours,
-        mandatoryConferenceArticles: updateTeacherInfoDto.mandatoryConferenceArticles,
-        mandatoryNationalArticles: updateTeacherInfoDto.mandatoryNationalArticles,
+        mandatoryExtracurricularHours:
+          updateTeacherInfoDto.mandatoryExtracurricularHours,
+        mandatoryConferenceArticles:
+          updateTeacherInfoDto.mandatoryConferenceArticles,
+        mandatoryNationalArticles:
+          updateTeacherInfoDto.mandatoryNationalArticles,
         mandatoryScopusArticles: updateTeacherInfoDto.mandatoryScopusArticles,
         mandatoryDocumentation: updateTeacherInfoDto.mandatoryDocumentation,
       },
@@ -326,7 +400,10 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async updateUserAccount(userId: number, updateAccountDto: UpdateUserAccountDto) {
+  async updateUserAccount(
+    userId: number,
+    updateAccountDto: UpdateUserAccountDto,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -344,24 +421,75 @@ export class UsersService {
     const teacherInfoData: any = {};
 
     const userInfoFields = [
-      'firstName', 'lastName', 'middleName', 'dateOfBirth', 'gender', 'nationality',
-      'countryOfBirth', 'regionOfBirth', 'currentAddress', 'permanentAddress',
-      'passportSerial', 'personalId', 'stirInn', 'englishLevel', 'profileImage', 'locale',
-      'email1', 'email2', 'phone1', 'phone2'
+      'firstName',
+      'lastName',
+      'middleName',
+      'dateOfBirth',
+      'gender',
+      'nationality',
+      'countryOfBirth',
+      'regionOfBirth',
+      'currentAddress',
+      'permanentAddress',
+      'passportSerial',
+      'personalId',
+      'stirInn',
+      'englishLevel',
+      'profileImage',
+      'locale',
+      'email1',
+      'email2',
+      'phone1',
+      'phone2',
     ];
 
     const teacherInfoFields = [
-      'bachelorUniversity', 'bachelorYear', 'bachelorDirection', 'bachelorDiplomaNumber',
-      'masterUniversity', 'masterYear', 'masterDirection', 'masterDiplomaNumber',
-      'researchArea', 'hasPhdDegree', 'phdYear', 'phdSpeciality', 'phdTopic',
-      'phdDiplomaNumber', 'phdCountry', 'phdOrganization', 'hasDscDegree', 'dscYear',
-      'dscSpeciality', 'dscTopic', 'dscDiplomaNumber', 'dscCountry', 'dscOrganization',
-      'hasAcademicTitle', 'academicTitleName', 'academicTitleSpeciality', 'academicTitleYear',
-      'academicTitleAttestat', 'internshipsCount', 'internshipsInfo', 'trainingCount',
-      'trainingInfo', 'awardsField', 'awardsState', 'supervisedPhd', 'supervisedDsc',
-      'conferencesRepublic', 'conferencesInternational', 'seminarsRepublic', 'seminarsInternational',
-      'projectsFundamental', 'projectsPractical', 'projectsYouth', 'projectsBusiness',
-      'projectsInnovation', 'innovativeIdeasCount'
+      'bachelorUniversity',
+      'bachelorYear',
+      'bachelorDirection',
+      'bachelorDiplomaNumber',
+      'masterUniversity',
+      'masterYear',
+      'masterDirection',
+      'masterDiplomaNumber',
+      'researchArea',
+      'hasPhdDegree',
+      'phdYear',
+      'phdSpeciality',
+      'phdTopic',
+      'phdDiplomaNumber',
+      'phdCountry',
+      'phdOrganization',
+      'hasDscDegree',
+      'dscYear',
+      'dscSpeciality',
+      'dscTopic',
+      'dscDiplomaNumber',
+      'dscCountry',
+      'dscOrganization',
+      'hasAcademicTitle',
+      'academicTitleName',
+      'academicTitleSpeciality',
+      'academicTitleYear',
+      'academicTitleAttestat',
+      'internshipsCount',
+      'internshipsInfo',
+      'trainingCount',
+      'trainingInfo',
+      'awardsField',
+      'awardsState',
+      'supervisedPhd',
+      'supervisedDsc',
+      'conferencesRepublic',
+      'conferencesInternational',
+      'seminarsRepublic',
+      'seminarsInternational',
+      'projectsFundamental',
+      'projectsPractical',
+      'projectsYouth',
+      'projectsBusiness',
+      'projectsInnovation',
+      'innovativeIdeasCount',
     ];
 
     userInfoFields.forEach((field) => {
@@ -385,7 +513,10 @@ export class UsersService {
       });
     }
 
-    if (user.role.name === 'teacher' && Object.keys(teacherInfoData).length > 0) {
+    if (
+      user.role.name === 'teacher' &&
+      Object.keys(teacherInfoData).length > 0
+    ) {
       if (user.teacherInfo) {
         await this.prisma.teacherInfo.update({
           where: { userId },
@@ -434,7 +565,11 @@ export class UsersService {
       before: { id, isActive: user.isActive },
       after: { id, isActive: updatedUser.isActive },
     });
-    this.logger.log({ event: `user.${action}d`, userId: id, actorId: actor.id });
+    this.logger.log({
+      event: `user.${action}d`,
+      userId: id,
+      actorId: actor.id,
+    });
 
     const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
@@ -476,7 +611,11 @@ export class UsersService {
       }
     }
 
-    const before = { id, login: userToDelete.login, role: userToDelete.role.name };
+    const before = {
+      id,
+      login: userToDelete.login,
+      role: userToDelete.role.name,
+    };
 
     await this.prisma.teachingActivity.deleteMany({
       where: { teacherId: id },
@@ -503,7 +642,12 @@ export class UsersService {
     });
 
     await this.audit.log(actor, 'delete', 'User', id, { before });
-    this.logger.log({ event: 'user.deleted', userId: id, login: before.login, actorId: actor.id });
+    this.logger.log({
+      event: 'user.deleted',
+      userId: id,
+      login: before.login,
+      actorId: actor.id,
+    });
 
     return { message: 'User deleted successfully' };
   }

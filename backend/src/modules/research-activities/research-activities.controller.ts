@@ -17,7 +17,16 @@ import {
   StreamableFile,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { extname, basename, join } from 'path';
 import { createReadStream, createWriteStream, existsSync } from 'fs';
 import { pipeline } from 'stream/promises';
@@ -43,8 +52,15 @@ export class ResearchActivitiesController {
   // ==================== TEMPLATE ENDPOINTS ====================
 
   @Get('templates')
-  @ApiOperation({ summary: 'Get active templates', description: 'Get active research activity templates' })
-  @ApiQuery({ name: 'category', required: false, description: 'Filter by category' })
+  @ApiOperation({
+    summary: 'Get active templates',
+    description: 'Get active research activity templates',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    description: 'Filter by category',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of templates' })
   async getTemplates(@Query('category') category?: string) {
     const templates =
@@ -54,7 +70,10 @@ export class ResearchActivitiesController {
 
   @Get('templates/admin')
   @Roles('admin')
-  @ApiOperation({ summary: 'Get all templates (admin)', description: 'Get all templates including inactive ones' })
+  @ApiOperation({
+    summary: 'Get all templates (admin)',
+    description: 'Get all templates including inactive ones',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of all templates' })
   async getAllTemplatesAdmin() {
     const templates =
@@ -64,17 +83,27 @@ export class ResearchActivitiesController {
 
   @Post('templates')
   @Roles('admin')
-  @ApiOperation({ summary: 'Create template', description: 'Create a new research activity template (admin)' })
+  @ApiOperation({
+    summary: 'Create template',
+    description: 'Create a new research activity template (admin)',
+  })
   @ApiResponse({ status: 201, description: 'Template created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   async createTemplate(@Body() dto: CreateTemplateDto) {
     const template = await this.researchActivitiesService.createTemplate(dto);
-    return { success: true, data: template, message: 'Template created successfully' };
+    return {
+      success: true,
+      data: template,
+      message: 'Template created successfully',
+    };
   }
 
   @Patch('templates/:id')
   @Roles('admin')
-  @ApiOperation({ summary: 'Update template', description: 'Update a research activity template' })
+  @ApiOperation({
+    summary: 'Update template',
+    description: 'Update a research activity template',
+  })
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiResponse({ status: 200, description: 'Template updated successfully' })
   @ApiResponse({ status: 404, description: 'Template not found' })
@@ -82,14 +111,24 @@ export class ResearchActivitiesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateTemplateDto,
   ) {
-    const template = await this.researchActivitiesService.updateTemplate(id, dto);
-    return { success: true, data: template, message: 'Template updated successfully' };
+    const template = await this.researchActivitiesService.updateTemplate(
+      id,
+      dto,
+    );
+    return {
+      success: true,
+      data: template,
+      message: 'Template updated successfully',
+    };
   }
 
   @Delete('templates/:id')
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete template', description: 'Delete a research activity template' })
+  @ApiOperation({
+    summary: 'Delete template',
+    description: 'Delete a research activity template',
+  })
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiResponse({ status: 200, description: 'Template deleted' })
   @ApiResponse({ status: 404, description: 'Template not found' })
@@ -101,24 +140,36 @@ export class ResearchActivitiesController {
   // ==================== TEACHER ACTIVITY ENDPOINTS ====================
 
   @Get('my')
-  @ApiOperation({ summary: 'Get my research activities', description: 'Get all research activities for the current teacher' })
-  @ApiResponse({ status: 200, description: 'Returns list of teacher activities' })
+  @ApiOperation({
+    summary: 'Get my research activities',
+    description: 'Get all research activities for the current teacher',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of teacher activities',
+  })
   async getMyActivities(@CurrentUser() user: any) {
-    const activities =
-      await this.researchActivitiesService.getMyActivities(user.id);
+    const activities = await this.researchActivitiesService.getMyActivities(
+      user.id,
+    );
     return { success: true, data: activities };
   }
 
   @Post('upload')
-  @ApiOperation({ summary: 'Upload activity file', description: 'Upload a file for a research activity' })
+  @ApiOperation({
+    summary: 'Upload activity file',
+    description: 'Upload a file for a research activity',
+  })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ description: 'File to upload (PDF, DOC, DOCX, XLS, XLSX, TXT, or images)' })
+  @ApiBody({
+    description: 'File to upload (PDF, DOC, DOCX, XLS, XLSX, TXT, or images)',
+  })
   @ApiResponse({ status: 200, description: 'File uploaded successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid file type or no file uploaded' })
-  async uploadFile(
-    @Req() request: FastifyRequest,
-    @CurrentUser() user: any,
-  ) {
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file type or no file uploaded',
+  })
+  async uploadFile(@Req() request: FastifyRequest, @CurrentUser() user: any) {
     try {
       const data = await request.file();
       if (!data) throw new BadRequestException('No file uploaded');
@@ -137,8 +188,17 @@ export class ResearchActivitiesController {
         'image/webp',
       ];
       const allowedExtensions = [
-        '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt',
-        '.jpg', '.jpeg', '.png', '.gif', '.webp',
+        '.pdf',
+        '.doc',
+        '.docx',
+        '.xls',
+        '.xlsx',
+        '.txt',
+        '.jpg',
+        '.jpeg',
+        '.png',
+        '.gif',
+        '.webp',
       ];
       const fileExt = extname(data.filename).toLowerCase();
 
@@ -172,9 +232,15 @@ export class ResearchActivitiesController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Add research activity', description: 'Add a new research activity from a template' })
+  @ApiOperation({
+    summary: 'Add research activity',
+    description: 'Add a new research activity from a template',
+  })
   @ApiResponse({ status: 201, description: 'Activity added successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error or already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error or already exists',
+  })
   async addActivity(
     @CurrentUser() user: any,
     @Body() dto: CreateResearchActivityDto,
@@ -191,7 +257,10 @@ export class ResearchActivitiesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update activity', description: 'Update a research activity' })
+  @ApiOperation({
+    summary: 'Update activity',
+    description: 'Update a research activity',
+  })
   @ApiParam({ name: 'id', description: 'Activity ID' })
   @ApiResponse({ status: 200, description: 'Activity updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update submitted activity' })
@@ -215,7 +284,10 @@ export class ResearchActivitiesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete activity', description: 'Delete a research activity' })
+  @ApiOperation({
+    summary: 'Delete activity',
+    description: 'Delete a research activity',
+  })
   @ApiParam({ name: 'id', description: 'Activity ID' })
   @ApiResponse({ status: 200, description: 'Activity deleted' })
   @ApiResponse({ status: 400, description: 'Cannot delete submitted activity' })
@@ -230,7 +302,10 @@ export class ResearchActivitiesController {
 
   @Post(':id/submit')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Submit activity', description: 'Submit a research activity for validation' })
+  @ApiOperation({
+    summary: 'Submit activity',
+    description: 'Submit a research activity for validation',
+  })
   @ApiParam({ name: 'id', description: 'Activity ID' })
   @ApiResponse({ status: 200, description: 'Activity submitted successfully' })
   @ApiResponse({ status: 400, description: 'Activity already submitted' })
@@ -240,7 +315,10 @@ export class ResearchActivitiesController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const activity = await this.researchActivitiesService.submitActivity(id, actor);
+    const activity = await this.researchActivitiesService.submitActivity(
+      id,
+      actor,
+    );
     return {
       success: true,
       data: activity,
@@ -251,7 +329,10 @@ export class ResearchActivitiesController {
   @Post(':id/validate')
   @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate activity', description: 'Validate a submitted activity (department head)' })
+  @ApiOperation({
+    summary: 'Validate activity',
+    description: 'Validate a submitted activity (department head)',
+  })
   @ApiParam({ name: 'id', description: 'Activity ID' })
   @ApiResponse({ status: 200, description: 'Activity validated successfully' })
   @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
@@ -261,7 +342,10 @@ export class ResearchActivitiesController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const activity = await this.researchActivitiesService.validateActivity(id, actor);
+    const activity = await this.researchActivitiesService.validateActivity(
+      id,
+      actor,
+    );
     return {
       success: true,
       data: activity,
@@ -272,7 +356,10 @@ export class ResearchActivitiesController {
   @Post(':id/reject')
   @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Reject activity', description: 'Reject a submitted activity (department head)' })
+  @ApiOperation({
+    summary: 'Reject activity',
+    description: 'Reject a submitted activity (department head)',
+  })
   @ApiParam({ name: 'id', description: 'Activity ID' })
   @ApiResponse({ status: 200, description: 'Activity rejected' })
   @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
@@ -282,7 +369,10 @@ export class ResearchActivitiesController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const activity = await this.researchActivitiesService.rejectActivity(id, actor);
+    const activity = await this.researchActivitiesService.rejectActivity(
+      id,
+      actor,
+    );
     return {
       success: true,
       data: activity,
@@ -291,7 +381,10 @@ export class ResearchActivitiesController {
   }
 
   @Get(':id/download')
-  @ApiOperation({ summary: 'Download activity file', description: 'Download the file attached to a research activity' })
+  @ApiOperation({
+    summary: 'Download activity file',
+    description: 'Download the file attached to a research activity',
+  })
   @ApiParam({ name: 'id', description: 'Activity ID' })
   @ApiResponse({ status: 200, description: 'File download' })
   @ApiResponse({ status: 404, description: 'Activity or file not found' })
@@ -307,11 +400,7 @@ export class ResearchActivitiesController {
     if (!item) throw new NotFoundException('Activity not found');
     if (!item.filePath) throw new NotFoundException('No file attached');
 
-    const uploadsDir = join(
-      process.cwd(),
-      'uploads',
-      'research-activities',
-    );
+    const uploadsDir = join(process.cwd(), 'uploads', 'research-activities');
     const fileName = basename(item.filePath);
     const filePath = join(uploadsDir, fileName);
 

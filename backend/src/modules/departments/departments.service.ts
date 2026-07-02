@@ -60,9 +60,17 @@ export class DepartmentsService {
     });
 
     await this.audit.log(actor, 'create', 'Department', department.id, {
-      after: { id: department.id, name: department.name, headId: department.headId },
+      after: {
+        id: department.id,
+        name: department.name,
+        headId: department.headId,
+      },
     });
-    this.logger.log({ event: 'department.created', departmentId: department.id, actorId: actor.id });
+    this.logger.log({
+      event: 'department.created',
+      departmentId: department.id,
+      actorId: actor.id,
+    });
 
     return department;
   }
@@ -123,7 +131,11 @@ export class DepartmentsService {
     return department;
   }
 
-  async update(id: number, updateDepartmentDto: UpdateDepartmentDto, actor: AuditActor) {
+  async update(
+    id: number,
+    updateDepartmentDto: UpdateDepartmentDto,
+    actor: AuditActor,
+  ) {
     const existing = await this.findOne(id);
 
     if (updateDepartmentDto.headId) {
@@ -201,7 +213,11 @@ export class DepartmentsService {
     await this.audit.log(actor, 'delete', 'Department', id, {
       before: { id, name: department.name },
     });
-    this.logger.log({ event: 'department.deleted', departmentId: id, actorId: actor.id });
+    this.logger.log({
+      event: 'department.deleted',
+      departmentId: id,
+      actorId: actor.id,
+    });
 
     return { message: 'Department deleted successfully' };
   }

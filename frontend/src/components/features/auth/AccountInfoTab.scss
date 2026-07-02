@@ -1,0 +1,65 @@
+@use '../../../styles/variables' as *;
+
+.account-info-tab {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-md;
+    flex-wrap: wrap;
+    margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-lg;
+    border-bottom: 1px solid $border-light;
+  }
+
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  &__avatar {
+    background: $gradient-primary;
+    font-size: 22px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  &__meta {
+    margin-top: 4px;
+  }
+
+  &__section {
+    margin-bottom: $spacing-lg;
+    page-break-inside: avoid;
+
+    &-title {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      margin-bottom: $spacing-sm;
+      font-size: 13px;
+      font-weight: 600;
+      color: $text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+
+      svg {
+        color: $primary-color;
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+@media print {
+  .account-info-tab {
+    &__edit-actions {
+      display: none !important;
+    }
+
+    &__header {
+      border-bottom-color: #000;
+    }
+  }
+}

@@ -28,7 +28,9 @@ async function bootstrap() {
       ],
       ...(isProd
         ? {}
-        : { transport: { target: 'pino-pretty', options: { colorize: true } } }),
+        : {
+            transport: { target: 'pino-pretty', options: { colorize: true } },
+          }),
     },
   });
 
@@ -42,7 +44,9 @@ async function bootstrap() {
 
   // Register CORS plugin for Fastify
   // Remove trailing slash from FRONTEND_URL to avoid CORS mismatch
-  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const frontendUrl = (
+    process.env.FRONTEND_URL || 'http://localhost:5173'
+  ).replace(/\/$/, '');
 
   await fastifyAdapter.register(fastifyCors, {
     origin: frontendUrl,
@@ -79,7 +83,9 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Academic Affairs API')
-    .setDescription('API for managing academic affairs including teaching activities, courses, research, and publications')
+    .setDescription(
+      'API for managing academic affairs including teaching activities, courses, research, and publications',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -112,6 +118,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation available at: http://localhost:${port}/api/docs`);
+  console.log(
+    `📚 Swagger documentation available at: http://localhost:${port}/api/docs`,
+  );
 }
 bootstrap();

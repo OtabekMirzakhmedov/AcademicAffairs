@@ -12,7 +12,14 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { TeachingActivitiesService } from './teaching-activities.service';
 import { CreateTeachingActivityDto } from './dto/create-teaching-activity.dto';
 import { UpdateTeachingActivityDto } from './dto/update-teaching-activity.dto';
@@ -31,8 +38,14 @@ export class TeachingActivitiesController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create teaching activity', description: 'Create a new teaching activity record' })
-  @ApiResponse({ status: 201, description: 'Teaching activity created successfully' })
+  @ApiOperation({
+    summary: 'Create teaching activity',
+    description: 'Create a new teaching activity record',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Teaching activity created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   async create(
     @CurrentUser() user: any,
@@ -50,9 +63,19 @@ export class TeachingActivitiesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get teaching activities', description: 'Get all teaching activities for the current user' })
-  @ApiQuery({ name: 'academicPeriodId', required: false, description: 'Filter by academic period ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of teaching activities' })
+  @ApiOperation({
+    summary: 'Get teaching activities',
+    description: 'Get all teaching activities for the current user',
+  })
+  @ApiQuery({
+    name: 'academicPeriodId',
+    required: false,
+    description: 'Filter by academic period ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of teaching activities',
+  })
   async findAll(
     @CurrentUser() user: any,
     @Query('academicPeriodId') academicPeriodId?: string,
@@ -68,8 +91,15 @@ export class TeachingActivitiesController {
   }
 
   @Get('stats')
-  @ApiOperation({ summary: 'Get teaching statistics', description: 'Get teaching hours statistics for current user' })
-  @ApiQuery({ name: 'academicPeriodId', required: false, description: 'Filter by academic period ID' })
+  @ApiOperation({
+    summary: 'Get teaching statistics',
+    description: 'Get teaching hours statistics for current user',
+  })
+  @ApiQuery({
+    name: 'academicPeriodId',
+    required: false,
+    description: 'Filter by academic period ID',
+  })
   @ApiResponse({ status: 200, description: 'Returns teaching statistics' })
   async getStatistics(
     @CurrentUser() user: any,
@@ -86,7 +116,10 @@ export class TeachingActivitiesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get activity by ID', description: 'Retrieve a specific teaching activity' })
+  @ApiOperation({
+    summary: 'Get activity by ID',
+    description: 'Retrieve a specific teaching activity',
+  })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Returns teaching activity' })
   @ApiResponse({ status: 403, description: 'Access denied' })
@@ -103,7 +136,10 @@ export class TeachingActivitiesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update activity', description: 'Update a teaching activity (only in draft status)' })
+  @ApiOperation({
+    summary: 'Update activity',
+    description: 'Update a teaching activity (only in draft status)',
+  })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update submitted activity' })
@@ -128,7 +164,10 @@ export class TeachingActivitiesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete activity', description: 'Delete a teaching activity (only in draft status)' })
+  @ApiOperation({
+    summary: 'Delete activity',
+    description: 'Delete a teaching activity (only in draft status)',
+  })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity deleted' })
   @ApiResponse({ status: 400, description: 'Cannot delete submitted activity' })
@@ -147,7 +186,10 @@ export class TeachingActivitiesController {
 
   @Post(':id/submit')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Submit activity', description: 'Submit teaching activity for validation' })
+  @ApiOperation({
+    summary: 'Submit activity',
+    description: 'Submit teaching activity for validation',
+  })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity submitted successfully' })
   @ApiResponse({ status: 400, description: 'Activity already submitted' })
@@ -168,10 +210,18 @@ export class TeachingActivitiesController {
 
   @Get('submitted/all')
   @Roles('departmenthead', 'admin')
-  @ApiOperation({ summary: 'Get all submitted activities', description: 'Get all submitted activities (for validation)' })
-  @ApiResponse({ status: 200, description: 'Returns list of submitted activities' })
+  @ApiOperation({
+    summary: 'Get all submitted activities',
+    description: 'Get all submitted activities (for validation)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of submitted activities',
+  })
   async getAllSubmitted(@CurrentUser() user: any) {
-    const activities = await this.teachingActivitiesService.getAllSubmitted(user.id);
+    const activities = await this.teachingActivitiesService.getAllSubmitted(
+      user.id,
+    );
     return {
       success: true,
       data: activities,
@@ -181,7 +231,10 @@ export class TeachingActivitiesController {
   @Post(':id/validate')
   @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate activity', description: 'Validate a submitted teaching activity (department head)' })
+  @ApiOperation({
+    summary: 'Validate activity',
+    description: 'Validate a submitted teaching activity (department head)',
+  })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity validated successfully' })
   @ApiResponse({ status: 400, description: 'Activity not in submitted status' })
@@ -202,7 +255,10 @@ export class TeachingActivitiesController {
   @Post(':id/reject')
   @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Reject activity', description: 'Reject a submitted teaching activity (department head)' })
+  @ApiOperation({
+    summary: 'Reject activity',
+    description: 'Reject a submitted teaching activity (department head)',
+  })
   @ApiParam({ name: 'id', description: 'Teaching activity ID' })
   @ApiResponse({ status: 200, description: 'Activity rejected' })
   @ApiResponse({ status: 400, description: 'Activity not in submitted status' })

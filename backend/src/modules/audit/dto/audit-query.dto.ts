@@ -1,9 +1,18 @@
-import { IsOptional, IsString, IsInt, Min, Max, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  Max,
+  IsDateString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AuditQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by entity type (e.g. TeachingActivity, User)' })
+  @ApiPropertyOptional({
+    description: 'Filter by entity type (e.g. TeachingActivity, User)',
+  })
   @IsOptional()
   @IsString()
   entityType?: string;
@@ -14,13 +23,18 @@ export class AuditQueryDto {
   @Type(() => Number)
   entityId?: number;
 
-  @ApiPropertyOptional({ description: 'Filter by actor (user who performed the action)' })
+  @ApiPropertyOptional({
+    description: 'Filter by actor (user who performed the action)',
+  })
   @IsOptional()
   @IsInt()
   @Type(() => Number)
   actorId?: number;
 
-  @ApiPropertyOptional({ description: 'Filter by action (submit, validate, reject, create, delete, ...)' })
+  @ApiPropertyOptional({
+    description:
+      'Filter by action (submit, validate, reject, create, delete, ...)',
+  })
   @IsOptional()
   @IsString()
   action?: string;

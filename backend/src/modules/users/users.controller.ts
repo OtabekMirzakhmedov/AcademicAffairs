@@ -6,12 +6,25 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  ForbiddenException,
+  BadRequestException,
+  StreamableFile,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import type { FastifyReply } from 'fastify';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
@@ -23,6 +36,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PdfReportService } from '../reports-pdf/pdf-report.service';
 
 @ApiTags('users')
 @ApiBearerAuth('JWT-auth')
@@ -33,11 +47,15 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly prisma: PrismaService,
+    private readonly pdfReportService: PdfReportService,
   ) {}
 
   @Get('roles')
   @Roles('admin', 'departmenthead')
-  @ApiOperation({ summary: 'Get all roles', description: 'Retrieve list of all available roles' })
+  @ApiOperation({
+    summary: 'Get all roles',
+    description: 'Retrieve list of all available roles',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of roles' })
   async getRoles() {
     const roles = await this.prisma.role.findMany();
@@ -48,10 +66,16 @@ export class UsersController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create user', description: 'Create a new user (admin only)' })
+  @ApiOperation({
+    summary: 'Create user',
+    description: 'Create a new user (admin only)',
+  })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 409, description: 'User with this login already exists' })
+  @ApiResponse({
+    status: 409,
+    description: 'User with this login already exists',
+  })
   async create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: any) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
     const result = await this.usersService.create(createUserDto, actor);
@@ -64,8 +88,14 @@ export class UsersController {
 
   @Post('teachers')
   @Roles('departmenthead')
-  @ApiOperation({ summary: 'Create teacher', description: 'Create a new teacher in department head\'s department' })
-  @ApiResponse({ status: 201, description: 'Teacher created with default password "password123"' })
+  @ApiOperation({
+    summary: 'Create teacher',
+    description: "Create a new teacher in department head's department",
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Teacher created with default password "password123"',
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 403, description: 'Not a department head' })
   async createTeacher(
@@ -73,19 +103,30 @@ export class UsersController {
     @CurrentUser() user: any,
   ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const teacher = await this.usersService.createTeacher(createTeacherDto, actor);
+    const teacher = await this.usersService.createTeacher(
+      createTeacherDto,
+      actor,
+    );
     return {
       success: true,
       data: teacher,
-      message: 'Teacher created successfully with default password "password123"',
+      message:
+        'Teacher created successfully with default password "password123"',
     };
   }
 
   @Patch('teachers/:id')
   @Roles('departmenthead')
-  @ApiOperation({ summary: 'Update teacher info', description: 'Update teacher employment and mandatory hours (department head only)' })
+  @ApiOperation({
+    summary: 'Update teacher info',
+    description:
+      'Update teacher employment and mandatory hours (department head only)',
+  })
   @ApiParam({ name: 'id', description: 'Teacher user ID' })
-  @ApiResponse({ status: 200, description: 'Teacher info updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher info updated successfully',
+  })
   @ApiResponse({ status: 403, description: 'Teacher not in your department' })
   @ApiResponse({ status: 404, description: 'Teacher not found' })
   async updateTeacherInfo(
@@ -107,10 +148,16 @@ export class UsersController {
 
   @Patch(':id/account')
   @Roles('admin', 'departmenthead', 'teacher')
-  @ApiOperation({ summary: 'Update user account', description: 'Update user personal and professional information' })
+  @ApiOperation({
+    summary: 'Update user account',
+    description: 'Update user personal and professional information',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Account updated successfully' })
-  @ApiResponse({ status: 403, description: 'Cannot update other user\'s account' })
+  @ApiResponse({
+    status: 403,
+    description: "Cannot update other user's account",
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async updateAccount(
     @Param('id', ParseIntPipe) id: number,
@@ -121,7 +168,10 @@ export class UsersController {
       throw new Error('You can only update your own account');
     }
 
-    const updatedUser = await this.usersService.updateUserAccount(id, updateAccountDto);
+    const updatedUser = await this.usersService.updateUserAccount(
+      id,
+      updateAccountDto,
+    );
     return {
       success: true,
       data: updatedUser,
@@ -129,9 +179,70 @@ export class UsersController {
     };
   }
 
+  @Get(':id/reports/account-summary')
+  @Roles('admin', 'departmenthead', 'teacher')
+  @ApiOperation({
+    summary: 'Print account summary',
+    description:
+      'Generate a condensed, one-page PDF "employee card" for the current user (self only)',
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    example: 'pdf',
+    description: 'Only "pdf" is supported today',
+  })
+  @ApiQuery({
+    name: 'lang',
+    required: false,
+    example: 'en',
+    description: 'en | ru | uz',
+  })
+  @ApiResponse({ status: 200, description: 'PDF file' })
+  @ApiResponse({
+    status: 403,
+    description: "Cannot print another user's summary",
+  })
+  async getAccountSummaryReport(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('format') format: string = 'pdf',
+    @Query('lang') lang: string,
+    @CurrentUser() user: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<StreamableFile> {
+    if (user.id !== id) {
+      throw new ForbiddenException(
+        'You can only print your own account summary',
+      );
+    }
+    if (format !== 'pdf') {
+      throw new BadRequestException(
+        'Only the "pdf" format is supported for this report',
+      );
+    }
+
+    const context = await this.usersService.buildAccountSummary(id, lang);
+    const pdf = await this.pdfReportService.renderToPdf(
+      'account-summary',
+      context,
+    );
+
+    res.header('Content-Type', 'application/pdf');
+    res.header(
+      'Content-Disposition',
+      'attachment; filename="account-summary.pdf"',
+    );
+
+    return new StreamableFile(pdf);
+  }
+
   @Get()
   @Roles('admin', 'departmenthead')
-  @ApiOperation({ summary: 'Get all users', description: 'Retrieve list of all users' })
+  @ApiOperation({
+    summary: 'Get all users',
+    description: 'Retrieve list of all users',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of users' })
   async findAll() {
     const users = await this.usersService.findAll();
@@ -143,7 +254,10 @@ export class UsersController {
 
   @Get(':id')
   @Roles('admin', 'departmenthead')
-  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a specific user by ID' })
+  @ApiOperation({
+    summary: 'Get user by ID',
+    description: 'Retrieve a specific user by ID',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Returns user data' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -156,7 +270,10 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update user', description: 'Update user data (admin only)' })
+  @ApiOperation({
+    summary: 'Update user',
+    description: 'Update user data (admin only)',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -176,11 +293,17 @@ export class UsersController {
 
   @Patch(':id/toggle-status')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Toggle user status', description: 'Activate or deactivate a user' })
+  @ApiOperation({
+    summary: 'Toggle user status',
+    description: 'Activate or deactivate a user',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User status toggled' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async toggleStatus(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async toggleStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
     const result = await this.usersService.toggleStatus(id, actor);
     return {
@@ -193,10 +316,16 @@ export class UsersController {
   @Delete(':id')
   @Roles('admin', 'departmenthead')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete user', description: 'Permanently delete a user' })
+  @ApiOperation({
+    summary: 'Delete user',
+    description: 'Permanently delete a user',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User deleted' })
-  @ApiResponse({ status: 403, description: 'Cannot delete yourself or higher role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Cannot delete yourself or higher role',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(
     @Param('id', ParseIntPipe) id: number,

@@ -1,28 +1,36 @@
 import { useState, useEffect } from 'react';
+import { Row, Col, Spin, Alert, Card } from 'antd';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Spin,
-  Alert,
-  Tag,
-} from 'antd';
-import {
-  UserOutlined,
-  BankOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  Users,
+  Building2,
+  GraduationCap,
+  UserCog,
+  Calendar,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 import MainLayout from '../../components/layout/MainLayout';
+import { PageHeader, StatCard, StatusBadge } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 import usersService from '../../services/users.service';
 import departmentsService from '../../services/departments.service';
 import academicPeriodsService from '../../services/academic-periods.service';
 import type { User, Department, AcademicPeriod } from '../../types';
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: '#ef4444',
+  departmenthead: '#f59e0b',
+  teacher: '#4f46e5',
+};
 
 const AdminDashboardPage = () => {
   const { user } = useAuthStore();
@@ -71,9 +79,7 @@ const AdminDashboardPage = () => {
   if (error) {
     return (
       <MainLayout>
-        <div style={{ padding: '24px' }}>
-          <Alert message={t('common:message.errorLoading')} description={error} type="error" showIcon />
-        </div>
+        <Alert message={t('common:message.errorLoading')} description={error} type="error" showIcon />
       </MainLayout>
     );
   }
@@ -84,214 +90,156 @@ const AdminDashboardPage = () => {
   const departmentHeads = users.filter((u) => u.role.name === 'departmenthead');
   const admins = users.filter((u) => u.role.name === 'admin');
 
+  const roleChartData = [
+    { role: t('domain:role.teacher'), value: teachers.length, key: 'teacher' },
+    { role: t('domain:role.departmenthead'), value: departmentHeads.length, key: 'departmenthead' },
+    { role: t('domain:role.admin'), value: admins.length, key: 'admin' },
+  ];
+
   return (
     <MainLayout>
-      <div style={{ padding: '24px' }}>
-        <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-          <Row align="middle">
-            <Col flex="auto">
-              <h1 style={{ margin: 0, color: 'white', fontSize: '28px' }}>
-                <UserOutlined style={{ marginRight: 12 }} />
-                {t('admin:dashboard.title')}
-              </h1>
-              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '16px' }}>
-                {t('admin:dashboard.desc', {
-                  name: `${user?.userInfo?.firstName ?? ''} ${user?.userInfo?.lastName ?? ''}`.trim(),
-                })}
-              </p>
-            </Col>
-          </Row>
-        </Card>
-
-        {activePeriod && (
-          <Card
-            title={
+      <PageHeader
+        title={t('admin:dashboard.title')}
+        subtitle={t('admin:dashboard.desc', {
+          name: `${user?.userInfo?.firstName ?? ''} ${user?.userInfo?.lastName ?? ''}`.trim(),
+        })}
+        actions={
+          activePeriod && (
+            <div className="period-chip">
+              <Calendar size={14} strokeWidth={2} />
               <span>
-                <CalendarOutlined style={{ marginRight: 8 }} />
-                {t('teacher:dashboard.currentPeriod')}
+                {activePeriod.academicYear} ·{' '}
+                {t(`domain:semester.${activePeriod.semester}`)} ·{' '}
+                {t('teacher:dashboard.week', { number: activePeriod.teachingWeek })}
               </span>
+            </div>
+          )
+        }
+      />
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            label={t('admin:nav.users')}
+            value={users.length}
+            icon={Users}
+            tone="primary"
+            footer={
+              <>
+                <StatusBadge status="active" label={`${activeUsers.length} ${t('domain:status.active')}`} />
+                <StatusBadge status="inactive" label={`${inactiveUsers.length} ${t('domain:status.inactive')}`} />
+              </>
             }
-            style={{ marginBottom: 24 }}
-          >
-            <Row gutter={24}>
-              <Col xs={24} sm={8}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    {t('teacher:dashboard.academicYear')}
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                    {activePeriod.academicYear}
-                  </div>
-                </div>
-              </Col>
-              <Col xs={24} sm={8}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    {t('teacher:dashboard.semester')}
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                    {t(`domain:semester.${activePeriod.semester}`)} ({t('teacher:dashboard.semester')} {activePeriod.semester})
-                  </div>
-                </div>
-              </Col>
-              <Col xs={24} sm={8}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '14px', color: '#8c8c8c', marginBottom: 8 }}>
-                    {t('teacher:dashboard.teachingWeek')}
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                    {t('teacher:dashboard.week', { number: activePeriod.teachingWeek })}
-                  </div>
-                </div>
-              </Col>
-            </Row>
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            label={t('admin:nav.departments')}
+            value={departments.length}
+            icon={Building2}
+            tone="success"
+            hint={`${departments.filter((d) => d.headId).length} ${t('admin:dashboard.withAssignedHeads')}`}
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            label={t('domain:role.teacher')}
+            value={teachers.length}
+            icon={GraduationCap}
+            tone="primary"
+            hint={`${teachers.filter((t) => t.isActive).length} ${t('admin:dashboard.activeTeachers')}`}
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard
+            label={t('domain:role.departmenthead')}
+            value={departmentHeads.length}
+            icon={UserCog}
+            tone="warning"
+            hint={t('admin:dashboard.managingDepts', {
+              count: departments.filter((d) => d.headId).length,
+            })}
+          />
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} lg={14}>
+          <Card title={t('admin:dashboard.usersByRole')} style={{ height: '100%' }}>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart
+                data={roleChartData}
+                layout="vertical"
+                margin={{ top: 8, right: 16, left: 24, bottom: 0 }}
+              >
+                <CartesianGrid stroke="#f5f5f4" horizontal={false} />
+                <XAxis type="number" stroke="#a8a29e" fontSize={12} />
+                <YAxis
+                  type="category"
+                  dataKey="role"
+                  stroke="#57534e"
+                  fontSize={13}
+                  width={120}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  cursor={{ fill: '#fafaf9' }}
+                  contentStyle={{
+                    background: '#ffffff',
+                    border: '1px solid #e7e5e4',
+                    borderRadius: 8,
+                    fontSize: 13,
+                  }}
+                />
+                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={28}>
+                  {roleChartData.map((entry) => (
+                    <Cell key={entry.key} fill={ROLE_COLORS[entry.key]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </Card>
-        )}
-
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title={t('admin:nav.users')}
-                value={users.length}
-                prefix={<UserOutlined />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-              <div style={{ marginTop: 12 }}>
-                <Tag color="success" icon={<CheckCircleOutlined />}>
-                  {activeUsers.length} {t('domain:status.active')}
-                </Tag>
-                <Tag color="default" icon={<ClockCircleOutlined />}>
-                  {inactiveUsers.length} {t('domain:status.inactive')}
-                </Tag>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title={t('admin:nav.departments')}
-                value={departments.length}
-                prefix={<BankOutlined />}
-                valueStyle={{ color: '#52c41a' }}
-              />
-              <div style={{ marginTop: 12, fontSize: '12px', color: '#8c8c8c' }}>
-                {departments.filter((d) => d.headId).length} {t('admin:dashboard.withAssignedHeads')}
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title={t('domain:role.teacher')}
-                value={teachers.length}
-                prefix={<TeamOutlined />}
-                valueStyle={{ color: '#722ed1' }}
-              />
-              <div style={{ marginTop: 12, fontSize: '12px', color: '#8c8c8c' }}>
-                {teachers.filter((t) => t.isActive).length} {t('admin:dashboard.activeTeachers')}
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title={t('domain:role.departmenthead')}
-                value={departmentHeads.length}
-                prefix={<BankOutlined />}
-                valueStyle={{ color: '#fa8c16' }}
-              />
-              <div style={{ marginTop: 12, fontSize: '12px', color: '#8c8c8c' }}>
-                {t('admin:dashboard.managingDepts', { count: departments.filter((d) => d.headId).length })}
-              </div>
-            </Card>
-          </Col>
-        </Row>
-
-        <Card
-          title={
-            <span>
-              <TeamOutlined style={{ marginRight: 8 }} />
-              {t('admin:dashboard.usersByRole')}
-            </span>
-          }
-          style={{ marginBottom: 24 }}
-        >
-          <Row gutter={16}>
-            <Col xs={24} md={8}>
-              <Card type="inner">
-                <Statistic
-                  title={t('domain:role.admin')}
-                  value={admins.length}
-                  valueStyle={{ color: '#f5222d' }}
-                />
-                <div style={{ marginTop: 8 }}>
-                  <Tag color="error">{admins.filter((a) => a.isActive).length} {t('domain:status.active')}</Tag>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card type="inner">
-                <Statistic
-                  title={t('domain:role.departmenthead')}
-                  value={departmentHeads.length}
-                  valueStyle={{ color: '#fa8c16' }}
-                />
-                <div style={{ marginTop: 8 }}>
-                  <Tag color="orange">{departmentHeads.filter((d) => d.isActive).length} {t('domain:status.active')}</Tag>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card type="inner">
-                <Statistic
-                  title={t('domain:role.teacher')}
-                  value={teachers.length}
-                  valueStyle={{ color: '#722ed1' }}
-                />
-                <div style={{ marginTop: 8 }}>
-                  <Tag color="purple">{teachers.filter((t) => t.isActive).length} {t('domain:status.active')}</Tag>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </Card>
-
-        <Card
-          title={
-            <span>
-              <BankOutlined style={{ marginRight: 8 }} />
-              {t('admin:dashboard.departmentsOverview')}
-            </span>
-          }
-        >
-          <Row gutter={16}>
-            {departments.slice(0, 6).map((dept) => (
-              <Col xs={24} sm={12} lg={8} key={dept.id} style={{ marginBottom: 16 }}>
-                <Card type="inner" size="small">
-                  <h4 style={{ margin: 0, marginBottom: 8 }}>{dept.name}</h4>
-                  <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
-                    <div>
-                      Head: {dept.head
+        </Col>
+        <Col xs={24} lg={10}>
+          <Card title={t('admin:dashboard.departmentsOverview')} style={{ height: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {departments.slice(0, 5).map((dept) => (
+                <div
+                  key={dept.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    background: '#fafaf9',
+                    border: '1px solid #f5f5f4',
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1c1917' }}>{dept.name}</div>
+                    <div style={{ fontSize: 12, color: '#78716c', marginTop: 2 }}>
+                      {dept.head
                         ? `${dept.head.userInfo?.firstName} ${dept.head.userInfo?.lastName}`
                         : t('admin:departments.notAssigned')}
                     </div>
-                    <div style={{ marginTop: 4 }}>
-                      <Tag color="blue">{dept._count?.teachers || 0} {t('admin:dashboard.teachers')}</Tag>
-                      <Tag color="green">{dept._count?.courses || 0} {t('admin:dashboard.courses')}</Tag>
-                    </div>
                   </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-          {departments.length > 6 && (
-            <div style={{ textAlign: 'center', marginTop: 16, color: '#8c8c8c' }}>
-              {t('admin:dashboard.moreDepts', { count: departments.length - 6 })}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <StatusBadge status="neutral" label={`${dept._count?.teachers || 0} ${t('admin:dashboard.teachers')}`} />
+                    <StatusBadge status="validated" label={`${dept._count?.courses || 0} ${t('admin:dashboard.courses')}`} />
+                  </div>
+                </div>
+              ))}
+              {departments.length > 5 && (
+                <div style={{ textAlign: 'center', fontSize: 12, color: '#78716c', marginTop: 4 }}>
+                  {t('admin:dashboard.moreDepts', { count: departments.length - 5 })}
+                </div>
+              )}
             </div>
-          )}
-        </Card>
-      </div>
+          </Card>
+        </Col>
+      </Row>
     </MainLayout>
   );
 };

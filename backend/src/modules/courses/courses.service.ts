@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -87,7 +88,10 @@ export class CoursesService {
           courseId: course.id,
           teacherId: createCourseDto.teacherId,
           academicPeriodId: createCourseDto.academicPeriodId,
-          groups: createCourseDto.groups && createCourseDto.groups.length > 0 ? createCourseDto.groups : undefined,
+          groups:
+            createCourseDto.groups && createCourseDto.groups.length > 0
+              ? createCourseDto.groups
+              : undefined,
         },
       });
 
@@ -296,7 +300,6 @@ export class CoursesService {
         department: true,
         _count: {
           select: {
-            assignedTeachers: true,
             teachingActivities: true,
           },
         },
@@ -319,9 +322,20 @@ export class CoursesService {
       );
     }
 
-    // Delete course (cascade will handle related records)
-    return await this.prisma.course.delete({
-      where: { id },
+    // Block deletion when teaching activity history exists — those records are
+    // workload data we must not silently destroy. The user has to reassign or
+    // delete the activities first.
+    if (course._count.teachingActivities > 0) {
+      throw new ConflictException(
+        `Cannot delete course: it has ${course._count.teachingActivities} teaching activity record(s). Remove them before deleting the course.`,
+      );
+    }
+
+    // CourseTeacher cascades on the FK; ProgramCourse does not, so unlink
+    // program associations explicitly in the same transaction.
+    return await this.prisma.$transaction(async (tx) => {
+      await tx.programCourse.deleteMany({ where: { courseId: id } });
+      return tx.course.delete({ where: { id } });
     });
   }
 }

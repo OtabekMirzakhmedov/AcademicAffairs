@@ -11,7 +11,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
@@ -30,7 +36,10 @@ export class PublicationsController {
   constructor(private readonly publicationsService: PublicationsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create publication', description: 'Create a new publication record' })
+  @ApiOperation({
+    summary: 'Create publication',
+    description: 'Create a new publication record',
+  })
   @ApiResponse({ status: 201, description: 'Publication created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   async create(
@@ -49,10 +58,15 @@ export class PublicationsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get my publications', description: 'Get all publications for the current teacher' })
+  @ApiOperation({
+    summary: 'Get my publications',
+    description: 'Get all publications for the current teacher',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of publications' })
   async findAll(@CurrentUser() user: any) {
-    const publications = await this.publicationsService.findAllByTeacher(user.id);
+    const publications = await this.publicationsService.findAllByTeacher(
+      user.id,
+    );
     return {
       success: true,
       data: publications,
@@ -60,8 +74,14 @@ export class PublicationsController {
   }
 
   @Get('statistics')
-  @ApiOperation({ summary: 'Get publication statistics', description: 'Get publication statistics for the current teacher' })
-  @ApiResponse({ status: 200, description: 'Returns publication statistics by type' })
+  @ApiOperation({
+    summary: 'Get publication statistics',
+    description: 'Get publication statistics for the current teacher',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns publication statistics by type',
+  })
   async getStatistics(@CurrentUser() user: any) {
     const statistics = await this.publicationsService.getStatistics(user.id);
     return {
@@ -71,7 +91,10 @@ export class PublicationsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get publication by ID', description: 'Retrieve a specific publication' })
+  @ApiOperation({
+    summary: 'Get publication by ID',
+    description: 'Retrieve a specific publication',
+  })
   @ApiParam({ name: 'id', description: 'Publication ID' })
   @ApiResponse({ status: 200, description: 'Returns publication data' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
@@ -84,10 +107,16 @@ export class PublicationsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update publication', description: 'Update a publication (draft status only)' })
+  @ApiOperation({
+    summary: 'Update publication',
+    description: 'Update a publication (draft status only)',
+  })
   @ApiParam({ name: 'id', description: 'Publication ID' })
   @ApiResponse({ status: 200, description: 'Publication updated successfully' })
-  @ApiResponse({ status: 400, description: 'Cannot update submitted publication' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot update submitted publication',
+  })
   @ApiResponse({ status: 403, description: 'Not publication owner' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
   async update(
@@ -109,13 +138,22 @@ export class PublicationsController {
 
   @Patch(':id/submit')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Submit publication', description: 'Submit publication for validation' })
+  @ApiOperation({
+    summary: 'Submit publication',
+    description: 'Submit publication for validation',
+  })
   @ApiParam({ name: 'id', description: 'Publication ID' })
-  @ApiResponse({ status: 200, description: 'Publication submitted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Publication submitted successfully',
+  })
   @ApiResponse({ status: 400, description: 'Publication already submitted' })
   @ApiResponse({ status: 403, description: 'Not publication owner' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
-  async submit(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async submit(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
     const publication = await this.publicationsService.submit(id, actor);
     return {
@@ -127,10 +165,16 @@ export class PublicationsController {
 
   @Get('submitted/all')
   @Roles('departmenthead', 'admin')
-  @ApiOperation({ summary: 'Get submitted publications', description: 'Get all submitted publications pending validation (department head sees own dept only)' })
+  @ApiOperation({
+    summary: 'Get submitted publications',
+    description:
+      'Get all submitted publications pending validation (department head sees own dept only)',
+  })
   @ApiResponse({ status: 200, description: 'Returns submitted publications' })
   async getAllSubmitted(@CurrentUser() user: any) {
-    const publications = await this.publicationsService.getAllSubmitted(user.id);
+    const publications = await this.publicationsService.getAllSubmitted(
+      user.id,
+    );
     return {
       success: true,
       data: publications,
@@ -140,13 +184,25 @@ export class PublicationsController {
   @Post(':id/validate')
   @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate publication', description: 'Validate a submitted publication (department head or admin)' })
+  @ApiOperation({
+    summary: 'Validate publication',
+    description: 'Validate a submitted publication (department head or admin)',
+  })
   @ApiParam({ name: 'id', description: 'Publication ID' })
-  @ApiResponse({ status: 200, description: 'Publication validated successfully' })
-  @ApiResponse({ status: 400, description: 'Publication not in submitted status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Publication validated successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Publication not in submitted status',
+  })
   @ApiResponse({ status: 403, description: 'Not in your department' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
-  async validate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async validate(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
     const publication = await this.publicationsService.validate(id, actor);
     return {
@@ -159,10 +215,16 @@ export class PublicationsController {
   @Post(':id/reject')
   @Roles('departmenthead', 'admin')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Reject publication', description: 'Reject a submitted publication (department head or admin)' })
+  @ApiOperation({
+    summary: 'Reject publication',
+    description: 'Reject a submitted publication (department head or admin)',
+  })
   @ApiParam({ name: 'id', description: 'Publication ID' })
   @ApiResponse({ status: 200, description: 'Publication rejected' })
-  @ApiResponse({ status: 400, description: 'Publication not in submitted status' })
+  @ApiResponse({
+    status: 400,
+    description: 'Publication not in submitted status',
+  })
   @ApiResponse({ status: 403, description: 'Not in your department' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
   async reject(
@@ -171,7 +233,11 @@ export class PublicationsController {
     @CurrentUser() user: any,
   ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const publication = await this.publicationsService.reject(id, actor, dto.reason);
+    const publication = await this.publicationsService.reject(
+      id,
+      actor,
+      dto.reason,
+    );
     return {
       success: true,
       data: publication,
@@ -181,13 +247,22 @@ export class PublicationsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete publication', description: 'Delete a publication (draft status only)' })
+  @ApiOperation({
+    summary: 'Delete publication',
+    description: 'Delete a publication (draft status only)',
+  })
   @ApiParam({ name: 'id', description: 'Publication ID' })
   @ApiResponse({ status: 200, description: 'Publication deleted' })
-  @ApiResponse({ status: 400, description: 'Cannot delete submitted publication' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot delete submitted publication',
+  })
   @ApiResponse({ status: 403, description: 'Not publication owner' })
   @ApiResponse({ status: 404, description: 'Publication not found' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     const result = await this.publicationsService.remove(id, user.id);
     return {
       success: true,

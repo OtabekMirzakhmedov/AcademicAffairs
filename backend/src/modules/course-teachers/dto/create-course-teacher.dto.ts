@@ -17,7 +17,10 @@ export class CreateCourseTeacherDto {
   @IsNotEmpty()
   academicPeriodId: number;
 
-  @ApiPropertyOptional({ example: ['CS-101', 'CS-102'], description: 'Group names' })
+  @ApiPropertyOptional({
+    example: ['CS-101', 'CS-102'],
+    description: 'Group names',
+  })
   @IsArray()
   @IsOptional()
   groups?: string[];

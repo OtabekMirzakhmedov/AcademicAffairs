@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 24mm 20mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #1f2937;
+    margin: 0;
+  }
+  .header {
+    text-align: center;
+    border-bottom: 2px solid #1f2937;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  .header h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+    letter-spacing: 0.5px;
+  }
+  .header .generated {
+    font-size: 11px;
+    color: #6b7280;
+  }
+  .section {
+    margin-bottom: 18px;
+  }
+  .section h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #374151;
+    border-bottom: 1px solid #d1d5db;
+    padding-bottom: 4px;
+    margin: 0 0 8px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  td {
+    padding: 5px 0;
+    font-size: 13px;
+    vertical-align: top;
+  }
+  td.label {
+    width: 35%;
+    color: #6b7280;
+  }
+  td.value {
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>{{ labels.title }}</h1>
+    <div class="generated">{{ labels.generatedOn }}: {{ generatedAt }}</div>
+  </div>
+
+  <div class="section">
+    <h2>{{ labels.personalInfo }}</h2>
+    <table>
+      <tr>
+        <td class="label">{{ labels.fullName }}</td>
+        <td class="value">{{ fullName }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ labels.login }}</td>
+        <td class="value">{{ login }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ labels.role }}</td>
+        <td class="value">{{ roleName }}</td>
+      </tr>
+      {% if departmentName %}
+      <tr>
+        <td class="label">{{ labels.department }}</td>
+        <td class="value">{{ departmentName }}</td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+
+  {% if bachelor %}
+  <div class="section">
+    <h2>{{ labels.bachelorDegree }}</h2>
+    <table>
+      <tr>
+        <td class="label">{{ labels.university }}</td>
+        <td class="value">{{ bachelor.university }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ labels.year }}</td>
+        <td class="value">{{ bachelor.year | default: labels.notSpecified }}</td>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if master %}
+  <div class="section">
+    <h2>{{ labels.masterDegree }}</h2>
+    <table>
+      <tr>
+        <td class="label">{{ labels.university }}</td>
+        <td class="value">{{ master.university }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ labels.year }}</td>
+        <td class="value">{{ master.year | default: labels.notSpecified }}</td>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if phd %}
+  <div class="section">
+    <h2>{{ labels.phdDegree }}</h2>
+    <table>
+      <tr>
+        <td class="label">{{ labels.year }}</td>
+        <td class="value">{{ phd.year | default: labels.notSpecified }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ labels.speciality }}</td>
+        <td class="value">{{ phd.speciality | default: labels.notSpecified }}</td>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if academicTitle %}
+  <div class="section">
+    <h2>{{ labels.academicTitle }}</h2>
+    <table>
+      <tr>
+        <td class="label">{{ labels.academicTitle }}</td>
+        <td class="value">{{ academicTitle.name | default: labels.notSpecified }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ labels.year }}</td>
+        <td class="value">{{ academicTitle.year | default: labels.notSpecified }}</td>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+</body>
+</html>

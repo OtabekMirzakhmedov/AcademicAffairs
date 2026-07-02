@@ -30,7 +30,16 @@ export class AuditService {
   }
 
   async findAll(query: AuditQueryDto) {
-    const { entityType, entityId, actorId, action, from, to, page = 1, limit = 20 } = query;
+    const {
+      entityType,
+      entityId,
+      actorId,
+      action,
+      from,
+      to,
+      page = 1,
+      limit = 20,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};

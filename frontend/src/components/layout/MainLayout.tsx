@@ -2,31 +2,33 @@ import { useState, useEffect } from 'react';
 import { Layout, Menu, Drawer, Button, Avatar, Select } from 'antd';
 import type { MenuProps } from 'antd';
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  DashboardOutlined,
-  BookOutlined,
-  ExperimentOutlined,
-  FileSearchOutlined,
-  FileTextOutlined,
-  AppstoreOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  BankOutlined,
-  ControlOutlined,
-  IdcardOutlined,
-  GlobalOutlined,
-  HistoryOutlined,
-} from '@ant-design/icons';
+  PanelLeftClose,
+  PanelLeftOpen,
+  LayoutDashboard,
+  BookOpen,
+  FlaskConical,
+  FileText,
+  FileSearch,
+  AppWindow,
+  User,
+  LogOut,
+  Settings,
+  Users,
+  Building2,
+  SlidersHorizontal,
+  IdCard,
+  Globe,
+  History,
+  type LucideIcon,
+} from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import usersService from '../../services/users.service';
 import branding from '../../config/branding.json';
-import universityLogo from '../../../public/university-logo.png';
 import './MainLayout.scss';
+
+const universityLogo = '/university-logo.png';
 
 const { Header, Sider, Content } = Layout;
 
@@ -39,6 +41,10 @@ const LANGUAGES = [
 interface MainLayoutProps {
   children: React.ReactNode;
 }
+
+const Icon = ({ icon: I }: { icon: LucideIcon }) => (
+  <I size={18} strokeWidth={1.75} className="nav-icon" />
+);
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -93,43 +99,43 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       ? [
           {
             key: '/dashboard',
-            icon: <DashboardOutlined />,
+            icon: <Icon icon={LayoutDashboard} />,
             label: t('nav.dashboard'),
             onClick: () => navigate('/dashboard'),
           },
           {
             key: '/teaching-activities',
-            icon: <BookOutlined />,
+            icon: <Icon icon={BookOpen} />,
             label: t('teacher:teachingActivities.title'),
             onClick: () => navigate('/teaching-activities'),
           },
           {
             key: '/scientific-activities',
-            icon: <ExperimentOutlined />,
+            icon: <Icon icon={FlaskConical} />,
             label: t('teacher:publications.title'),
             onClick: () => navigate('/scientific-activities'),
           },
           {
             key: '/scientific-tasks',
-            icon: <FileTextOutlined />,
+            icon: <Icon icon={FileText} />,
             label: t('teacher:scientificTasks.title'),
             onClick: () => navigate('/scientific-tasks'),
           },
           {
             key: '/account-info',
-            icon: <IdcardOutlined />,
+            icon: <Icon icon={IdCard} />,
             label: t('auth:account.title'),
             onClick: () => navigate('/account-info'),
           },
           {
             key: '/research-activities',
-            icon: <FileSearchOutlined />,
+            icon: <Icon icon={FileSearch} />,
             label: t('teacher:researchActivities.title'),
             onClick: () => navigate('/research-activities'),
           },
           {
             key: '/other-activities',
-            icon: <AppstoreOutlined />,
+            icon: <Icon icon={AppWindow} />,
             label: t('teacher:otherActivities'),
             onClick: () => navigate('/other-activities'),
             disabled: true,
@@ -140,37 +146,43 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       ? [
           {
             key: '/department/dashboard',
-            icon: <DashboardOutlined />,
+            icon: <Icon icon={LayoutDashboard} />,
             label: t('nav.dashboard'),
             onClick: () => navigate('/department/dashboard'),
+          },
+          {
+            key: '/account-info',
+            icon: <Icon icon={IdCard} />,
+            label: t('auth:account.title'),
+            onClick: () => navigate('/account-info'),
           },
           { type: 'divider' as const },
           {
             key: 'department',
-            icon: <BankOutlined />,
+            icon: <Icon icon={Building2} />,
             label: t('head:activities.title'),
             children: [
               {
                 key: '/department/activities',
-                icon: <BookOutlined />,
+                icon: <Icon icon={BookOpen} />,
                 label: t('teacher:teachingActivities.title'),
                 onClick: () => navigate('/department/activities'),
               },
               {
                 key: '/department/teachers',
-                icon: <TeamOutlined />,
+                icon: <Icon icon={Users} />,
                 label: t('head:teachers.title'),
                 onClick: () => navigate('/department/teachers'),
               },
               {
                 key: '/department/scientific-reports',
-                icon: <ExperimentOutlined />,
+                icon: <Icon icon={FlaskConical} />,
                 label: t('head:scientificReports.title'),
                 onClick: () => navigate('/department/scientific-reports'),
               },
               {
                 key: '/department/publications',
-                icon: <FileTextOutlined />,
+                icon: <Icon icon={FileText} />,
                 label: t('head:publications.navTitle'),
                 onClick: () => navigate('/department/publications'),
               },
@@ -182,43 +194,43 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       ? [
           {
             key: '/admin/dashboard',
-            icon: <DashboardOutlined />,
+            icon: <Icon icon={LayoutDashboard} />,
             label: t('nav.dashboard'),
             onClick: () => navigate('/admin/dashboard'),
           },
           { type: 'divider' as const },
           {
             key: 'administration',
-            icon: <ControlOutlined />,
+            icon: <Icon icon={SlidersHorizontal} />,
             label: t('nav.administration'),
             children: [
               {
                 key: '/admin/users',
-                icon: <TeamOutlined />,
+                icon: <Icon icon={Users} />,
                 label: t('admin:nav.users'),
                 onClick: () => navigate('/admin/users'),
               },
               {
                 key: '/admin/departments',
-                icon: <BankOutlined />,
+                icon: <Icon icon={Building2} />,
                 label: t('admin:nav.departments'),
                 onClick: () => navigate('/admin/departments'),
               },
               {
                 key: '/admin/scientific-tasks',
-                icon: <ExperimentOutlined />,
+                icon: <Icon icon={FlaskConical} />,
                 label: t('admin:nav.scientificTasks'),
                 onClick: () => navigate('/admin/scientific-tasks'),
               },
               {
                 key: '/admin/research-activities',
-                icon: <FileSearchOutlined />,
+                icon: <Icon icon={FileSearch} />,
                 label: t('admin:nav.researchActivities'),
                 onClick: () => navigate('/admin/research-activities'),
               },
               {
                 key: '/admin/audit-logs',
-                icon: <HistoryOutlined />,
+                icon: <Icon icon={History} />,
                 label: t('admin:nav.auditLogs'),
                 onClick: () => navigate('/admin/audit-logs'),
               },
@@ -231,24 +243,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const bottomMenuItems: MenuProps['items'] = [
     {
       key: '/settings',
-      icon: <SettingOutlined />,
+      icon: <Icon icon={Settings} />,
       label: t('nav.settings'),
       onClick: () => navigate('/settings'),
     },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
+      icon: <Icon icon={LogOut} />,
       label: t('nav.logout'),
       onClick: handleLogout,
       danger: true,
-      style: { color: '#ff4d4f' },
     },
   ];
 
-
   const siderContent = (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div className="logo-container" style={{ flexShrink: 0 }}>
+    <div className="sider-inner">
+      <div className="logo-container">
         {!collapsed && (
           <div className="logo-text">
             <img
@@ -265,44 +275,39 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {collapsed && (
           <div className="logo-icon">
             <img
-                src={universityLogo}
-                alt={branding.universityName}
-                className="logo-image-collapsed"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
+              src={universityLogo}
+              alt={branding.universityName}
+              className="logo-image-collapsed"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div className="sider-menu-wrap">
         <Menu
-            theme="dark"
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            items={menuItems}
-            className="sidebar-menu"
-            style={{ borderBottom: 'none' }}
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          className="sidebar-menu"
         />
       </div>
 
-      <div style={{ flexShrink: 0 }}>
+      <div className="sider-bottom">
         <Menu
-            theme="dark"
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            items={bottomMenuItems}
-            style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}
-            className="bottom-menu"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={bottomMenuItems}
+          className="bottom-menu"
         />
       </div>
     </div>
   );
 
   return (
-      <Layout className="main-layout">
-      {/* Desktop Sidebar */}
+    <Layout className="main-layout">
       {!mobile && (
         <Sider
           trigger={null}
@@ -310,6 +315,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           collapsed={collapsed}
           className="main-sider"
           width={250}
+          collapsedWidth={80}
           style={{
             overflow: 'hidden',
             height: '100vh',
@@ -321,7 +327,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </Sider>
       )}
 
-      {/* Mobile Drawer */}
       {mobile && (
         <Drawer
           placement="left"
@@ -330,7 +335,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           closable={false}
           width={250}
           className="mobile-drawer"
-          styles={{ body: { padding: 0, background: '#001529', height: '100%' } }}
+          styles={{ body: { padding: 0, background: '#ffffff', height: '100%' } }}
         >
           {siderContent}
         </Drawer>
@@ -341,7 +346,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="header-left">
             <Button
               type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              icon={
+                collapsed ? (
+                  <PanelLeftOpen size={18} strokeWidth={1.75} />
+                ) : (
+                  <PanelLeftClose size={18} strokeWidth={1.75} />
+                )
+              }
               onClick={() => setCollapsed(!collapsed)}
               className="collapse-btn"
             />
@@ -355,12 +366,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               options={LANGUAGES}
               size="small"
               style={{ width: 110 }}
-              suffixIcon={<GlobalOutlined />}
+              suffixIcon={<Globe size={14} strokeWidth={1.75} />}
             />
             {isAdmin && (
               <Button
                 type="primary"
-                icon={<ControlOutlined />}
+                icon={<SlidersHorizontal size={16} strokeWidth={2} />}
                 onClick={() => navigate('/admin/users')}
                 className="admin-btn"
               >
@@ -368,11 +379,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </Button>
             )}
             <div className="user-profile">
-              <Avatar
-                size="default"
-                icon={<UserOutlined />}
-                className="user-avatar"
-              />
+              <Avatar size="default" icon={<User size={16} strokeWidth={2} />} className="user-avatar" />
               <span className="user-name">
                 {user?.userInfo?.firstName && user?.userInfo?.lastName
                   ? `${user.userInfo.firstName} ${user.userInfo.lastName}`

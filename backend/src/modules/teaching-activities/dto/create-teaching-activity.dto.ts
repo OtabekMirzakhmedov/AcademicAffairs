@@ -14,7 +14,10 @@ export class CreateTeachingActivityDto {
   @IsInt()
   academicPeriodId: number;
 
-  @ApiPropertyOptional({ example: ['CS-101', 'CS-102'], description: 'Group names' })
+  @ApiPropertyOptional({
+    example: ['CS-101', 'CS-102'],
+    description: 'Group names',
+  })
   @IsArray()
   @IsOptional()
   groups?: string[];
@@ -25,7 +28,11 @@ export class CreateTeachingActivityDto {
   @IsOptional()
   lectureHours?: number;
 
-  @ApiPropertyOptional({ example: 1.5, description: 'Practice hours', minimum: 0 })
+  @ApiPropertyOptional({
+    example: 1.5,
+    description: 'Practice hours',
+    minimum: 0,
+  })
   @IsNumber()
   @Min(0)
   @IsOptional()
@@ -43,7 +50,11 @@ export class CreateTeachingActivityDto {
   @IsOptional()
   seminarHours?: number;
 
-  @ApiPropertyOptional({ example: 0.5, description: 'Advising hours', minimum: 0 })
+  @ApiPropertyOptional({
+    example: 0.5,
+    description: 'Advising hours',
+    minimum: 0,
+  })
   @IsNumber()
   @Min(0)
   @IsOptional()

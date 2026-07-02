@@ -1,9 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsInt,
-  IsOptional,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDepartmentDto {
@@ -17,12 +12,18 @@ export class CreateDepartmentDto {
   @IsOptional()
   headId?: number;
 
-  @ApiPropertyOptional({ example: '+998712345678', description: 'Department phone number' })
+  @ApiPropertyOptional({
+    example: '+998712345678',
+    description: 'Department phone number',
+  })
   @IsString()
   @IsOptional()
   phone?: string;
 
-  @ApiPropertyOptional({ example: 'A-101', description: 'Department room number' })
+  @ApiPropertyOptional({
+    example: 'A-101',
+    description: 'Department room number',
+  })
   @IsString()
   @IsOptional()
   roomNumber?: string;

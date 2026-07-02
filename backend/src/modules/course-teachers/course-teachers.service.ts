@@ -75,7 +75,10 @@ export class CourseTeachersService {
         courseId: createDto.courseId,
         teacherId: createDto.teacherId,
         academicPeriodId: createDto.academicPeriodId,
-        groups: createDto.groups && createDto.groups.length > 0 ? createDto.groups : undefined,
+        groups:
+          createDto.groups && createDto.groups.length > 0
+            ? createDto.groups
+            : undefined,
       },
       include: {
         course: {
@@ -101,7 +104,13 @@ export class CourseTeachersService {
         academicPeriodId: createDto.academicPeriodId,
       },
     });
-    this.logger.log({ event: 'course_teacher.assigned', assignmentId: assignment.id, courseId: createDto.courseId, teacherId: createDto.teacherId, actorId: actor.id });
+    this.logger.log({
+      event: 'course_teacher.assigned',
+      assignmentId: assignment.id,
+      courseId: createDto.courseId,
+      teacherId: createDto.teacherId,
+      actorId: actor.id,
+    });
 
     return assignment;
   }
@@ -250,7 +259,9 @@ export class CourseTeachersService {
     }
 
     if (userRole !== 'admin' && userRole !== 'departmenthead') {
-      throw new ForbiddenException('Only department heads can update assignments');
+      throw new ForbiddenException(
+        'Only department heads can update assignments',
+      );
     }
 
     if (
@@ -306,7 +317,9 @@ export class CourseTeachersService {
     }
 
     if (userRole !== 'admin' && userRole !== 'departmenthead') {
-      throw new ForbiddenException('Only department heads can delete assignments');
+      throw new ForbiddenException(
+        'Only department heads can delete assignments',
+      );
     }
 
     if (
@@ -336,7 +349,11 @@ export class CourseTeachersService {
     });
 
     await this.audit.log(actor, 'unassign', 'CourseTeacher', id, { before });
-    this.logger.log({ event: 'course_teacher.unassigned', assignmentId: id, actorId: actor.id });
+    this.logger.log({
+      event: 'course_teacher.unassigned',
+      assignmentId: id,
+      actorId: actor.id,
+    });
 
     return { message: 'Assignment removed successfully' };
   }

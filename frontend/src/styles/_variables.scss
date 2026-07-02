@@ -1,45 +1,54 @@
-// Primary Theme Colors
-$primary-color: #1890ff;
-$primary-dark: #0050b3;
-$primary-light: #69c0ff;
-$secondary-color: #52c41a;
+// Primary Theme Colors — indigo accent (modern SaaS)
+$primary-color: #4f46e5;
+$primary-dark: #3730a3;
+$primary-light: #818cf8;
+$primary-soft: #eef2ff;
+$secondary-color: #10b981;
 
 // Status Colors
-$success-color: #52c41a;
-$warning-color: #faad14;
-$error-color: #f5222d;
-$info-color: #1890ff;
+$success-color: #10b981;
+$success-soft: #ecfdf5;
+$warning-color: #f59e0b;
+$warning-soft: #fffbeb;
+$error-color: #ef4444;
+$error-soft: #fef2f2;
+$info-color: #4f46e5;
+$info-soft: #eef2ff;
 
-// Gradient Colors
-$gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-$gradient-success: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
-$gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-$gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-$gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-$gradient-blue: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+// Gradient Colors (kept available, used sparingly)
+$gradient-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+$gradient-success: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+$gradient-warning: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+$gradient-info: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+$gradient-purple: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+$gradient-blue: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+$gradient-mesh: radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(129, 140, 248, 0.12) 0px, transparent 50%),
+                radial-gradient(at 0% 90%, rgba(16, 185, 129, 0.10) 0px, transparent 50%);
 
-// Background Colors
-$background-primary: #f0f2f5;
+// Background Colors — warm neutrals (stone scale)
+$background-primary: #fafaf9;
 $background-secondary: #ffffff;
-$background-dark: #001529;
-$background-light: #fafafa;
+$background-dark: #1c1917;
+$background-light: #f5f5f4;
 
-// Text Colors
-$text-primary: #000000;
-$text-secondary: #8c8c8c;
-$text-disabled: #bfbfbf;
+// Text Colors — stone scale
+$text-primary: #1c1917;
+$text-secondary: #57534e;
+$text-tertiary: #78716c;
+$text-disabled: #a8a29e;
 $text-white: #ffffff;
 
-// Border & Divider
-$border-color: #d9d9d9;
-$border-light: #f0f0f0;
-$divider-color: #e8e8e8;
+// Border & Divider — stone scale
+$border-color: #e7e5e4;
+$border-light: #f5f5f4;
+$divider-color: #e7e5e4;
 
-// Shadow
-$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
-$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-$shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.15);
-$shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+// Shadow — crisp not blurry
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
 
 // Spacing
 $spacing-xs: 4px;
@@ -49,17 +58,21 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 $spacing-2xl: 48px;
 
-// Border Radius
-$radius-sm: 4px;
+// Border Radius — modern SaaS feel
+$radius-sm: 6px;
 $radius-md: 8px;
-$radius-lg: 12px;
-$radius-xl: 16px;
+$radius-lg: 10px;
+$radius-xl: 14px;
 $radius-full: 9999px;
 
 // Transitions
-$transition-fast: 0.15s ease-in-out;
-$transition-base: 0.3s ease-in-out;
-$transition-slow: 0.5s ease-in-out;
+$transition-fast: 0.12s ease-out;
+$transition-base: 0.2s ease-out;
+$transition-slow: 0.4s ease-out;
+
+// Font
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  'Helvetica Neue', Arial, sans-serif;
 
 // Export as CSS custom properties
 :root {
@@ -67,11 +80,16 @@ $transition-slow: 0.5s ease-in-out;
   --primary-color: #{$primary-color};
   --primary-dark: #{$primary-dark};
   --primary-light: #{$primary-light};
+  --primary-soft: #{$primary-soft};
   --secondary-color: #{$secondary-color};
   --success-color: #{$success-color};
+  --success-soft: #{$success-soft};
   --warning-color: #{$warning-color};
+  --warning-soft: #{$warning-soft};
   --error-color: #{$error-color};
+  --error-soft: #{$error-soft};
   --info-color: #{$info-color};
+  --info-soft: #{$info-soft};
 
   // Backgrounds
   --background-primary: #{$background-primary};
@@ -82,6 +100,7 @@ $transition-slow: 0.5s ease-in-out;
   // Text
   --text-primary: #{$text-primary};
   --text-secondary: #{$text-secondary};
+  --text-tertiary: #{$text-tertiary};
   --text-disabled: #{$text-disabled};
   --text-white: #{$text-white};
 
@@ -89,6 +108,12 @@ $transition-slow: 0.5s ease-in-out;
   --border-color: #{$border-color};
   --border-light: #{$border-light};
   --divider-color: #{$divider-color};
+
+  // Shadows
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
 
   // Spacing
   --spacing-xs: #{$spacing-xs};
@@ -104,4 +129,7 @@ $transition-slow: 0.5s ease-in-out;
   --radius-lg: #{$radius-lg};
   --radius-xl: #{$radius-xl};
   --radius-full: #{$radius-full};
+
+  // Font
+  --font-family: #{$font-family};
 }

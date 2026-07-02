@@ -11,11 +11,14 @@ import { UsersModule } from './modules/users/users.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { CourseTeachersModule } from './modules/course-teachers/course-teachers.module';
-import { AcademicPeriodsModule } from "./modules/academic-periods/academic-periods.module";
+import { AcademicPeriodsModule } from './modules/academic-periods/academic-periods.module';
 import { ProgramsModule } from './modules/programs/programs.module';
 import { ScientificTasksModule } from './modules/scientific-tasks/scientific-tasks.module';
 import { PublicationsModule } from './modules/publications/publications.module';
 import { ResearchActivitiesModule } from './modules/research-activities/research-activities.module';
+import { ReportsPdfModule } from './modules/reports-pdf/reports-pdf.module';
+import { ReportsExcelModule } from './modules/reports-excel/reports-excel.module';
+import { ReportsDocxModule } from './modules/reports-docx/reports-docx.module';
 
 @Module({
   imports: [
@@ -38,6 +41,11 @@ import { ResearchActivitiesModule } from './modules/research-activities/research
     ScientificTasksModule,
     PublicationsModule,
     ResearchActivitiesModule,
+    // Isolated per-format report generators — each can be removed
+    // independently (see each module's README) without touching the others.
+    ReportsPdfModule,
+    ReportsExcelModule,
+    ReportsDocxModule,
   ],
   controllers: [AppController],
   providers: [AppService],

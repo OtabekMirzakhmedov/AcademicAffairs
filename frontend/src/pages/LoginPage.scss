@@ -1,0 +1,133 @@
+@use '../styles/variables' as *;
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  background: $background-primary;
+
+  &__brand {
+    flex: 1.2;
+    min-width: 0;
+    position: relative;
+    background-color: #0f172a;
+    background-image:
+      radial-gradient(at 18% 22%, rgba(99, 102, 241, 0.55) 0px, transparent 50%),
+      radial-gradient(at 82% 10%, rgba(129, 140, 248, 0.45) 0px, transparent 50%),
+      radial-gradient(at 12% 88%, rgba(16, 185, 129, 0.30) 0px, transparent 55%),
+      radial-gradient(at 95% 95%, rgba(124, 58, 237, 0.40) 0px, transparent 55%);
+    color: $text-white;
+    padding: $spacing-2xl;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+
+    @media (max-width: 960px) {
+      display: none;
+    }
+  }
+
+  &__brand-content {
+    max-width: 460px;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  &__logo {
+    width: 64px;
+    height: 64px;
+    border-radius: $radius-lg;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: $spacing-lg;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+
+    img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+  }
+
+  &__brand-title {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 $spacing-sm;
+  }
+
+  &__brand-subtitle {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+    margin: 0 0 $spacing-md;
+  }
+
+  &__brand-tag {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.65);
+    margin: 0;
+    max-width: 380px;
+  }
+
+  &__brand-footer {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  &__form-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-xl;
+    background: $background-secondary;
+  }
+
+  &__form-card {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  &__form-header {
+    margin-bottom: $spacing-xl;
+  }
+
+  &__form-title {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: $text-primary;
+    margin: 0 0 $spacing-sm;
+  }
+
+  &__form-subtitle {
+    font-size: 13px;
+    color: $text-tertiary;
+    margin: 0;
+  }
+
+  &__input-icon {
+    color: $text-tertiary;
+  }
+
+  &__remember {
+    margin-bottom: $spacing-md;
+  }
+
+  &__submit {
+    height: 44px;
+    font-weight: 600;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+}

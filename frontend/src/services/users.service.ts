@@ -182,6 +182,22 @@ class UsersService {
   async delete(id: number): Promise<void> {
     await api.delete(`/users/${id}`);
   }
+
+  async downloadAccountSummaryPdf(id: number, lang: string): Promise<void> {
+    const response = await api.get(`/users/${id}/reports/account-summary`, {
+      params: { format: 'pdf', lang },
+      responseType: 'blob',
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'account-summary.pdf');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
 }
 
 export default new UsersService();

@@ -6,7 +6,10 @@ export class CreateResearchActivityDto {
   @IsInt()
   templateId: number;
 
-  @ApiPropertyOptional({ example: '2025-06-30', description: 'Activity deadline (ISO date format)' })
+  @ApiPropertyOptional({
+    example: '2025-06-30',
+    description: 'Activity deadline (ISO date format)',
+  })
   @IsOptional()
   @IsString()
   deadline?: string;

@@ -31,9 +31,14 @@ export class ProgramsService {
         degreeLevel: createProgramDto.degreeLevel,
         departmentId: createProgramDto.departmentId,
         durationYears: createProgramDto.durationYears,
-        totalCreditsRequired: new Decimal(createProgramDto.totalCreditsRequired),
+        totalCreditsRequired: new Decimal(
+          createProgramDto.totalCreditsRequired,
+        ),
         description: createProgramDto.description,
-        isActive: createProgramDto.isActive !== undefined ? createProgramDto.isActive : true,
+        isActive:
+          createProgramDto.isActive !== undefined
+            ? createProgramDto.isActive
+            : true,
         createdBy,
       },
       include: {
@@ -121,7 +126,9 @@ export class ProgramsService {
     const isDeptHead = user.role.name === 'departmenthead';
 
     if (!isAdmin && !isCreator && !isDeptHead) {
-      throw new ForbiddenException('You do not have permission to update this program');
+      throw new ForbiddenException(
+        'You do not have permission to update this program',
+      );
     }
 
     // Check code uniqueness if being updated
@@ -137,7 +144,9 @@ export class ProgramsService {
 
     const updateData: any = { ...updateProgramDto };
     if (updateProgramDto.totalCreditsRequired !== undefined) {
-      updateData.totalCreditsRequired = new Decimal(updateProgramDto.totalCreditsRequired);
+      updateData.totalCreditsRequired = new Decimal(
+        updateProgramDto.totalCreditsRequired,
+      );
     }
 
     return this.prisma.program.update({
@@ -176,7 +185,9 @@ export class ProgramsService {
     const isCreator = program.createdBy === userId;
 
     if (!isAdmin && !isCreator) {
-      throw new ForbiddenException('You do not have permission to delete this program');
+      throw new ForbiddenException(
+        'You do not have permission to delete this program',
+      );
     }
 
     await this.prisma.program.delete({
@@ -215,7 +226,10 @@ export class ProgramsService {
       data: {
         programId,
         courseId: addCourseDto.courseId,
-        isRequired: addCourseDto.isRequired !== undefined ? addCourseDto.isRequired : true,
+        isRequired:
+          addCourseDto.isRequired !== undefined
+            ? addCourseDto.isRequired
+            : true,
         recommendedSemester: addCourseDto.recommendedSemester,
       },
       include: {

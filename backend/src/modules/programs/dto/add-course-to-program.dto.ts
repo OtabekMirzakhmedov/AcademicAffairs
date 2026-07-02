@@ -6,12 +6,21 @@ export class AddCourseToProgramDto {
   @IsInt()
   courseId: number;
 
-  @ApiPropertyOptional({ example: true, description: 'Is course required (true) or elective (false)', default: true })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Is course required (true) or elective (false)',
+    default: true,
+  })
   @IsBoolean()
   @IsOptional()
   isRequired?: boolean;
 
-  @ApiPropertyOptional({ example: 3, description: 'Recommended semester to take this course (1-12)', minimum: 1, maximum: 12 })
+  @ApiPropertyOptional({
+    example: 3,
+    description: 'Recommended semester to take this course (1-12)',
+    minimum: 1,
+    maximum: 12,
+  })
   @IsInt()
   @Min(1)
   @Max(12)

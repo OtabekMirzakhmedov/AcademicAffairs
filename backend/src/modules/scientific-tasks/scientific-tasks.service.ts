@@ -39,7 +39,9 @@ export class ScientificTasksService {
     const roleName = user.role.name.toLowerCase();
 
     if (roleName !== 'admin' && roleName !== 'departmenthead') {
-      throw new ForbiddenException('Only admins and department heads can create scientific tasks');
+      throw new ForbiddenException(
+        'Only admins and department heads can create scientific tasks',
+      );
     }
 
     let departmentId: number | null = null;
@@ -131,10 +133,7 @@ export class ScientificTasksService {
       const deptHead = user.headedDepartments[0];
       if (deptHead) {
         where = {
-          OR: [
-            { departmentId: deptHead.id },
-            { departmentId: null },
-          ],
+          OR: [{ departmentId: deptHead.id }, { departmentId: null }],
           isActive: true,
         };
       }
@@ -195,7 +194,11 @@ export class ScientificTasksService {
     return task;
   }
 
-  async updateTask(taskId: number, userId: number, dto: UpdateScientificTaskDto) {
+  async updateTask(
+    taskId: number,
+    userId: number,
+    dto: UpdateScientificTaskDto,
+  ) {
     const task = await this.prisma.scientificTask.findUnique({
       where: { id: taskId },
     });
@@ -391,7 +394,11 @@ export class ScientificTasksService {
       before,
       after: { id: reportId, status: 'submitted' },
     });
-    this.logger.log({ event: 'scientific_report.submitted', reportId, teacherId: actor.id });
+    this.logger.log({
+      event: 'scientific_report.submitted',
+      reportId,
+      teacherId: actor.id,
+    });
 
     return result;
   }
@@ -416,7 +423,7 @@ export class ScientificTasksService {
       throw new ForbiddenException('Teachers cannot access this endpoint');
     }
 
-    let where: any = {};
+    const where: any = {};
 
     if (roleName === 'departmenthead') {
       const deptHead = user.headedDepartments[0];
@@ -505,10 +512,14 @@ export class ScientificTasksService {
     if (roleName === 'departmenthead') {
       const deptHead = user?.headedDepartments[0];
       if (deptHead?.id !== report.teacher.teacherInfo?.departmentId) {
-        throw new ForbiddenException('You can only validate reports from your department');
+        throw new ForbiddenException(
+          'You can only validate reports from your department',
+        );
       }
     } else if (roleName !== 'admin') {
-      throw new ForbiddenException('Only admins and department heads can validate reports');
+      throw new ForbiddenException(
+        'Only admins and department heads can validate reports',
+      );
     }
 
     const before = { id: report.id, status: report.status };
@@ -537,11 +548,22 @@ export class ScientificTasksService {
       },
     });
 
-    await this.audit.log(actor, 'validate', 'TeacherScientificReport', reportId, {
-      before,
-      after: { id: reportId, status: 'validated', validatedBy: actor.id },
+    await this.audit.log(
+      actor,
+      'validate',
+      'TeacherScientificReport',
+      reportId,
+      {
+        before,
+        after: { id: reportId, status: 'validated', validatedBy: actor.id },
+      },
+    );
+    this.logger.log({
+      event: 'scientific_report.validated',
+      reportId,
+      validatorId: actor.id,
+      teacherId: report.teacherId,
     });
-    this.logger.log({ event: 'scientific_report.validated', reportId, validatorId: actor.id, teacherId: report.teacherId });
 
     return result;
   }
@@ -576,10 +598,14 @@ export class ScientificTasksService {
     if (roleName === 'departmenthead') {
       const deptHead = user?.headedDepartments[0];
       if (deptHead?.id !== report.teacher.teacherInfo?.departmentId) {
-        throw new ForbiddenException('You can only reject reports from your department');
+        throw new ForbiddenException(
+          'You can only reject reports from your department',
+        );
       }
     } else if (roleName !== 'admin') {
-      throw new ForbiddenException('Only admins and department heads can reject reports');
+      throw new ForbiddenException(
+        'Only admins and department heads can reject reports',
+      );
     }
 
     const before = { id: report.id, status: report.status };
@@ -612,7 +638,12 @@ export class ScientificTasksService {
       before,
       after: { id: reportId, status: 'rejected', validatedBy: actor.id },
     });
-    this.logger.log({ event: 'scientific_report.rejected', reportId, validatorId: actor.id, teacherId: report.teacherId });
+    this.logger.log({
+      event: 'scientific_report.rejected',
+      reportId,
+      validatorId: actor.id,
+      teacherId: report.teacherId,
+    });
 
     return result;
   }

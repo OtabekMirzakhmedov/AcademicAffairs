@@ -1,0 +1,63 @@
+@use '../../styles/variables' as *;
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  border: 1px solid transparent;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: $radius-full;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    text-transform: capitalize;
+  }
+
+  &--draft {
+    background: $background-light;
+    color: $text-secondary;
+    border-color: $border-color;
+  }
+
+  &--submitted {
+    background: $warning-soft;
+    color: #b45309;
+    border-color: #fde68a;
+  }
+
+  &--validated,
+  &--active {
+    background: $success-soft;
+    color: #047857;
+    border-color: #a7f3d0;
+  }
+
+  &--rejected {
+    background: $error-soft;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
+
+  &--inactive {
+    background: $background-light;
+    color: $text-tertiary;
+    border-color: $border-color;
+  }
+
+  &--neutral {
+    background: $primary-soft;
+    color: $primary-color;
+    border-color: #e0e7ff;
+  }
+}

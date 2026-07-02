@@ -132,15 +132,13 @@ export class TeachingActivitiesService {
     return activity;
   }
 
-  async update(
-    id: number,
-    teacherId: number,
-    dto: UpdateTeachingActivityDto,
-  ) {
+  async update(id: number, teacherId: number, dto: UpdateTeachingActivityDto) {
     const activity = await this.findOne(id, teacherId);
 
     if (activity.status === 'validated' || activity.status === 'rejected') {
-      throw new BadRequestException('Validated or rejected activities cannot be edited');
+      throw new BadRequestException(
+        'Validated or rejected activities cannot be edited',
+      );
     }
 
     const totalHours =
@@ -206,7 +204,9 @@ export class TeachingActivitiesService {
     const activity = await this.findOne(id, actor.id);
 
     if (activity.status === 'validated') {
-      throw new BadRequestException('Validated activities cannot be resubmitted');
+      throw new BadRequestException(
+        'Validated activities cannot be resubmitted',
+      );
     }
 
     const before = { id: activity.id, status: activity.status };
@@ -226,7 +226,11 @@ export class TeachingActivitiesService {
       before,
       after: { id, status: 'submitted' },
     });
-    this.logger.log({ event: 'teaching_activity.submitted', activityId: id, teacherId: actor.id });
+    this.logger.log({
+      event: 'teaching_activity.submitted',
+      activityId: id,
+      teacherId: actor.id,
+    });
 
     return result;
   }
@@ -362,7 +366,9 @@ export class TeachingActivitiesService {
     }
 
     if (activity.status !== 'submitted') {
-      throw new BadRequestException('Only submitted activities can be validated');
+      throw new BadRequestException(
+        'Only submitted activities can be validated',
+      );
     }
 
     await this.assertValidatorScope(actor.id, activity.teacherId);
@@ -390,7 +396,12 @@ export class TeachingActivitiesService {
       before,
       after: { id, status: 'validated', validatedBy: actor.id },
     });
-    this.logger.log({ event: 'teaching_activity.validated', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+    this.logger.log({
+      event: 'teaching_activity.validated',
+      activityId: id,
+      validatorId: actor.id,
+      teacherId: activity.teacherId,
+    });
 
     return result;
   }
@@ -405,7 +416,9 @@ export class TeachingActivitiesService {
     }
 
     if (activity.status !== 'submitted') {
-      throw new BadRequestException('Only submitted activities can be rejected');
+      throw new BadRequestException(
+        'Only submitted activities can be rejected',
+      );
     }
 
     await this.assertValidatorScope(actor.id, activity.teacherId);
@@ -433,7 +446,12 @@ export class TeachingActivitiesService {
       before,
       after: { id, status: 'rejected', validatedBy: actor.id },
     });
-    this.logger.log({ event: 'teaching_activity.rejected', activityId: id, validatorId: actor.id, teacherId: activity.teacherId });
+    this.logger.log({
+      event: 'teaching_activity.rejected',
+      activityId: id,
+      validatorId: actor.id,
+      teacherId: activity.teacherId,
+    });
 
     return result;
   }

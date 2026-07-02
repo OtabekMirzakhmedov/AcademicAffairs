@@ -7,7 +7,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -22,8 +27,14 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'User login', description: 'Authenticate user and return JWT tokens' })
-  @ApiResponse({ status: 200, description: 'Login successful, returns access and refresh tokens' })
+  @ApiOperation({
+    summary: 'User login',
+    description: 'Authenticate user and return JWT tokens',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful, returns access and refresh tokens',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto) {
     const result = await this.authService.login(loginDto);
@@ -36,7 +47,10 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refresh access token', description: 'Get a new access token using refresh token' })
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description: 'Get a new access token using refresh token',
+  })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
@@ -54,7 +68,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'User logout', description: 'Logout user (stateless, handled client-side)' })
+  @ApiOperation({
+    summary: 'User logout',
+    description: 'Logout user (stateless, handled client-side)',
+  })
   @ApiResponse({ status: 200, description: 'Logout successful' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout() {
@@ -70,9 +87,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Change password', description: 'Change current user password' })
+  @ApiOperation({
+    summary: 'Change password',
+    description: 'Change current user password',
+  })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid old password or validation error' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid old password or validation error',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async changePassword(
     @CurrentUser() user: any,
@@ -92,7 +115,10 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get current user profile', description: 'Get authenticated user profile with all details' })
+  @ApiOperation({
+    summary: 'Get current user profile',
+    description: 'Get authenticated user profile with all details',
+  })
   @ApiResponse({ status: 200, description: 'Returns user profile data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@CurrentUser() user: any) {

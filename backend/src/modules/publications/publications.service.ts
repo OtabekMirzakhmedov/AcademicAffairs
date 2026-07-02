@@ -1,4 +1,10 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditActor } from '../audit/interfaces/audit-actor.interface';
@@ -52,14 +58,20 @@ export class PublicationsService {
     return publication;
   }
 
-  async update(id: number, teacherId: number, updatePublicationDto: UpdatePublicationDto) {
+  async update(
+    id: number,
+    teacherId: number,
+    updatePublicationDto: UpdatePublicationDto,
+  ) {
     const publication = await this.findOne(id);
     if (publication.teacherId !== teacherId) {
       throw new ForbiddenException('You can only update your own publications');
     }
 
     if (publication.status !== 'draft' && publication.status !== 'rejected') {
-      throw new ForbiddenException('Cannot update submitted or validated publications');
+      throw new ForbiddenException(
+        'Cannot update submitted or validated publications',
+      );
     }
 
     return this.prisma.teacherPublication.update({
@@ -97,7 +109,11 @@ export class PublicationsService {
       before,
       after: { id, status: 'submitted' },
     });
-    this.logger.log({ event: 'publication.submitted', publicationId: id, teacherId: actor.id });
+    this.logger.log({
+      event: 'publication.submitted',
+      publicationId: id,
+      teacherId: actor.id,
+    });
 
     return result;
   }
@@ -109,7 +125,9 @@ export class PublicationsService {
     }
 
     if (publication.status !== 'draft' && publication.status !== 'rejected') {
-      throw new ForbiddenException('Cannot delete submitted or validated publications');
+      throw new ForbiddenException(
+        'Cannot delete submitted or validated publications',
+      );
     }
 
     await this.prisma.teacherPublication.delete({
@@ -119,7 +137,10 @@ export class PublicationsService {
     return { message: 'Publication deleted successfully' };
   }
 
-  private async assertValidatorScope(validatorId: number, publicationTeacherId: number) {
+  private async assertValidatorScope(
+    validatorId: number,
+    publicationTeacherId: number,
+  ) {
     const [user, teacherInfo] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: validatorId },
@@ -138,12 +159,16 @@ export class PublicationsService {
     if (roleName === 'departmenthead') {
       const headedDeptId = user?.headedDepartments[0]?.id;
       if (!headedDeptId || headedDeptId !== teacherInfo?.departmentId) {
-        throw new ForbiddenException('You can only act on publications from your department');
+        throw new ForbiddenException(
+          'You can only act on publications from your department',
+        );
       }
       return;
     }
 
-    throw new ForbiddenException('Only admins and department heads can perform this action');
+    throw new ForbiddenException(
+      'Only admins and department heads can perform this action',
+    );
   }
 
   async getAllSubmitted(userId: number) {
@@ -160,7 +185,9 @@ export class PublicationsService {
       if (!headedDeptId) return [];
       where.teacher = { teacherInfo: { departmentId: headedDeptId } };
     } else if (roleName !== 'admin') {
-      throw new ForbiddenException('Only admins and department heads can view submitted publications');
+      throw new ForbiddenException(
+        'Only admins and department heads can view submitted publications',
+      );
     }
 
     return this.prisma.teacherPublication.findMany({
@@ -176,7 +203,9 @@ export class PublicationsService {
     const publication = await this.findOne(id);
 
     if (publication.status !== 'submitted') {
-      throw new BadRequestException('Only submitted publications can be validated');
+      throw new BadRequestException(
+        'Only submitted publications can be validated',
+      );
     }
 
     await this.assertValidatorScope(actor.id, publication.teacherId);
@@ -197,7 +226,12 @@ export class PublicationsService {
       before,
       after: { id, status: 'validated', validatedBy: actor.id },
     });
-    this.logger.log({ event: 'publication.validated', publicationId: id, validatorId: actor.id, teacherId: publication.teacherId });
+    this.logger.log({
+      event: 'publication.validated',
+      publicationId: id,
+      validatorId: actor.id,
+      teacherId: publication.teacherId,
+    });
 
     return result;
   }
@@ -206,7 +240,9 @@ export class PublicationsService {
     const publication = await this.findOne(id);
 
     if (publication.status !== 'submitted') {
-      throw new BadRequestException('Only submitted publications can be rejected');
+      throw new BadRequestException(
+        'Only submitted publications can be rejected',
+      );
     }
 
     await this.assertValidatorScope(actor.id, publication.teacherId);
@@ -228,7 +264,12 @@ export class PublicationsService {
       after: { id, status: 'rejected', validatedBy: actor.id },
       reason,
     });
-    this.logger.log({ event: 'publication.rejected', publicationId: id, validatorId: actor.id, teacherId: publication.teacherId });
+    this.logger.log({
+      event: 'publication.rejected',
+      publicationId: id,
+      validatorId: actor.id,
+      teacherId: publication.teacherId,
+    });
 
     return result;
   }
@@ -248,26 +289,28 @@ export class PublicationsService {
     const publications = await this.findAllByTeacher(teacherId);
 
     const stats = {
-      mandatoryConferenceArticles: user.teacherInfo.mandatoryConferenceArticles || 0,
-      mandatoryNationalArticles: user.teacherInfo.mandatoryNationalArticles || 0,
+      mandatoryConferenceArticles:
+        user.teacherInfo.mandatoryConferenceArticles || 0,
+      mandatoryNationalArticles:
+        user.teacherInfo.mandatoryNationalArticles || 0,
       mandatoryScopusArticles: user.teacherInfo.mandatoryScopusArticles || 0,
       submittedConferenceArticles: publications.filter(
-        (p) => p.publicationType === 'conference' && p.status === 'submitted'
+        (p) => p.publicationType === 'conference' && p.status === 'submitted',
       ).length,
       submittedNationalArticles: publications.filter(
-        (p) => p.publicationType === 'national' && p.status === 'submitted'
+        (p) => p.publicationType === 'national' && p.status === 'submitted',
       ).length,
       submittedScopusArticles: publications.filter(
-        (p) => p.publicationType === 'scopus' && p.status === 'submitted'
+        (p) => p.publicationType === 'scopus' && p.status === 'submitted',
       ).length,
       validatedConferenceArticles: publications.filter(
-        (p) => p.publicationType === 'conference' && p.status === 'validated'
+        (p) => p.publicationType === 'conference' && p.status === 'validated',
       ).length,
       validatedNationalArticles: publications.filter(
-        (p) => p.publicationType === 'national' && p.status === 'validated'
+        (p) => p.publicationType === 'national' && p.status === 'validated',
       ).length,
       validatedScopusArticles: publications.filter(
-        (p) => p.publicationType === 'scopus' && p.status === 'validated'
+        (p) => p.publicationType === 'scopus' && p.status === 'validated',
       ).length,
     };
 

@@ -14,15 +14,62 @@ import {
   Typography,
   Checkbox,
   Card,
+  Descriptions,
+  Avatar,
+  Tag,
 } from 'antd';
-import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { EditOutlined, SaveOutlined, CloseOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  User as UserIcon,
+  Calendar,
+  MapPin,
+  Fingerprint,
+  Phone,
+  GraduationCap,
+  FlaskConical,
+  Award,
+  Star,
+  BookOpen,
+  Trophy,
+  Users,
+  Presentation,
+  Briefcase,
+  type LucideIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import usersService, { type UpdateUserAccountRequest } from '../../../services/users.service';
 import type { User } from '../../../types';
 import dayjs from 'dayjs';
+import './AccountInfoTab.scss';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
+
+const ROLE_COLOR: Record<string, string> = {
+  admin: 'red',
+  departmenthead: 'blue',
+  teacher: 'green',
+};
+
+const Section = ({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: LucideIcon;
+  title: React.ReactNode;
+  children: React.ReactNode;
+}) => (
+  <div className="account-info-tab__section">
+    <div className="account-info-tab__section-title">
+      <Icon size={16} strokeWidth={1.75} />
+      <span>{title}</span>
+    </div>
+    <Descriptions bordered size="small" column={{ xs: 1, sm: 2, md: 3 }}>
+      {children}
+    </Descriptions>
+  </div>
+);
 
 interface AccountInfoTabProps {
   user: User;
@@ -132,300 +179,173 @@ const AccountInfoTab = ({ user, onSuccess }: AccountInfoTabProps) => {
     setIsEditing(false);
   };
 
-  const ViewField = ({ label, value }: { label: string; value: any }) => (
-    <div style={{ marginBottom: 16 }}>
-      <Text type="secondary" style={{ display: 'block', marginBottom: 4, fontSize: '12px' }}>
-        {label}
-      </Text>
-      <Text strong style={{ fontSize: '14px' }}>{value || '-'}</Text>
-    </div>
-  );
+  const dv = (value: string | number | null | undefined) =>
+    value === null || value === undefined || value === '' ? '-' : value;
+  const yn = (value: boolean | undefined) => (value ? t('common:label.yes') : t('common:label.no'));
+  const fullName = [user.userInfo?.firstName, user.userInfo?.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  const initials = `${user.userInfo?.firstName?.[0] ?? ''}${user.userInfo?.lastName?.[0] ?? ''}`.toUpperCase();
 
   if (!isEditing) {
     return (
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-          <Title level={4}>{t('auth:account.title')}</Title>
-          <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
+      <Card className="account-info-tab">
+        <div className="account-info-tab__header">
+          <div className="account-info-tab__identity">
+            <Avatar size={64} className="account-info-tab__avatar">
+              {initials || <UserOutlined />}
+            </Avatar>
+            <div>
+              <Title level={4} style={{ margin: 0 }}>
+                {fullName || user.login}
+              </Title>
+              <Space size={8} wrap className="account-info-tab__meta">
+                <Tag color={ROLE_COLOR[user.role.name] ?? 'default'}>
+                  {t(`domain:role.${user.role.name}`)}
+                </Tag>
+                {user.teacherInfo?.department?.name && (
+                  <Text type="secondary">{user.teacherInfo.department.name}</Text>
+                )}
+                <Text type="secondary">@{user.login}</Text>
+              </Space>
+            </div>
+          </div>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => setIsEditing(true)}
+            className="account-info-tab__edit-actions"
+          >
             {t('auth:account.editProfile')}
           </Button>
         </div>
 
-        <Divider orientation="left">{t('auth:account.mainInfo')}</Divider>
-        <Row gutter={24}>
-          <Col span={8}>
-            <ViewField label={t('auth:account.firstName')} value={user.userInfo?.firstName} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.lastName')} value={user.userInfo?.lastName} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.middleName')} value={user.userInfo?.middleName} />
-          </Col>
-          <Col span={8}>
-            <ViewField
-              label={t('auth:account.dateOfBirth')}
-              value={user.userInfo?.dateOfBirth ? dayjs(user.userInfo.dateOfBirth).format('YYYY-MM-DD') : '-'}
-            />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.gender')} value={user.userInfo?.gender} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.nationality')} value={user.userInfo?.nationality} />
-          </Col>
-        </Row>
+        <Section icon={UserIcon} title={t('auth:account.mainInfo')}>
+          <Descriptions.Item label={t('auth:account.firstName')}>{dv(user.userInfo?.firstName)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.lastName')}>{dv(user.userInfo?.lastName)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.middleName')}>{dv(user.userInfo?.middleName)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.dateOfBirth')}>
+            {user.userInfo?.dateOfBirth ? dayjs(user.userInfo.dateOfBirth).format('YYYY-MM-DD') : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.gender')}>{dv(user.userInfo?.gender)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.nationality')}>{dv(user.userInfo?.nationality)}</Descriptions.Item>
+        </Section>
 
-        <Divider orientation="left">{t('auth:account.birthInfo')}</Divider>
-        <Row gutter={24}>
-          <Col span={12}>
-            <ViewField label={t('auth:account.countryOfBirth')} value={user.userInfo?.countryOfBirth} />
-          </Col>
-          <Col span={12}>
-            <ViewField label={t('auth:account.regionOfBirth')} value={user.userInfo?.regionOfBirth} />
-          </Col>
-        </Row>
+        <Section icon={Calendar} title={t('auth:account.birthInfo')}>
+          <Descriptions.Item label={t('auth:account.countryOfBirth')}>{dv(user.userInfo?.countryOfBirth)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.regionOfBirth')}>{dv(user.userInfo?.regionOfBirth)}</Descriptions.Item>
+        </Section>
 
-        <Divider orientation="left">{t('auth:account.addressInfo')}</Divider>
-        <Row gutter={24}>
-          <Col span={12}>
-            <ViewField label={t('auth:account.currentAddress')} value={user.userInfo?.currentAddress} />
-          </Col>
-          <Col span={12}>
-            <ViewField label={t('auth:account.permanentAddress')} value={user.userInfo?.permanentAddress} />
-          </Col>
-        </Row>
+        <Section icon={MapPin} title={t('auth:account.addressInfo')}>
+          <Descriptions.Item label={t('auth:account.currentAddress')}>{dv(user.userInfo?.currentAddress)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.permanentAddress')}>{dv(user.userInfo?.permanentAddress)}</Descriptions.Item>
+        </Section>
 
-        <Divider orientation="left">{t('auth:account.identification')}</Divider>
-        <Row gutter={24}>
-          <Col span={8}>
-            <ViewField label={t('auth:account.passportSerial')} value={user.userInfo?.passportSerial} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.personalId')} value={user.userInfo?.personalId} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.stirInn')} value={user.userInfo?.stirInn} />
-          </Col>
-        </Row>
+        <Section icon={Fingerprint} title={t('auth:account.identification')}>
+          <Descriptions.Item label={t('auth:account.passportSerial')}>{dv(user.userInfo?.passportSerial)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.personalId')}>{dv(user.userInfo?.personalId)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.stirInn')}>{dv(user.userInfo?.stirInn)}</Descriptions.Item>
+        </Section>
 
-        <Divider orientation="left">{t('auth:account.contactInfo')}</Divider>
-        <Row gutter={24}>
-          <Col span={8}>
-            <ViewField label={t('auth:account.englishLevel')} value={user.userInfo?.englishLevel} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.phone')} value={user.userInfo?.phone1} />
-          </Col>
-          <Col span={8}>
-            <ViewField label={t('auth:account.email')} value={user.userInfo?.email1} />
-          </Col>
-        </Row>
+        <Section icon={Phone} title={t('auth:account.contactInfo')}>
+          <Descriptions.Item label={t('auth:account.englishLevel')}>{dv(user.userInfo?.englishLevel)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.phone')}>{dv(user.userInfo?.phone1)}</Descriptions.Item>
+          <Descriptions.Item label={t('auth:account.email')}>{dv(user.userInfo?.email1)}</Descriptions.Item>
+        </Section>
 
         {user.role.name === 'teacher' && (
           <>
-            <Divider orientation="left">{t('auth:account.bachelorDegree')}</Divider>
-            <Row gutter={24}>
-              <Col span={12}>
-                <ViewField label={t('auth:account.bachelorUniversity')} value={user.teacherInfo?.bachelorUniversity} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.bachelorYear')} value={user.teacherInfo?.bachelorYear} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.bachelorDirection')} value={user.teacherInfo?.bachelorDirection} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.bachelorDiplomaNumber')} value={user.teacherInfo?.bachelorDiplomaNumber} />
-              </Col>
-            </Row>
+            <Section icon={GraduationCap} title={t('auth:account.bachelorDegree')}>
+              <Descriptions.Item label={t('auth:account.bachelorUniversity')}>{dv(user.teacherInfo?.bachelorUniversity)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.bachelorYear')}>{dv(user.teacherInfo?.bachelorYear)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.bachelorDirection')}>{dv(user.teacherInfo?.bachelorDirection)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.bachelorDiplomaNumber')}>{dv(user.teacherInfo?.bachelorDiplomaNumber)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.masterDegree')}</Divider>
-            <Row gutter={24}>
-              <Col span={12}>
-                <ViewField label={t('auth:account.masterUniversity')} value={user.teacherInfo?.masterUniversity} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.masterYear')} value={user.teacherInfo?.masterYear} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.masterDirection')} value={user.teacherInfo?.masterDirection} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.masterDiplomaNumber')} value={user.teacherInfo?.masterDiplomaNumber} />
-              </Col>
-            </Row>
+            <Section icon={GraduationCap} title={t('auth:account.masterDegree')}>
+              <Descriptions.Item label={t('auth:account.masterUniversity')}>{dv(user.teacherInfo?.masterUniversity)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.masterYear')}>{dv(user.teacherInfo?.masterYear)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.masterDirection')}>{dv(user.teacherInfo?.masterDirection)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.masterDiplomaNumber')}>{dv(user.teacherInfo?.masterDiplomaNumber)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.research')}</Divider>
-            <Row gutter={24}>
-              <Col span={24}>
-                <ViewField label={t('auth:account.researchArea')} value={user.teacherInfo?.researchArea} />
-              </Col>
-            </Row>
+            <Section icon={FlaskConical} title={t('auth:account.research')}>
+              <Descriptions.Item label={t('auth:account.researchArea')} span={3}>{dv(user.teacherInfo?.researchArea)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.phdDegree')}</Divider>
-            <Row gutter={24}>
-              <Col span={24}>
-                <ViewField
-                  label={t('auth:account.hasPhdDegree')}
-                  value={user.teacherInfo?.hasPhdDegree ? t('common:label.yes') : t('common:label.no')}
-                />
-              </Col>
+            <Section icon={Award} title={t('auth:account.phdDegree')}>
+              <Descriptions.Item label={t('auth:account.hasPhdDegree')} span={3}>{yn(user.teacherInfo?.hasPhdDegree)}</Descriptions.Item>
               {user.teacherInfo?.hasPhdDegree && (
                 <>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.phdYear')} value={user.teacherInfo?.phdYear} />
-                  </Col>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.phdSpeciality')} value={user.teacherInfo?.phdSpeciality} />
-                  </Col>
-                  <Col span={24}>
-                    <ViewField label={t('auth:account.phdTopic')} value={user.teacherInfo?.phdTopic} />
-                  </Col>
-                  <Col span={8}>
-                    <ViewField label={t('auth:account.phdDiplomaNumber')} value={user.teacherInfo?.phdDiplomaNumber} />
-                  </Col>
-                  <Col span={8}>
-                    <ViewField label={t('auth:account.phdCountry')} value={user.teacherInfo?.phdCountry} />
-                  </Col>
-                  <Col span={8}>
-                    <ViewField label={t('auth:account.phdOrganization')} value={user.teacherInfo?.phdOrganization} />
-                  </Col>
+                  <Descriptions.Item label={t('auth:account.phdYear')}>{dv(user.teacherInfo?.phdYear)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.phdSpeciality')}>{dv(user.teacherInfo?.phdSpeciality)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.phdDiplomaNumber')}>{dv(user.teacherInfo?.phdDiplomaNumber)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.phdTopic')} span={3}>{dv(user.teacherInfo?.phdTopic)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.phdCountry')}>{dv(user.teacherInfo?.phdCountry)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.phdOrganization')} span={2}>{dv(user.teacherInfo?.phdOrganization)}</Descriptions.Item>
                 </>
               )}
-            </Row>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.dscDegree')}</Divider>
-            <Row gutter={24}>
-              <Col span={24}>
-                <ViewField
-                  label={t('auth:account.hasDscDegree')}
-                  value={user.teacherInfo?.hasDscDegree ? t('common:label.yes') : t('common:label.no')}
-                />
-              </Col>
+            <Section icon={Award} title={t('auth:account.dscDegree')}>
+              <Descriptions.Item label={t('auth:account.hasDscDegree')} span={3}>{yn(user.teacherInfo?.hasDscDegree)}</Descriptions.Item>
               {user.teacherInfo?.hasDscDegree && (
                 <>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.dscYear')} value={user.teacherInfo?.dscYear} />
-                  </Col>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.dscSpeciality')} value={user.teacherInfo?.dscSpeciality} />
-                  </Col>
-                  <Col span={24}>
-                    <ViewField label={t('auth:account.dscTopic')} value={user.teacherInfo?.dscTopic} />
-                  </Col>
-                  <Col span={8}>
-                    <ViewField label={t('auth:account.dscDiplomaNumber')} value={user.teacherInfo?.dscDiplomaNumber} />
-                  </Col>
-                  <Col span={8}>
-                    <ViewField label={t('auth:account.dscCountry')} value={user.teacherInfo?.dscCountry} />
-                  </Col>
-                  <Col span={8}>
-                    <ViewField label={t('auth:account.dscOrganization')} value={user.teacherInfo?.dscOrganization} />
-                  </Col>
+                  <Descriptions.Item label={t('auth:account.dscYear')}>{dv(user.teacherInfo?.dscYear)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.dscSpeciality')}>{dv(user.teacherInfo?.dscSpeciality)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.dscDiplomaNumber')}>{dv(user.teacherInfo?.dscDiplomaNumber)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.dscTopic')} span={3}>{dv(user.teacherInfo?.dscTopic)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.dscCountry')}>{dv(user.teacherInfo?.dscCountry)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.dscOrganization')} span={2}>{dv(user.teacherInfo?.dscOrganization)}</Descriptions.Item>
                 </>
               )}
-            </Row>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.academicTitle')}</Divider>
-            <Row gutter={24}>
-              <Col span={24}>
-                <ViewField
-                  label={t('auth:account.hasAcademicTitle')}
-                  value={user.teacherInfo?.hasAcademicTitle ? t('common:label.yes') : t('common:label.no')}
-                />
-              </Col>
+            <Section icon={Star} title={t('auth:account.academicTitle')}>
+              <Descriptions.Item label={t('auth:account.hasAcademicTitle')} span={3}>{yn(user.teacherInfo?.hasAcademicTitle)}</Descriptions.Item>
               {user.teacherInfo?.hasAcademicTitle && (
                 <>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.academicTitleName')} value={user.teacherInfo?.academicTitleName} />
-                  </Col>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.academicTitleSpeciality')} value={user.teacherInfo?.academicTitleSpeciality} />
-                  </Col>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.academicTitleYear')} value={user.teacherInfo?.academicTitleYear} />
-                  </Col>
-                  <Col span={12}>
-                    <ViewField label={t('auth:account.academicTitleAttestat')} value={user.teacherInfo?.academicTitleAttestat} />
-                  </Col>
+                  <Descriptions.Item label={t('auth:account.academicTitleName')}>{dv(user.teacherInfo?.academicTitleName)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.academicTitleSpeciality')}>{dv(user.teacherInfo?.academicTitleSpeciality)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.academicTitleYear')}>{dv(user.teacherInfo?.academicTitleYear)}</Descriptions.Item>
+                  <Descriptions.Item label={t('auth:account.academicTitleAttestat')} span={3}>{dv(user.teacherInfo?.academicTitleAttestat)}</Descriptions.Item>
                 </>
               )}
-            </Row>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.trainingDev')}</Divider>
-            <Row gutter={24}>
-              <Col span={12}>
-                <ViewField label={t('auth:account.internshipsCount')} value={user.teacherInfo?.internshipsCount} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.trainingCount')} value={user.teacherInfo?.trainingCount} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.internshipsInfo')} value={user.teacherInfo?.internshipsInfo} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.trainingInfo')} value={user.teacherInfo?.trainingInfo} />
-              </Col>
-            </Row>
+            <Section icon={BookOpen} title={t('auth:account.trainingDev')}>
+              <Descriptions.Item label={t('auth:account.internshipsCount')}>{dv(user.teacherInfo?.internshipsCount)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.trainingCount')}>{dv(user.teacherInfo?.trainingCount)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.internshipsInfo')}>{dv(user.teacherInfo?.internshipsInfo)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.trainingInfo')} span={2}>{dv(user.teacherInfo?.trainingInfo)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.awardsSection')}</Divider>
-            <Row gutter={24}>
-              <Col span={12}>
-                <ViewField label={t('auth:account.awardsField')} value={user.teacherInfo?.awardsField} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.awardsState')} value={user.teacherInfo?.awardsState} />
-              </Col>
-            </Row>
+            <Section icon={Trophy} title={t('auth:account.awardsSection')}>
+              <Descriptions.Item label={t('auth:account.awardsField')}>{dv(user.teacherInfo?.awardsField)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.awardsState')} span={2}>{dv(user.teacherInfo?.awardsState)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.supervision')}</Divider>
-            <Row gutter={24}>
-              <Col span={12}>
-                <ViewField label={t('auth:account.supervisedPhd')} value={user.teacherInfo?.supervisedPhd} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.supervisedDsc')} value={user.teacherInfo?.supervisedDsc} />
-              </Col>
-            </Row>
+            <Section icon={Users} title={t('auth:account.supervision')}>
+              <Descriptions.Item label={t('auth:account.supervisedPhd')}>{dv(user.teacherInfo?.supervisedPhd)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.supervisedDsc')}>{dv(user.teacherInfo?.supervisedDsc)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.conferencesSection')}</Divider>
-            <Row gutter={24}>
-              <Col span={12}>
-                <ViewField label={t('auth:account.conferencesRepublic')} value={user.teacherInfo?.conferencesRepublic} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.conferencesInternational')} value={user.teacherInfo?.conferencesInternational} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.seminarsRepublic')} value={user.teacherInfo?.seminarsRepublic} />
-              </Col>
-              <Col span={12}>
-                <ViewField label={t('auth:account.seminarsInternational')} value={user.teacherInfo?.seminarsInternational} />
-              </Col>
-            </Row>
+            <Section icon={Presentation} title={t('auth:account.conferencesSection')}>
+              <Descriptions.Item label={t('auth:account.conferencesRepublic')}>{dv(user.teacherInfo?.conferencesRepublic)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.conferencesInternational')}>{dv(user.teacherInfo?.conferencesInternational)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.seminarsRepublic')}>{dv(user.teacherInfo?.seminarsRepublic)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.seminarsInternational')}>{dv(user.teacherInfo?.seminarsInternational)}</Descriptions.Item>
+            </Section>
 
-            <Divider orientation="left">{t('auth:account.projects')}</Divider>
-            <Row gutter={24}>
-              <Col span={8}>
-                <ViewField label={t('auth:account.projectsFundamental')} value={user.teacherInfo?.projectsFundamental} />
-              </Col>
-              <Col span={8}>
-                <ViewField label={t('auth:account.projectsPractical')} value={user.teacherInfo?.projectsPractical} />
-              </Col>
-              <Col span={8}>
-                <ViewField label={t('auth:account.projectsYouth')} value={user.teacherInfo?.projectsYouth} />
-              </Col>
-              <Col span={8}>
-                <ViewField label={t('auth:account.projectsBusiness')} value={user.teacherInfo?.projectsBusiness} />
-              </Col>
-              <Col span={8}>
-                <ViewField label={t('auth:account.projectsInnovation')} value={user.teacherInfo?.projectsInnovation} />
-              </Col>
-              <Col span={8}>
-                <ViewField label={t('auth:account.innovativeIdeasCount')} value={user.teacherInfo?.innovativeIdeasCount} />
-              </Col>
-            </Row>
+            <Section icon={Briefcase} title={t('auth:account.projects')}>
+              <Descriptions.Item label={t('auth:account.projectsFundamental')}>{dv(user.teacherInfo?.projectsFundamental)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.projectsPractical')}>{dv(user.teacherInfo?.projectsPractical)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.projectsYouth')}>{dv(user.teacherInfo?.projectsYouth)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.projectsBusiness')}>{dv(user.teacherInfo?.projectsBusiness)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.projectsInnovation')}>{dv(user.teacherInfo?.projectsInnovation)}</Descriptions.Item>
+              <Descriptions.Item label={t('auth:account.innovativeIdeasCount')}>{dv(user.teacherInfo?.innovativeIdeasCount)}</Descriptions.Item>
+            </Section>
           </>
         )}
       </Card>

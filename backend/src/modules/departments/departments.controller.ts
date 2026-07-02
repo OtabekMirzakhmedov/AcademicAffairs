@@ -11,7 +11,13 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { DepartmentsService } from './departments.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
@@ -29,12 +35,21 @@ export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create department', description: 'Create a new department (admin only)' })
+  @ApiOperation({
+    summary: 'Create department',
+    description: 'Create a new department (admin only)',
+  })
   @ApiResponse({ status: 201, description: 'Department created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async create(@Body() createDepartmentDto: CreateDepartmentDto, @CurrentUser() user: any) {
+  async create(
+    @Body() createDepartmentDto: CreateDepartmentDto,
+    @CurrentUser() user: any,
+  ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const department = await this.departmentsService.create(createDepartmentDto, actor);
+    const department = await this.departmentsService.create(
+      createDepartmentDto,
+      actor,
+    );
     return {
       success: true,
       data: department,
@@ -44,7 +59,10 @@ export class DepartmentsController {
 
   @Get()
   @Roles('admin', 'departmenthead')
-  @ApiOperation({ summary: 'Get all departments', description: 'Retrieve list of all departments' })
+  @ApiOperation({
+    summary: 'Get all departments',
+    description: 'Retrieve list of all departments',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of departments' })
   async findAll() {
     const departments = await this.departmentsService.findAll();
@@ -56,7 +74,10 @@ export class DepartmentsController {
 
   @Get(':id')
   @Roles('admin', 'departmenthead')
-  @ApiOperation({ summary: 'Get department by ID', description: 'Retrieve a specific department by ID' })
+  @ApiOperation({
+    summary: 'Get department by ID',
+    description: 'Retrieve a specific department by ID',
+  })
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiResponse({ status: 200, description: 'Returns department data' })
   @ApiResponse({ status: 404, description: 'Department not found' })
@@ -69,7 +90,10 @@ export class DepartmentsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update department', description: 'Update department data (admin only)' })
+  @ApiOperation({
+    summary: 'Update department',
+    description: 'Update department data (admin only)',
+  })
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiResponse({ status: 200, description: 'Department updated successfully' })
   @ApiResponse({ status: 404, description: 'Department not found' })
@@ -79,7 +103,11 @@ export class DepartmentsController {
     @CurrentUser() user: any,
   ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
-    const department = await this.departmentsService.update(id, updateDepartmentDto, actor);
+    const department = await this.departmentsService.update(
+      id,
+      updateDepartmentDto,
+      actor,
+    );
     return {
       success: true,
       data: department,
@@ -89,11 +117,17 @@ export class DepartmentsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete department', description: 'Permanently delete a department (admin only)' })
+  @ApiOperation({
+    summary: 'Delete department',
+    description: 'Permanently delete a department (admin only)',
+  })
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiResponse({ status: 200, description: 'Department deleted' })
   @ApiResponse({ status: 404, description: 'Department not found' })
-  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
     const actor = { id: user.id, login: user.login, role: user.role.name };
     const result = await this.departmentsService.remove(id, actor);
     return {

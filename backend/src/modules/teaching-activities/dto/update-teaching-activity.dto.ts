@@ -2,7 +2,10 @@ import { IsInt, IsArray, IsNumber, IsOptional, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateTeachingActivityDto {
-  @ApiPropertyOptional({ example: 2, description: 'Course-teacher assignment ID' })
+  @ApiPropertyOptional({
+    example: 2,
+    description: 'Course-teacher assignment ID',
+  })
   @IsInt()
   @IsOptional()
   courseTeacherId?: number;
@@ -17,7 +20,10 @@ export class UpdateTeachingActivityDto {
   @IsOptional()
   academicPeriodId?: number;
 
-  @ApiPropertyOptional({ example: ['CS-101', 'CS-103'], description: 'Group names' })
+  @ApiPropertyOptional({
+    example: ['CS-101', 'CS-103'],
+    description: 'Group names',
+  })
   @IsArray()
   @IsOptional()
   groups?: string[];
@@ -28,7 +34,11 @@ export class UpdateTeachingActivityDto {
   @IsOptional()
   lectureHours?: number;
 
-  @ApiPropertyOptional({ example: 2, description: 'Practice hours', minimum: 0 })
+  @ApiPropertyOptional({
+    example: 2,
+    description: 'Practice hours',
+    minimum: 0,
+  })
   @IsNumber()
   @Min(0)
   @IsOptional()
@@ -46,7 +56,11 @@ export class UpdateTeachingActivityDto {
   @IsOptional()
   seminarHours?: number;
 
-  @ApiPropertyOptional({ example: 1, description: 'Advising hours', minimum: 0 })
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Advising hours',
+    minimum: 0,
+  })
   @IsNumber()
   @Min(0)
   @IsOptional()

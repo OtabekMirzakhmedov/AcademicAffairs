@@ -1,0 +1,33 @@
+@media print {
+  .main-sider,
+  .main-header,
+  .mobile-drawer,
+  .page-header__actions {
+    display: none !important;
+  }
+
+  .main-layout .ant-layout {
+    margin-left: 0 !important;
+  }
+
+  .main-content {
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .account-info-page {
+    .page-header {
+      margin-bottom: 12px;
+    }
+
+    .ant-card {
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    .ant-card-body {
+      padding: 0 !important;
+    }
+  }
+}

@@ -1,9 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsEmail,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTeacherDto {
@@ -22,22 +17,34 @@ export class CreateTeacherDto {
   @IsNotEmpty()
   lastName: string;
 
-  @ApiPropertyOptional({ example: 'jane.smith@university.edu', description: 'Primary email address' })
+  @ApiPropertyOptional({
+    example: 'jane.smith@university.edu',
+    description: 'Primary email address',
+  })
   @IsEmail()
   @IsOptional()
   email1?: string;
 
-  @ApiPropertyOptional({ example: 'j.smith@gmail.com', description: 'Secondary email address' })
+  @ApiPropertyOptional({
+    example: 'j.smith@gmail.com',
+    description: 'Secondary email address',
+  })
   @IsEmail()
   @IsOptional()
   email2?: string;
 
-  @ApiPropertyOptional({ example: '+998901234567', description: 'Primary phone number' })
+  @ApiPropertyOptional({
+    example: '+998901234567',
+    description: 'Primary phone number',
+  })
   @IsString()
   @IsOptional()
   phone1?: string;
 
-  @ApiPropertyOptional({ example: '+998907654321', description: 'Secondary phone number' })
+  @ApiPropertyOptional({
+    example: '+998907654321',
+    description: 'Secondary phone number',
+  })
   @IsString()
   @IsOptional()
   phone2?: string;

@@ -12,7 +12,10 @@ export class LoginDto {
   @IsNotEmpty()
   password: string;
 
-  @ApiPropertyOptional({ example: false, description: 'Remember me for extended session (30 days)' })
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Remember me for extended session (30 days)',
+  })
   @IsBoolean()
   @IsOptional()
   rememberMe?: boolean;
