@@ -54,13 +54,18 @@
     "userInfo": "Информация пользователя",
     "username": "Имя пользователя",
     "fullName": "Полное имя",
-    "security": "Безопасность"
+    "security": "Безопасность",
+    "appearance": "Оформление",
+    "theme": "Тема",
+    "lightMode": "Светлая",
+    "darkMode": "Тёмная"
   },
   "nav": {
     "settings": "Настройки",
     "logout": "Выйти",
     "dashboard": "Панель управления",
-    "administration": "Администрирование"
+    "administration": "Администрирование",
+    "toggleTheme": "Переключить тёмную тему"
   },
   "message": {
     "errorLoading": "Ошибка загрузки данных",

@@ -177,6 +177,19 @@
       align-items: center;
       gap: $spacing-md;
 
+      .theme-toggle-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: $radius-md;
+        color: $text-secondary;
+        transition: background $transition-fast, color $transition-fast;
+
+        &:hover {
+          background: $background-light;
+          color: $text-primary;
+        }
+      }
+
       .admin-btn {
         height: 36px;
         font-weight: 500;

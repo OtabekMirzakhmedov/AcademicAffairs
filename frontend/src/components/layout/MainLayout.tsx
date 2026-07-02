@@ -19,11 +19,14 @@ import {
   IdCard,
   Globe,
   History,
+  Sun,
+  Moon,
   type LucideIcon,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import usersService from '../../services/users.service';
 import branding from '../../config/branding.json';
 import './MainLayout.scss';
@@ -52,6 +55,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
   const { t, i18n } = useTranslation(['common', 'teacher', 'head', 'admin']);
 
   useEffect(() => {
@@ -335,7 +339,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           closable={false}
           width={250}
           className="mobile-drawer"
-          styles={{ body: { padding: 0, background: '#ffffff', height: '100%' } }}
+          styles={{ body: { padding: 0, background: 'var(--background-secondary)', height: '100%' } }}
         >
           {siderContent}
         </Drawer>
@@ -360,6 +364,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
 
           <div className="header-right">
+            <Button
+              type="text"
+              icon={
+                mode === 'dark' ? (
+                  <Sun size={18} strokeWidth={1.75} />
+                ) : (
+                  <Moon size={18} strokeWidth={1.75} />
+                )
+              }
+              onClick={toggleTheme}
+              className="theme-toggle-btn"
+              aria-label={t('nav.toggleTheme')}
+              title={t('nav.toggleTheme')}
+            />
             <Select
               value={i18n.language}
               onChange={handleLanguageChange}

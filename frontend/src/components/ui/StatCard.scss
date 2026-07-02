@@ -12,7 +12,7 @@
   gap: 6px;
 
   &:hover {
-    border-color: #d6d3d1;
+    border-color: $text-disabled;
     box-shadow: $shadow-sm;
   }
 

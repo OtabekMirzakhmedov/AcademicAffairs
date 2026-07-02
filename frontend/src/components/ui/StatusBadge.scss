@@ -32,21 +32,21 @@
 
   &--submitted {
     background: $warning-soft;
-    color: #b45309;
-    border-color: #fde68a;
+    color: $status-submitted-text;
+    border-color: $status-submitted-border;
   }
 
   &--validated,
   &--active {
     background: $success-soft;
-    color: #047857;
-    border-color: #a7f3d0;
+    color: $status-validated-text;
+    border-color: $status-validated-border;
   }
 
   &--rejected {
     background: $error-soft;
-    color: #b91c1c;
-    border-color: #fecaca;
+    color: $status-rejected-text;
+    border-color: $status-rejected-border;
   }
 
   &--inactive {
@@ -58,6 +58,6 @@
   &--neutral {
     background: $primary-soft;
     color: $primary-color;
-    border-color: #e0e7ff;
+    border-color: $status-neutral-border;
   }
 }

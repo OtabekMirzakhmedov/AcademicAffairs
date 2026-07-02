@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { Card, Tabs, Form, Input, Button, message, Divider } from 'antd';
+import { Card, Tabs, Form, Input, Button, message, Divider, Switch } from 'antd';
 import { LockOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/layout/MainLayout';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import authService from '../services/auth.service';
 
 const SettingsPage = () => {
   const { t } = useTranslation(['auth', 'common', 'domain']);
   const { user } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -48,41 +51,68 @@ const SettingsPage = () => {
           <h3>{t('common:settings.userInfo')}</h3>
           <Divider />
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:settings.username')}</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{t('common:settings.username')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>{user?.login}</div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:settings.fullName')}</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{t('common:settings.fullName')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
               {user?.userInfo?.firstName} {user?.userInfo?.lastName}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('auth:account.email')}</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{t('auth:account.email')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
               {user?.userInfo?.email1 || t('common:label.notSet')}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('auth:account.phone')}</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{t('auth:account.phone')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
               {user?.userInfo?.phone1 || t('common:label.notSet')}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:label.role')}</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{t('common:label.role')}</div>
             <div style={{ fontSize: '16px', fontWeight: 500 }}>
               {t(`domain:role.${user?.role?.name}`, { defaultValue: user?.role?.name })}
             </div>
           </div>
           {user?.role?.name === 'teacher' && user?.teacherInfo?.department && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ color: '#8c8c8c', fontSize: '12px' }}>{t('common:label.department')}</div>
+              <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>{t('common:label.department')}</div>
               <div style={{ fontSize: '16px', fontWeight: 500 }}>
                 {user.teacherInfo.department.name}
               </div>
             </div>
           )}
+        </Card>
+      ),
+    },
+    {
+      key: 'appearance',
+      label: (
+        <span>
+          <Moon size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+          {t('common:settings.appearance')}
+        </span>
+      ),
+      children: (
+        <Card>
+          <h3>{t('common:settings.appearance')}</h3>
+          <Divider />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 400 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {mode === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+              <span>{t('common:settings.theme')}</span>
+            </div>
+            <Switch
+              checked={mode === 'dark'}
+              onChange={toggleTheme}
+              checkedChildren={t('common:settings.darkMode')}
+              unCheckedChildren={t('common:settings.lightMode')}
+            />
+          </div>
         </Card>
       ),
     },
@@ -174,7 +204,7 @@ const SettingsPage = () => {
             <SettingOutlined style={{ marginRight: 8 }} />
             {t('common:nav.settings')}
           </h1>
-          <p style={{ margin: '4px 0 0', color: '#8c8c8c' }}>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-tertiary)' }}>
             {t('common:settings.subtitle')}
           </p>
         </div>

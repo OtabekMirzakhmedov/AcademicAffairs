@@ -1,21 +1,94 @@
 // Primary Theme Colors — indigo accent (modern SaaS)
-$primary-color: #4f46e5;
-$primary-dark: #3730a3;
-$primary-light: #818cf8;
-$primary-soft: #eef2ff;
-$secondary-color: #10b981;
+// Light theme literals
+$primary-color-light: #4f46e5;
+$primary-dark-light: #3730a3;
+$primary-light-light: #818cf8;
+$primary-soft-light: #eef2ff;
+$secondary-color-light: #10b981;
 
-// Status Colors
-$success-color: #10b981;
-$success-soft: #ecfdf5;
-$warning-color: #f59e0b;
-$warning-soft: #fffbeb;
-$error-color: #ef4444;
-$error-soft: #fef2f2;
-$info-color: #4f46e5;
-$info-soft: #eef2ff;
+$success-color-light: #10b981;
+$success-soft-light: #ecfdf5;
+$warning-color-light: #f59e0b;
+$warning-soft-light: #fffbeb;
+$error-color-light: #ef4444;
+$error-soft-light: #fef2f2;
+$info-color-light: #4f46e5;
+$info-soft-light: #eef2ff;
 
-// Gradient Colors (kept available, used sparingly)
+$background-primary-light: #fafaf9;
+$background-secondary-light: #ffffff;
+$background-dark-light: #1c1917;
+$background-light-light: #f5f5f4;
+
+$text-primary-light: #1c1917;
+$text-secondary-light: #57534e;
+$text-tertiary-light: #78716c;
+$text-disabled-light: #a8a29e;
+
+$border-color-light: #e7e5e4;
+$border-light-light: #f5f5f4;
+$divider-color-light: #e7e5e4;
+
+$shadow-sm-light: 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md-light: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-lg-light: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-xl-light: 0 12px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+
+$status-submitted-text-light: #b45309;
+$status-submitted-border-light: #fde68a;
+$status-validated-text-light: #047857;
+$status-validated-border-light: #a7f3d0;
+$status-rejected-text-light: #b91c1c;
+$status-rejected-border-light: #fecaca;
+$status-neutral-border-light: #e0e7ff;
+
+// Dark theme literals
+$primary-color-dark: #6366f1;
+$primary-dark-dark: #818cf8;
+$primary-light-dark: #a5b4fc;
+$primary-soft-dark: rgba(99, 102, 241, 0.16);
+$secondary-color-dark: #34d399;
+
+$success-color-dark: #34d399;
+$success-soft-dark: rgba(16, 185, 129, 0.16);
+$warning-color-dark: #fbbf24;
+$warning-soft-dark: rgba(245, 158, 11, 0.16);
+$error-color-dark: #f87171;
+$error-soft-dark: rgba(239, 68, 68, 0.16);
+$info-color-dark: #6366f1;
+$info-soft-dark: rgba(99, 102, 241, 0.16);
+
+$background-primary-dark: #121110;
+$background-secondary-dark: #1c1917;
+$background-dark-dark: #09090a;
+$background-light-dark: #292524;
+
+$text-primary-dark: #f5f5f4;
+$text-secondary-dark: #d6d3d1;
+$text-tertiary-dark: #a8a29e;
+$text-disabled-dark: #78716c;
+
+$border-color-dark: #3f3a35;
+$border-light-dark: #292524;
+$divider-color-dark: #3f3a35;
+
+$shadow-sm-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
+$shadow-md-dark: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+$shadow-lg-dark: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+$shadow-xl-dark: 0 12px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+
+$status-submitted-text-dark: #fbbf24;
+$status-submitted-border-dark: rgba(245, 158, 11, 0.4);
+$status-validated-text-dark: #34d399;
+$status-validated-border-dark: rgba(16, 185, 129, 0.4);
+$status-rejected-text-dark: #f87171;
+$status-rejected-border-dark: rgba(239, 68, 68, 0.4);
+$status-neutral-border-dark: rgba(99, 102, 241, 0.4);
+
+// Colors that don't change between themes
+$text-white: #ffffff;
+
+// Gradient Colors (kept available, used sparingly) — decorative, theme-independent
 $gradient-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
 $gradient-success: linear-gradient(135deg, #34d399 0%, #10b981 100%);
 $gradient-warning: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
@@ -25,30 +98,6 @@ $gradient-blue: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
 $gradient-mesh: radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
                 radial-gradient(at 80% 0%, rgba(129, 140, 248, 0.12) 0px, transparent 50%),
                 radial-gradient(at 0% 90%, rgba(16, 185, 129, 0.10) 0px, transparent 50%);
-
-// Background Colors — warm neutrals (stone scale)
-$background-primary: #fafaf9;
-$background-secondary: #ffffff;
-$background-dark: #1c1917;
-$background-light: #f5f5f4;
-
-// Text Colors — stone scale
-$text-primary: #1c1917;
-$text-secondary: #57534e;
-$text-tertiary: #78716c;
-$text-disabled: #a8a29e;
-$text-white: #ffffff;
-
-// Border & Divider — stone scale
-$border-color: #e7e5e4;
-$border-light: #f5f5f4;
-$divider-color: #e7e5e4;
-
-// Shadow — crisp not blurry
-$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-$shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-$shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
-$shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
 
 // Spacing
 $spacing-xs: 4px;
@@ -74,48 +123,54 @@ $transition-slow: 0.4s ease-out;
 $font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
   'Helvetica Neue', Arial, sans-serif;
 
-// Export as CSS custom properties
+// Export as CSS custom properties — light theme is the default (:root),
+// dark theme overrides live under [data-theme='dark']. Components should
+// consume the $variables below (which resolve to var(--...)) rather than
+// these blocks directly, so runtime theme switching works without touching
+// individual component stylesheets.
 :root {
-  // Colors
-  --primary-color: #{$primary-color};
-  --primary-dark: #{$primary-dark};
-  --primary-light: #{$primary-light};
-  --primary-soft: #{$primary-soft};
-  --secondary-color: #{$secondary-color};
-  --success-color: #{$success-color};
-  --success-soft: #{$success-soft};
-  --warning-color: #{$warning-color};
-  --warning-soft: #{$warning-soft};
-  --error-color: #{$error-color};
-  --error-soft: #{$error-soft};
-  --info-color: #{$info-color};
-  --info-soft: #{$info-soft};
+  --primary-color: #{$primary-color-light};
+  --primary-dark: #{$primary-dark-light};
+  --primary-light: #{$primary-light-light};
+  --primary-soft: #{$primary-soft-light};
+  --secondary-color: #{$secondary-color-light};
+  --success-color: #{$success-color-light};
+  --success-soft: #{$success-soft-light};
+  --warning-color: #{$warning-color-light};
+  --warning-soft: #{$warning-soft-light};
+  --error-color: #{$error-color-light};
+  --error-soft: #{$error-soft-light};
+  --info-color: #{$info-color-light};
+  --info-soft: #{$info-soft-light};
 
-  // Backgrounds
-  --background-primary: #{$background-primary};
-  --background-secondary: #{$background-secondary};
-  --background-dark: #{$background-dark};
-  --background-light: #{$background-light};
+  --background-primary: #{$background-primary-light};
+  --background-secondary: #{$background-secondary-light};
+  --background-dark: #{$background-dark-light};
+  --background-light: #{$background-light-light};
 
-  // Text
-  --text-primary: #{$text-primary};
-  --text-secondary: #{$text-secondary};
-  --text-tertiary: #{$text-tertiary};
-  --text-disabled: #{$text-disabled};
+  --text-primary: #{$text-primary-light};
+  --text-secondary: #{$text-secondary-light};
+  --text-tertiary: #{$text-tertiary-light};
+  --text-disabled: #{$text-disabled-light};
   --text-white: #{$text-white};
 
-  // Borders
-  --border-color: #{$border-color};
-  --border-light: #{$border-light};
-  --divider-color: #{$divider-color};
+  --border-color: #{$border-color-light};
+  --border-light: #{$border-light-light};
+  --divider-color: #{$divider-color-light};
 
-  // Shadows
-  --shadow-sm: #{$shadow-sm};
-  --shadow-md: #{$shadow-md};
-  --shadow-lg: #{$shadow-lg};
-  --shadow-xl: #{$shadow-xl};
+  --shadow-sm: #{$shadow-sm-light};
+  --shadow-md: #{$shadow-md-light};
+  --shadow-lg: #{$shadow-lg-light};
+  --shadow-xl: #{$shadow-xl-light};
 
-  // Spacing
+  --status-submitted-text: #{$status-submitted-text-light};
+  --status-submitted-border: #{$status-submitted-border-light};
+  --status-validated-text: #{$status-validated-text-light};
+  --status-validated-border: #{$status-validated-border-light};
+  --status-rejected-text: #{$status-rejected-text-light};
+  --status-rejected-border: #{$status-rejected-border-light};
+  --status-neutral-border: #{$status-neutral-border-light};
+
   --spacing-xs: #{$spacing-xs};
   --spacing-sm: #{$spacing-sm};
   --spacing-md: #{$spacing-md};
@@ -123,13 +178,99 @@ $font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
   --spacing-xl: #{$spacing-xl};
   --spacing-2xl: #{$spacing-2xl};
 
-  // Border Radius
   --radius-sm: #{$radius-sm};
   --radius-md: #{$radius-md};
   --radius-lg: #{$radius-lg};
   --radius-xl: #{$radius-xl};
   --radius-full: #{$radius-full};
 
-  // Font
   --font-family: #{$font-family};
 }
+
+[data-theme='dark'] {
+  --primary-color: #{$primary-color-dark};
+  --primary-dark: #{$primary-dark-dark};
+  --primary-light: #{$primary-light-dark};
+  --primary-soft: #{$primary-soft-dark};
+  --secondary-color: #{$secondary-color-dark};
+  --success-color: #{$success-color-dark};
+  --success-soft: #{$success-soft-dark};
+  --warning-color: #{$warning-color-dark};
+  --warning-soft: #{$warning-soft-dark};
+  --error-color: #{$error-color-dark};
+  --error-soft: #{$error-soft-dark};
+  --info-color: #{$info-color-dark};
+  --info-soft: #{$info-soft-dark};
+
+  --background-primary: #{$background-primary-dark};
+  --background-secondary: #{$background-secondary-dark};
+  --background-dark: #{$background-dark-dark};
+  --background-light: #{$background-light-dark};
+
+  --text-primary: #{$text-primary-dark};
+  --text-secondary: #{$text-secondary-dark};
+  --text-tertiary: #{$text-tertiary-dark};
+  --text-disabled: #{$text-disabled-dark};
+  --text-white: #{$text-white};
+
+  --border-color: #{$border-color-dark};
+  --border-light: #{$border-light-dark};
+  --divider-color: #{$divider-color-dark};
+
+  --shadow-sm: #{$shadow-sm-dark};
+  --shadow-md: #{$shadow-md-dark};
+  --shadow-lg: #{$shadow-lg-dark};
+  --shadow-xl: #{$shadow-xl-dark};
+
+  --status-submitted-text: #{$status-submitted-text-dark};
+  --status-submitted-border: #{$status-submitted-border-dark};
+  --status-validated-text: #{$status-validated-text-dark};
+  --status-validated-border: #{$status-validated-border-dark};
+  --status-rejected-text: #{$status-rejected-text-dark};
+  --status-rejected-border: #{$status-rejected-border-dark};
+  --status-neutral-border: #{$status-neutral-border-dark};
+}
+
+// Public SCSS variables consumed by component stylesheets. These resolve to
+// CSS custom properties (not literal colors) so every consumer re-themes
+// automatically at runtime when [data-theme] changes — no per-component edits.
+$primary-color: var(--primary-color);
+$primary-dark: var(--primary-dark);
+$primary-light: var(--primary-light);
+$primary-soft: var(--primary-soft);
+$secondary-color: var(--secondary-color);
+$success-color: var(--success-color);
+$success-soft: var(--success-soft);
+$warning-color: var(--warning-color);
+$warning-soft: var(--warning-soft);
+$error-color: var(--error-color);
+$error-soft: var(--error-soft);
+$info-color: var(--info-color);
+$info-soft: var(--info-soft);
+
+$background-primary: var(--background-primary);
+$background-secondary: var(--background-secondary);
+$background-dark: var(--background-dark);
+$background-light: var(--background-light);
+
+$text-primary: var(--text-primary);
+$text-secondary: var(--text-secondary);
+$text-tertiary: var(--text-tertiary);
+$text-disabled: var(--text-disabled);
+
+$border-color: var(--border-color);
+$border-light: var(--border-light);
+$divider-color: var(--divider-color);
+
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$shadow-xl: var(--shadow-xl);
+
+$status-submitted-text: var(--status-submitted-text);
+$status-submitted-border: var(--status-submitted-border);
+$status-validated-text: var(--status-validated-text);
+$status-validated-border: var(--status-validated-border);
+$status-rejected-text: var(--status-rejected-text);
+$status-rejected-border: var(--status-rejected-border);
+$status-neutral-border: var(--status-neutral-border);

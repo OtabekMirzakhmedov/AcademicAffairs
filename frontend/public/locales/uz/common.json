@@ -54,13 +54,18 @@
     "userInfo": "Foydalanuvchi ma'lumotlari",
     "username": "Foydalanuvchi nomi",
     "fullName": "To'liq ism",
-    "security": "Xavfsizlik"
+    "security": "Xavfsizlik",
+    "appearance": "Ko'rinish",
+    "theme": "Mavzu",
+    "lightMode": "Yorug'",
+    "darkMode": "Qorong'u"
   },
   "nav": {
     "settings": "Sozlamalar",
     "logout": "Chiqish",
     "dashboard": "Bosh sahifa",
-    "administration": "Boshqaruv"
+    "administration": "Boshqaruv",
+    "toggleTheme": "Qorong'u rejimni almashtirish"
   },
   "message": {
     "errorLoading": "Ma'lumot yuklashda xatolik",

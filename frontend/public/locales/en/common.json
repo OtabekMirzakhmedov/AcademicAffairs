@@ -54,13 +54,18 @@
     "userInfo": "User Information",
     "username": "Username",
     "fullName": "Full Name",
-    "security": "Security"
+    "security": "Security",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "lightMode": "Light",
+    "darkMode": "Dark"
   },
   "nav": {
     "settings": "Settings",
     "logout": "Logout",
     "dashboard": "Dashboard",
-    "administration": "Administration"
+    "administration": "Administration",
+    "toggleTheme": "Toggle dark mode"
   },
   "message": {
     "errorLoading": "Error Loading Data",

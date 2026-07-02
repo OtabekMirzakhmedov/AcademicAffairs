@@ -37,13 +37,13 @@
 
       .period-label {
         font-size: 14px;
-        color: #8c8c8c;
+        color: var(--text-tertiary);
         font-weight: 500;
       }
 
       .period-value {
         font-size: 18px;
-        color: #262626;
+        color: var(--text-primary);
         font-weight: 600;
       }
     }
@@ -60,9 +60,9 @@
 
     .ant-table {
       .ant-table-thead > tr > th {
-        background: #fafafa;
+        background: var(--background-light);
         font-weight: 600;
-        color: #262626;
+        color: var(--text-primary);
       }
 
       .ant-table-tbody > tr {
